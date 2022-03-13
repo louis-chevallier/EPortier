@@ -1,0 +1,37 @@
+
+
+<html>
+  <head>
+    <title>Create a Button in JavaScript</title>
+  </head>
+
+  <body>
+    <!-- Empty <body> HTML (the JavaScript code in <script> will generate a button here)-->
+
+    <script>
+      // Create a button element
+      const button = document.createElement('button')
+
+      // Set the button text to 'Can you click me?'
+      button.innerText = 'Can you click me?'
+
+      button.id = 'mainButton'
+
+      // Attach the "click" event to your button
+      button.addEventListener('click', () => {
+        // When there is a "click"
+        // it shows an alert in the browser
+        alert('Oh, you clicked me!')
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function() {
+          jsontext = request.responseText;
+          alert(jsontext);
+        }
+        request.open("GET", "https://extraction.import.io/query/extractor/THE_PUBLIC_LINK_THEY_GIVE_YOU?_apikey=YOUR_KEY&url=YOUR_URL", true);
+        request.send();
+      })
+
+      document.body.appendChild(button)
+    </script>
+  </body>
+</html>
