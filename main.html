@@ -6,26 +6,30 @@
   </head>
   <body>
   <div>
-    <button id="ouvrir" onclick="ouvrit()">Ouvrir</button>
+    <button id="ouvrir">Ouvrir</button>
   </div>
     <script>
       const button = document.getElementById("ouvrir");
-      const url = "https://extraction.import.io/query/extractor/THE_PUBLIC_LINK_THEY_GIVE_YOU?_apikey=YOUR_KEY&url=YOUR_URL"
-      button.addEventListener('click', () => {
+	  reset = function(){
+					button.innerHTML = "Ouvrir";
+					button.disabled = false;
+				};
+      //const url = "https://herewecode.io/blog/create-button-javascript/"
+	  const url = "https://stackoverflow.com/questions/13831601/disabling-and-enabling-a-html-input-button";
+	  button.addEventListener('click', () => {
         button.innerHTML = "le verrou va s'ouvrir ...";
-        button.disabled = true;
-        var request = new XMLHttpRequest();
-          request.onreadystatechange = function() {
-          button.innerHTML = "système contacté, la porte est déverrouillée ...";
-          setTimeout(function(){
-                        button.innerHTML = "Ouvrir";
-                        button.disabled = false;
-                      }, 
-                     2000);
-        }
-        request.open("GET", url, true);
-        request.send();
-      })
+		setTimeout(() => {
+			button.disabled = true;
+			window.fetch(url, { mode: 'no-cors'}).then((result) => {
+				button.innerHTML = "Système contacté,\n la porte est déverrouillée pendant 2 secondes ...";
+				setTimeout(reset, 2000);
+			}).catch((e) => {
+				button.innerHTML = "Pas moyen de contacter le système! ;)..";
+				setTimeout(reset, 2000);
+			}
+			)
+			}, 
+			1000)})
     </script>
   </body>
 </html>
