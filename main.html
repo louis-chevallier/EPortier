@@ -2,34 +2,44 @@
 
 <html>
   <head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
     <title>Ouverture de la porte</title>
+    <style>
+    .bb {
+        font-size: 100px;
+    }
+    </style>
   </head>
   <body>
   <div>
-    <button id="ouvrir">Ouvrir</button>
+    <button class="bb", id="ouvrir">Ouvrir</button>
   </div>
     <script>
       const button = document.getElementById("ouvrir");
-	  reset = function(){
-					button.innerHTML = "Ouvrir";
-					button.disabled = false;
-				};
-      //const url = "https://herewecode.io/blog/create-button-javascript/"
-	  const url = "https://stackoverflow.com/questions/13831601/disabling-and-enabling-a-html-input-button";
-	  button.addEventListener('click', () => {
+          reset = function(){
+                                        button.innerHTML = "Ouvrir";
+                                        button.disabled = false;
+                                };
+          //const url = "https://herewecode.io/blog/create-button-javascript/"
+          //const url = "https://stackoverflow.com/questions/13831601/disabling-and-enabling-a-html-input-button";
+          const url = "http://78.207.134.29:8082"
+          button.addEventListener('click', () => {
         button.innerHTML = "le verrou va s'ouvrir ...";
-		setTimeout(() => {
-			button.disabled = true;
-			window.fetch(url, { mode: 'no-cors'}).then((result) => {
-				button.innerHTML = "Système contacté,\n la porte est déverrouillée pendant 2 secondes ...";
-				setTimeout(reset, 2000);
-			}).catch((e) => {
-				button.innerHTML = "Pas moyen de contacter le système! ;)..";
-				setTimeout(reset, 2000);
-			}
-			)
-			}, 
-			1000)})
+                setTimeout(() => {
+                        button.disabled = true;
+                        window.fetch(url, { mode: 'no-cors'}).then((result) => {
+                                button.innerHTML = "Système contacté,\n la porte est déverrouillée pendant 2 secondes ...";
+                                setTimeout(reset, 2000);
+                        }).catch((e) => {
+                                button.innerHTML = "Pas moyen de contacter le système! ;)..";
+                                setTimeout(reset, 2000);
+                        }
+                        )
+                        },
+                        1000)})
     </script>
   </body>
 </html>
+
+
+
