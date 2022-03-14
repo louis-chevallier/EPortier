@@ -2,36 +2,30 @@
 
 <html>
   <head>
-    <title>Create a Button in JavaScript</title>
+    <title>Ouverture de la porte</title>
   </head>
-
   <body>
-    <!-- Empty <body> HTML (the JavaScript code in <script> will generate a button here)-->
-
+  <div>
+    <button id="ouvrir" onclick="ouvrit()">Ouvrir</button>
+  </div>
     <script>
-      // Create a button element
-      const button = document.createElement('button')
-
-      // Set the button text to 'Can you click me?'
-      button.innerText = 'Can you click me?'
-
-      button.id = 'mainButton'
-
-      // Attach the "click" event to your button
+      const button = document.getElementById("ouvrir");
+      const url = "https://extraction.import.io/query/extractor/THE_PUBLIC_LINK_THEY_GIVE_YOU?_apikey=YOUR_KEY&url=YOUR_URL"
       button.addEventListener('click', () => {
-        // When there is a "click"
-        // it shows an alert in the browser
-        alert('Oh, you clicked me!')
+        button.innerHTML = "le verrou va s'ouvrir ...";
+        button.disabled = true;
         var request = new XMLHttpRequest();
-        request.onreadystatechange = function() {
-          jsontext = request.responseText;
-          alert(jsontext);
+          request.onreadystatechange = function() {
+          button.innerHTML = "système contacté, la porte est déverrouillée ...";
+          setTimeout(function(){
+                        button.innerHTML = "Ouvrir";
+                        button.disabled = false;
+                      }, 
+                     2000);
         }
-        request.open("GET", "https://extraction.import.io/query/extractor/THE_PUBLIC_LINK_THEY_GIVE_YOU?_apikey=YOUR_KEY&url=YOUR_URL", true);
+        request.open("GET", url, true);
         request.send();
       })
-
-      document.body.appendChild(button)
     </script>
   </body>
 </html>
