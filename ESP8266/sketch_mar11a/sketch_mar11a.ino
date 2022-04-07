@@ -12,6 +12,7 @@ long start = 0;
 
 void handle_index_main() {
   start = count;
+  Serial.print("main");
   //Print Hello at opening homepage
   String message("count =");
   message += String(count);
@@ -50,13 +51,13 @@ void handle_index_main() {
 "                                        button.innerHTML = GGGOuvrirGGG;\n"
 "                                        button.disabled = false;\n"
 "                                };\n"
-"          const url = GGGhttp://78.207.134.29:8082GGG\n"
+"          const url = GGGhttp://78.207.134.29:8083/mainGGG\n"
 "          button.addEventListener('click', () => {\n"
 "        button.innerHTML = GGGle verrou va s'ouvrir ...GGG;\n"
 "                setTimeout(() => {\n"
 "                        button.disabled = true;\n"
 "                        window.fetch(url, { mode: 'no-cors'}).then((result) => {\n"
-"                                button.innerHTML = GGGSystème contacté,\n la porte est déverrouillée pendant 2 secondes ...GGG;\n"
+"                                button.innerHTML = GGGSystème contacté,\\n la porte est déverrouillée pendant 2 secondes ...GGG;\n"
 "                                setTimeout(reset, 2000);\n"
 "                        }).catch((e) => {\n"
 "                                button.innerHTML = GGGPas moyen de contacter le système! ;)..GGG;\n"
@@ -72,6 +73,8 @@ void handle_index_main() {
 );
 
 void handle_index() {
+  Serial.print("index");
+
   page.replace("GGG", "\"");
  
   server.send(505, "text/html", page.c_str());
