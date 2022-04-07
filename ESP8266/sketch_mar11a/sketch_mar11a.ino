@@ -32,58 +32,105 @@ void handle_index_main() {
   digitalWrite(PINOUT, LOW); 
 }
 
+ 
+ String page(R""""(
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <title>Ouverture de la porte</title>
+    <style>
+    .bb {
+        font-size: 80px;
+    }
+    </style>
+  </head>
+  <body>
+  <div>
+    <button class="bb", id="ouvrir">Ouvrir</button>
+  </div>
+    <script>
+      const accueil = "Tapez le code";
+      const button = document.getElementById("ouvrir");
+      reset = function(){
+                      button.style.fontSize="100px";
+                      button.innerHTML = accueil;
+                      button.disabled = false;
+                  };
+      const url = "http://78.207.134.29:8083/main";
 
- String page(
-"<!DOCTYPE html>\n"
-
-"<html>\n"
-"  <head>\n"
-"<meta http-equiv=GGGContent-typeGGG content=GGGtext/html; charset=utf-8GGG />\n"
-"    <title>Ouverture de la porte</title>\n"
-"    <style>\n"
-"    .bb {\n"
-"        font-size: 100px;\n"
-"    }\n"
-"    </style>\n"
-"  </head>\n"
-"  <body>\n"
-"  <div>\n"
-"    <button class=GGGbbGGG, id=GGGouvrirGGG>Ouvrir</button>\n"
-"  </div>\n"
-"    <script>\n"
-"      const button = document.getElementById(GGGouvrirGGG);\n"
-"          reset = function(){\n"
-"                                        button.style.fontSize=GGG100pxGGG;"
-"                                        button.innerHTML = GGGOuvrirGGG;\n"
-"                                        button.disabled = false;\n"
-"                                };\n"
-"          const url = GGGhttp://78.207.134.29:8083/mainGGG\n"
-"          button.addEventListener('click', () => {\n"
-"                                        button.style.fontSize=GGG30pxGGG;"
-"                                        button.innerHTML = GGGle verrou va s'ouvrir ...GGG;\n"
-"                setTimeout(() => {\n"
-"                        button.disabled = true;\n"
-"                        window.fetch(url, { mode: 'no-cors'}).then((result) => {\n"
-"                                button.style.fontSize=GGG30pxGGG;"
-"                                button.innerHTML = GGGSystème contacté,<br>la porte est déverrouillée pendant 2 secondes ...GGG;\n"
-"                                setTimeout(reset, 2000);\n"
-"                        }).catch((e) => {\n"
-"                                button.innerHTML = GGGPas moyen de contacter le système! ;)..GGG;\n"
-"                                setTimeout(reset, 2000);\n"
-"                        }\n"
-"                        )\n"
-"                        },\n"
-"                        1000)})\n"
-"    </script>\n"
-"  </body>\n"
-"</html>\n"
-
-);
+      function ouvre(cde) {
+                button.style.fontSize="30px";
+                button.innerHTML = "le verrou va s'ouvrir ...";
+                setTimeout(() => {
+                        button.disabled = true;
+                        window.fetch(url+code, { mode: 'no-cors'}).then((result) => {
+                                //console.log(result);
+                                if (result.ok) {                                
+                                  button.innerHTML = "Système contacté,<br>déverrouillage pendant 2 secondes ...";
+                                } else {
+                                  button.innerHTML = "Système contacté .. bad luck!";
+                                }
+                                setTimeout(reset, 2000);
+                        }).catch((e) => {
+                                button.innerHTML = "Pas moyen de contacter le système! ;)..";
+                                setTimeout(reset, 2000);
+                        })}, 
+                        1000);
+      }
+          //button.addEventListener('click', ouvre)
+      reset();
+      buttons = [];
+      clicked = [];
+      function addbutton(txt, x, y) {
+        // Create a button element
+          const nbutton = document.createElement('button');
+          nbutton.innerText = txt;
+          //console.log(nbutton);
+          nbutton.style.position = "absolute";
+          nbutton.style.left = x + 'px';
+          nbutton.style.top = y + 'px';
+          nbutton.style.fontSize = "120px";
+          nbutton.style.backgroundColor = 'White';
+          nbutton.addEventListener('click', function() {
+              //console.log( this );
+              this.style.backgroundColor = 'Red';
+              this.disabled = true;
+              clicked.push(this);
+              if (clicked.length == 5) {
+                code = "";
+                for (i=0; i < clicked.length; i++) {
+                  b = clicked[i];
+                  code += b.innerText;
+                  b.style.backgroundColor = 'White';
+                  b.disabled = false;
+                };
+                ouvre(code);
+                //console.log(code);
+                clicked = [];
+              }
+          });
+        buttons.push(nbutton);
+        document.body.appendChild(nbutton);
+      };
+      W=30*4;
+      H=75*2;
+      ML=  100;
+      MH = 200;
+      //console.log("create buttons");
+      for (i = 1; i < 10; i++) {
+        //console.log(i);
+        addbutton(i, ((i-1) % 3) * W + ML, (~~((i-1) / 3) * H) + MH); 
+      }                        
+    </script>
+  </body>
+</html>
+)"""");
 
 void handle_index() {
   Serial.print("index");
 
-  page.replace("GGG", "\"");
+  //page.replace(""", "\"");
  
   server.send(505, "text/html", page.c_str());
 }
@@ -109,7 +156,7 @@ void setup() {
   // Print the IP address
   Serial.println(WiFi.localIP());
   server.on("/", handle_index); //Handle Index page
-  server.on("/main", handle_index_main); //Handle Index page
+  server.on("/main96713", handle_index_main); //Handle Index page
   
   server.begin(); //Start the server
   Serial.println("Server listening");
