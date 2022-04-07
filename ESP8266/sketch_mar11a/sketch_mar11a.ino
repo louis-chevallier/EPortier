@@ -10,6 +10,9 @@ long count = 0;
 int ledv = 1>2;
 long start = 0;
 
+// 15 = GPIO15, PIN=D8 on board
+long PINOUT=15;
+
 void handle_index_main() {
   start = count;
   Serial.print("main");
@@ -23,8 +26,10 @@ void handle_index_main() {
   digitalWrite(2, LOW);   // Turn the LED on (Note that LOW is the voltage level
                                     // but actually the LED is on; this is because 
                                     // it is acive low on the ESP-01)
+  digitalWrite(PINOUT, HIGH); 
   delay(2000);
   digitalWrite(2, HIGH);   // Turn the LED on (Note that LOW is the voltage level
+  digitalWrite(PINOUT, LOW); 
 }
 
 
@@ -48,16 +53,19 @@ void handle_index_main() {
 "    <script>\n"
 "      const button = document.getElementById(GGGouvrirGGG);\n"
 "          reset = function(){\n"
+"                                        button.style.fontSize=GGG100pxGGG;"
 "                                        button.innerHTML = GGGOuvrirGGG;\n"
 "                                        button.disabled = false;\n"
 "                                };\n"
 "          const url = GGGhttp://78.207.134.29:8083/mainGGG\n"
 "          button.addEventListener('click', () => {\n"
-"        button.innerHTML = GGGle verrou va s'ouvrir ...GGG;\n"
+"                                        button.style.fontSize=GGG30pxGGG;"
+"                                        button.innerHTML = GGGle verrou va s'ouvrir ...GGG;\n"
 "                setTimeout(() => {\n"
 "                        button.disabled = true;\n"
 "                        window.fetch(url, { mode: 'no-cors'}).then((result) => {\n"
-"                                button.innerHTML = GGGSystème contacté,\\n la porte est déverrouillée pendant 2 secondes ...GGG;\n"
+"                                button.style.fontSize=GGG30pxGGG;"
+"                                button.innerHTML = GGGSystème contacté,<br>la porte est déverrouillée pendant 2 secondes ...GGG;\n"
 "                                setTimeout(reset, 2000);\n"
 "                        }).catch((e) => {\n"
 "                                button.innerHTML = GGGPas moyen de contacter le système! ;)..GGG;\n"
@@ -108,59 +116,16 @@ void setup() {
   pinMode(2, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
   digitalWrite(2, HIGH);  
 
-}
-/*
-void loop2() {
-  // Check if a client has connected
-  WiFiClient client = server.available();
+  // INPUT ANALOG
+  pinMode(A0,INPUT);
 
-  if (client) {
-    // Wait until the client sends some data
-    Serial.println("-----------------------");
-    Serial.println("new client");
-    while (!client.available()) {
-      delay(1);
-    }
-  int v = ledv ? LOW : HIGH;
-  ledv = !ledv;
-  digitalWrite(2, v);   // Turn the LED on (Note that LOW is the voltage level
-                                    // but actually the LED is on; this is because 
-                                    // it is acive low on the ESP-01)
   
-    // Read the first line of the request
-    String clientRequest = client.readStringUntil('\r');
-    Serial.println(clientRequest);
-    
-    client.flush();
-  
-    long randNumber = random(1000);
-    Serial.print("randNumber: ");
-    Serial.println(randNumber);
-  
-    // Prepare the response
-    String esp8266Response = 
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/html\r\n\r\n" +
-        String(randNumber);
-  
-    // Send the response to the client
-    client.print(esp8266Response);
-    delay(1);
-    Serial.println("Client disonnected");
-  
-    // The client will actually be disconnected
-    // when the function returns and 'client' object is detroyed 
-  }
+  pinMode(PINOUT, OUTPUT);
+  digitalWrite(PINOUT, LOW);  
 }
-*/
+
 void loop() {
   server.handleClient(); //Handling of incoming client requests
   count += 1;
-  /*
-  if (count > start + 1000000) {
-    int v = ledv ? LOW : HIGH;  
-    ledv = !ledv; 
-    digitalWrite(2, v);   // Turn the LED on (Note that LOW is the voltage level
-  }
-*/
+
 }
