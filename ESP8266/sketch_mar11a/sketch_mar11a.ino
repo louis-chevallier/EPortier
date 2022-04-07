@@ -52,19 +52,42 @@ void handle_index_main() {
     <script>
       const accueil = "Tapez le code";
       const button = document.getElementById("ouvrir");
+      cookies = document.cookies;
+      console.log(cookies);
       reset = function(){
                       button.style.fontSize="100px";
                       button.innerHTML = accueil;
                       button.disabled = false;
                   };
       const url = "http://78.207.134.29:8083/main";
-
+      function getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for(let i = 0; i <ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+          }
+          if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+          }
+        }
+        return "";
+      }
+      code =getCookie("eportiercode");
+      console.log(code);
       function ouvre(cde) {
+                document.cookie = "eportiercode=" + cde;
+                cookies = document.cookies;
+                console.log(cookies);
+                cookies = document.cookie;
+                console.log(cookies);
                 button.style.fontSize="30px";
                 button.innerHTML = "le verrou va s'ouvrir ...";
                 setTimeout(() => {
                         button.disabled = true;
-                        window.fetch(url+code, { mode: 'no-cors'}).then((result) => {
+                        window.fetch(url+cde, { mode: 'no-cors'}).then((result) => {
                                 //console.log(result);
                                 if (result.ok) {                                
                                   button.innerHTML = "Système contacté,<br>déverrouillage pendant 2 secondes ...";
@@ -78,7 +101,7 @@ void handle_index_main() {
                         })}, 
                         1000);
       }
-          //button.addEventListener('click', ouvre)
+      button.addEventListener('click', function() { ouvre(code); });
       reset();
       buttons = [];
       clicked = [];
