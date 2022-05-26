@@ -2,6 +2,7 @@
 #include <ESP8266WebServer.h>
 
 
+
 ESP8266WebServer server(80);
 
 const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
@@ -61,6 +62,9 @@ void handle_index_main() {
                       button.disabled = false;
                   };
       //const url = "http://78.207.134.29:8083/main";
+      //const url = "http://78.207.134.29:8083/main";
+      //const url = "http://78.207.134.29:8083/main";
+      // const url = "http://176.161.19.7:8080/main"
       const url = "http://192.168.1.95/main";
       function getCookie(cname) {
         let name = cname + "=";

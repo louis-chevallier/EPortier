@@ -28,4 +28,17 @@
 https://arduino.stackexchange.com/questions/36330/how-to-make-a-5-volt-relay-work-with-nodemcu
 
 https://randomnerdtutori
+
+
+## manip
   
+sudo usermod -a -G dialout louis
+
+
+sudo chown louis /dev/ttyUSB0
+si c'est le port ouvert par arduino
+
+
+===> point d'entree : http://176.161.19.7:8080/main"
+
+c'est redirigé vers le nodemcu qui est à http://192.168.1.95/main";
