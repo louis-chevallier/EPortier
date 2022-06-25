@@ -39,6 +39,6 @@ sudo chown louis /dev/ttyUSB0
 si c'est le port ouvert par arduino
 
 
-===> point d'entree : http://176.161.19.7:8080/main"
+===> point d'entree : http://176.161.19.7:8080"
 
 c'est redirigé vers le nodemcu qui est à http://192.168.1.95/";
