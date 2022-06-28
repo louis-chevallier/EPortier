@@ -5,8 +5,16 @@
 
 ESP8266WebServer server(80);
 
-const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
-const char* password =  "9697abcdea"; //Enter Wi-Fi Password
+
+//const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
+//const char* password =  "9697abcdea"; //Enter Wi-Fi Password
+// chez pepito
+
+const char* ssid = "Bbox-09179E72"; //Enter Wi-Fi SSID
+const char* password =  "114564D1FA44C45A736FF6AE6D5E3C"; //Enter Wi-Fi Password
+
+
+
 long count = 0;
 int ledv = 1>2;
 long start = 0;
@@ -64,8 +72,9 @@ void handle_index_main() {
       //const url = "http://78.207.134.29:8083/main";
       //const url = "http://78.207.134.29:8083/main";
       //const url = "http://78.207.134.29:8083/main";
-      // const url = "http://176.161.19.7:8080/main"
-      const url = "http://192.168.1.95/main";
+      const url = "http://176.161.19.7:8080/main"
+      //const url = "http://192.168.1.95/main";
+      
       function getCookie(cname) {
         let name = cname + "=";
         let decodedCookie = decodeURIComponent(document.cookie);
@@ -96,7 +105,7 @@ void handle_index_main() {
                         button.disabled = true;
                         console.log(url+code)
                         window.fetch(url+cde, { mode: 'no-cors'}).then((result) => {
-                                //console.log(result);
+                                console.log(result);
                                 if (result.ok) {                                
                                   button.innerHTML = "Système contacté,<br>déverrouillage pendant 2 secondes ...";
                                 } else {
@@ -104,7 +113,7 @@ void handle_index_main() {
                                 }
                                 setTimeout(reset, 2000);
                         }).catch((e) => {
-                                button.innerHTML = "Pas moyen de contacter le système! ;)..";
+                                button.innerHTML = "Pas moyen de contacter le système!.. fetching " + url + cde;
                                 setTimeout(reset, 2000);
                         })}, 
                         1000);
