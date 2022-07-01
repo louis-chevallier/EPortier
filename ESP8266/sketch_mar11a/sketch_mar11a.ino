@@ -5,14 +5,17 @@
 
 ESP8266WebServer server(80);
 
+// chez nous
+const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
+const char* password =  "9697abcdea"; //Enter Wi-Fi Password
+//const char* WURL = "http://176.161.19.7:8080/main";
+// deuxieme mcu 
+const char* WURL = "http://176.161.19.7:8081/main";
 
-//const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
-//const char* password =  "9697abcdea"; //Enter Wi-Fi Password
 // chez pepito
-
-const char* ssid = "Bbox-09179E72"; //Enter Wi-Fi SSID
-const char* password =  "114564D1FA44C45A736FF6AE6D5E3C"; //Enter Wi-Fi Password
-
+//const char* ssid = "Bbox-09179E72"; //Enter Wi-Fi SSID
+//const char* password =  "114564D1FA44C45A736FF6AE6D5E3C"; //Enter Wi-Fi Password
+//const char* WURL = "http://176.161.19.7:8080/main";
 
 
 long count = 0;
@@ -60,7 +63,7 @@ void handle_index_main() {
     <button class="bb", id="ouvrir">Ouvrir</button>
   </div>
     <script>
-      const accueil = "Tapez le code";
+      const accueil = "(re)Tapez le code";
       const button = document.getElementById("ouvrir");
       cookies = document.cookies;
       console.log(cookies);
@@ -72,7 +75,7 @@ void handle_index_main() {
       //const url = "http://78.207.134.29:8083/main";
       //const url = "http://78.207.134.29:8083/main";
       //const url = "http://78.207.134.29:8083/main";
-      const url = "http://176.161.19.7:8080/main"
+      const url = "WURL";
       //const url = "http://192.168.1.95/main";
       
       function getCookie(cname) {
@@ -170,7 +173,7 @@ void handle_index_main() {
 void handle_index() {
   Serial.print("index");
 
-  //page.replace(""", "\"");
+  page.replace("WURL", WURL);
  
   server.send(505, "text/html", page.c_str());
   Serial.print("end");
