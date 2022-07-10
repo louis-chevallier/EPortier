@@ -24,7 +24,6 @@ long start = 0;
 
 // 15 = GPIO15, PIN=D8 on board
 long PINOUT=15;
-
 void handle_index_main() {
   start = count;
   Serial.print("handle_index_main");
@@ -59,6 +58,7 @@ void handle_index_main() {
     </style>
   </head>
   <body>
+  " la porte est PORTE"
   <div>
     <button class="bb", id="ouvrir">Ouvrir</button>
   </div>
@@ -172,15 +172,20 @@ void handle_index_main() {
 
 void handle_index() {
   Serial.print("index");
-
-  page.replace("WURL", WURL);
+  String a0 = String(analogRead(A0));
+  Serial.print(a0);
+  String npage(page);
+  npage.replace("WURL", WURL);
+  npage.replace("PORTE", a0);
  
-  server.send(505, "text/html", page.c_str());
+  server.send(505, "text/html", npage.c_str());
   Serial.print("end");
 }
 
 void setup() {
   
+  pinMode(A0,INPUT);
+
   Serial.begin(115200); //Begin Serial at 115200 Baud
   delay(10);
   WiFi.begin(ssid, password);  //Connect to the WiFi network
