@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 
-
+#include "QueueArray.h"
 
 ESP8266WebServer server(80);
 
@@ -12,8 +12,10 @@ const char* password =  "9697abcdea"; //Enter Wi-Fi Password
 //const char* WURL = "http://176.161.19.7:8080/main";
 // deuxieme mcu 
 //const char* WURL = "http://176.161.19.7:8081/main";
+
 // troisieme mcu 
 const char* WURL = "http://176.161.19.7:8082/main";
+const char* url = "http://176.161.19.7:8082/fetch";
 
 // chez pepito
 //const char* ssid = "Bbox-09179E72"; //Enter Wi-Fi SSID
@@ -28,6 +30,16 @@ long start = 0;
 // 15 = GPIO15, PIN=D8 on board
 long PINOUT=15;
 int buttonPin = 3;
+
+
+const int BUFFER_SIZE=1000; // 10000 => 10.7 sec (30.815 - 20.147)
+float buffer[BUFFER_SIZE];
+float sample_per_sec = 10000/(30.815 - 20.147);
+
+QueueArray<float> queue;
+int transmission_started = 1>2;
+int consumed = 0;
+
 void handle_index_main() {
   start = count;
   Serial.print("handle_index_main");
@@ -48,11 +60,12 @@ void handle_index_main() {
  <head>
   <meta charset="utf-8"/>
   <script type="application/javascript">
+
     function draw() {
       const canvas = document.getElementById('canvas');
       if (canvas.getContext) {
         const ctx = canvas.getContext('2d');
-        const x = new Float32Array([ FLOATS]);
+        const x = new Float32Array([ 0.1, 0.3]);
         ctx.fillStyle = 'rgb(200, 0, 0)';
         ctx.fillRect(10, 10, 50, 50);
 
@@ -63,14 +76,41 @@ void handle_index_main() {
   </script>
  </head>
  <body onload="draw();">
-   <canvas id="canvas" width="150" height="150"></canvas>
+    <canvas id="canvas" width="150" height="150"></canvas>
+    <div>
+       <button class="bb", id="lancer">Lancer l'ECG</button>
+    </div>
+
+   <script type="application/javascript">
+    const button = document.getElementById("lancer");
+
+    function lancer(debut, duree) {
+        url = "espData?";
+        url += String("duree=") + String(duree);
+        url += String("&debut=") + String(debut);
+        console.log("fetching");
+        fetch(url).then(function(response) {
+          console.log("reponse");
+          console.log(response);
+          return response.json();
+        }).then(function(data) {
+          console.log("data");
+          console.log(data);
+        }).catch(function() {
+          console.log("Booo");
+        });
+    }
+ 
+    button.addEventListener('click', function() {
+      rep  = lancer(10, 33);
+      console.log(rep); 
+    });
+
+    
+   </script>
  </body>
 </html>
 )"""");
-
-const int BUFFER_SIZE=10000; // 10000 => 10.7 sec (30.815 - 20.147)
-float buffer[BUFFER_SIZE];
-float sample_per_sec = 10000/(30.815 - 20.147);
 
 
 void fill_buffer() {
@@ -81,10 +121,23 @@ void fill_buffer() {
   }
   Serial.println("end readng");
 }
+
 void handle_index() {
-  Serial.print("index");
+  Serial.println("index");
+  //String a0 = String(analogRead(A0));
+  //Serial.print(a0);
+  String npage(page);
+ 
+  Serial.println("SENDING");
+ 
+  server.send(505, "text/html", npage.c_str());
+  Serial.println("end sending");
+}
+
+void handle_fetch() {
+  Serial.println("fetch");
   String a0 = String(analogRead(A0));
-  Serial.print(a0);
+  //Serial.print(a0);
   String npage(page);
   fill_buffer();
   String floats(buffer[0]);
@@ -92,12 +145,12 @@ void handle_index() {
   for (int i = 1; i < BUFFER_SIZE; i++) {
     floats = floats + "," + String(buffer[i]);
   }
-  npage.replace("FLOATS", floats);
   Serial.println("SENDING");
  
-  server.send(505, "text/html", npage.c_str());
-  Serial.print("end");
+  server.send(200, "text/html", floats.c_str());
+  Serial.println("end sending");
 }
+
 
 void setup() {
   Serial.begin(115200); //Begin Serial at 115200 Baud
@@ -130,7 +183,37 @@ void setup() {
     // Print the IP address
     Serial.println(WiFi.localIP());
     server.on("/", handle_index); //Handle Index page
-    server.on("/main96713", handle_index_main); //Handle Index page
+    server.on("/fetch", handle_fetch); //Handle Index page
+
+    server.on("/espData", HTTP_GET, []() {
+      String message = "POST form was:\n";
+      for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
+      Serial.println(message);
+
+      transmission_started = 1>0;
+      String floats = "[";
+      while (queue.count() > 0) {
+        floats += String(queue.pop()) + ",";
+        consumed ++;
+      }
+      floats += "]";      
+      
+      String json;
+      json.reserve(88);
+      json = "{\"time\":";
+      json += millis();
+
+      json += ", \"floats\":";
+      json += floats;
+      
+      json += ", \"heap\":";
+      json += ESP.getFreeHeap();
+      json += ", \"analog\":";
+      json += analogRead(A0);
+      json += "}";
+      server.send(200, "text/json", json);
+  });
+
   
     server.begin(); //Start the server
     Serial.println("setup");
@@ -141,7 +224,7 @@ void setup() {
     //digitalWrite(PINOUT, LOW);  
     Serial.println("Server listening");
   }
-  Serial.print("end setup");
+  Serial.println("end setup");
 }
 
 
@@ -177,8 +260,15 @@ void loop2() {
 
   delay(1000);
 }
+
 void loop() {
   server.handleClient(); //Handling of incoming client requests
   count += 1;
-
+  if (!transmission_started and !queue.isEmpty()) {
+    queue.pop();
+  }
+  queue.push(analogRead(A0));
+  if (queue.count() % 100 == 0) {
+    Serial.println("queue count" + String(queue.count()));
+  }
 }
