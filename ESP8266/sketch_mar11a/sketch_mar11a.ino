@@ -8,9 +8,9 @@ ESP8266WebServer server(80);
 // chez nous
 const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
 const char* password =  "9697abcdea"; //Enter Wi-Fi Password
-//const char* WURL = "http://176.161.19.7:8080/main";
+const char* WURL = "http://176.161.19.7:8080/main";
 // deuxieme mcu 
-const char* WURL = "http://176.161.19.7:8081/main";
+//const char* WURL = "http://176.161.19.7:8081/main";
 
 // chez pepito
 //const char* ssid = "Bbox-09179E72"; //Enter Wi-Fi SSID
@@ -41,7 +41,7 @@ void handle_index_main() {
   delay(2000);
   digitalWrite(2, HIGH);   // Turn the LED on (Note that LOW is the voltage level
   digitalWrite(PINOUT, LOW); 
-  Serial.print("end");
+  Serial.println("end");
 }
 
  
@@ -50,20 +50,40 @@ void handle_index_main() {
 <html>
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <title>Ouverture de la porte</title>
+    <title>Ouverture du garage</title>
     <style>
     .bb {
         font-size: 80px;
     }
     </style>
   </head>
-  <body>
-  " la porte est PORTE"
+  <body class="bb">
+  <div id="statut"> La porte est ??? </div>
   <div>
     <button class="bb", id="ouvrir">Ouvrir</button>
   </div>
     <script>
-      const accueil = "(re)Tapez le code";
+      const myTimeout = setTimeout(statut, 1000);
+      function statut() {
+        murl = "statut_porte";
+        console.log("fetching");
+        fetch(murl).then(function(response) {
+          console.log("reponse");
+          d = response.json();
+          console.log(d);
+          console.log(d["porte"]);
+          return d;
+        }).then(function(data) {
+          console.log("data");
+          console.log(data);
+          document.getElementById("statut").innerHTML = "La porte est " + data["porte"];
+          setTimeout(statut, 1000);
+        }).catch(function() {
+          console.log("Booo");
+        });
+      }
+
+      const accueil = "Tapez le code";
       const button = document.getElementById("ouvrir");
       cookies = document.cookies;
       console.log(cookies);
@@ -97,7 +117,7 @@ void handle_index_main() {
       console.log(code);
       function ouvre(cde) {
                 console.log(cde);
-                document.cookie = "eportiercode=" + cde;
+                document.cookie = "eportiercode=" + cde + ";SameSite=Strict";
                 cookies = document.cookies;
                 console.log(cookies);
                 cookies = document.cookie;
@@ -159,7 +179,7 @@ void handle_index_main() {
       W=30*4;
       H=75*2;
       ML=  100;
-      MH = 200;
+      MH = 230;
       //console.log("create buttons");
       for (i = 1; i < 10; i++) {
         console.log(i);
@@ -171,15 +191,23 @@ void handle_index_main() {
 )"""");
 
 void handle_index() {
-  Serial.print("index");
-  String a0 = String(analogRead(A0));
-  Serial.print(a0);
+  Serial.println("index");
+  int a0 = analogRead(A0);
+  Serial.println("a0=" + String(a0));
+
+  String porte(a0 == 0 ? "ouverte" : "close");
+  
   String npage(page);
   npage.replace("WURL", WURL);
-  npage.replace("PORTE", a0);
+  npage.replace("PORTE", porte);
  
   server.send(505, "text/html", npage.c_str());
-  Serial.print("end");
+  Serial.println("end");
+}
+
+void statut_porte() {
+  Serial.println("statut porte");
+  int a0 = analogRead(A0);
 }
 
 void setup() {
@@ -206,6 +234,16 @@ void setup() {
   Serial.println(WiFi.localIP());
   server.on("/", handle_index); //Handle Index page
   server.on("/main96713", handle_index_main); //Handle Index page
+
+  server.on("/statut_porte", HTTP_GET, []() {
+      String message = "POST form was:\n";
+      for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
+      Serial.println(message);
+      String stat(analogRead(A0) > 0 ? "ouverte" : "close");
+      String json = "{ \"porte\" : \"" + stat + "\" }";
+      Serial.println(json);
+      server.send(200, "text/json", json);
+  });
   
   server.begin(); //Start the server
   Serial.println("setup");
