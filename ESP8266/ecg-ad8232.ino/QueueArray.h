@@ -196,7 +196,7 @@ void QueueArray<T>::resize (const int s) {
 
 // add an item to the queue.
 template<typename T>
-void QueueArray<T>::enqueueA (const T i) {
+void QueueArray<T>::enqueueA (const T &i) {
   // check if the queue is full.
   if (isFull ())
     // double size of array.
