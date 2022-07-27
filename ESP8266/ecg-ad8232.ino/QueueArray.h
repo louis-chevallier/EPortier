@@ -76,6 +76,15 @@ class QueueArray {
     T dequeueA ();
     T dequeue () { T t; ATOMIC() { t = dequeueA(); } return t; }
 
+    String dump() const {
+      String s = "";
+      for (int i = 0; i < count(); i++) {
+        s += (i == 0 ? "" : ", ") + String(peek(i));
+      }
+      return s;
+    }
+
+
     // push an item to the queue.
     void push (const T i);
 
@@ -86,11 +95,12 @@ class QueueArray {
     T front () const;
 
     // get an item from the queue.
-    T peek () const;
+    T &peek (int idx = 0) const;
 
     // check if the queue is empty.
     bool isEmpty () const;
 
+ 
     // get the number of items in the queue.
     int count () const;
 
@@ -100,9 +110,16 @@ class QueueArray {
     // set the printer of the queue.
     void setPrinter (Print & p);
 
+    void empy() {
+      free(contents);
+      init();
+    }
+
   private:
     // resize the size of the queue.
     void resize (const int s);
+
+    void init();
 
     // exit report method in case of error.
     void exit (const char * m) const;
@@ -129,6 +146,10 @@ class QueueArray {
 // init the queue (constructor).
 template<typename T>
 QueueArray<T>::QueueArray () {
+  init();
+}
+
+template<typename T> void QueueArray<T>::init() {
   size = 0;       // set the size of queue to zero.
   items = 0;      // set the number of items of queue to zero.
 
@@ -261,8 +282,9 @@ T QueueArray<T>::front () const {
 
 // get an item from the queue.
 template<typename T>
-T QueueArray<T>::peek () const {
-  return front();
+T &QueueArray<T>::peek (int idx ) const {
+  assert(idx < count());
+  return contents[(head + idx) % size];
 }
 
 // check if the queue is empty.
