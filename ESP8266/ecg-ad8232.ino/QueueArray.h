@@ -55,6 +55,8 @@
 
 // include Arduino basic header.
 #include <Arduino.h>
+#include <inttypes.h>
+#include <SimplyAtomic.h>
 
 // the definition of the queue class.
 template<typename T>
@@ -67,10 +69,12 @@ class QueueArray {
     ~QueueArray ();
 
     // add an item to the queue.
-    void enqueue (const T i);
+    void enqueueA (const T &i);
+    void enqueue (const T &i) { ATOMIC() { enqueueA(i); }
     
     // remove an item from the queue.
-    T dequeue ();
+    T dequeueA ();
+    T dequeue () { T t; ATOMIC() { t = dequeueA(); } return t; }
 
     // push an item to the queue.
     void push (const T i);
@@ -192,7 +196,7 @@ void QueueArray<T>::resize (const int s) {
 
 // add an item to the queue.
 template<typename T>
-void QueueArray<T>::enqueue (const T i) {
+void QueueArray<T>::enqueueA (const T i) {
   // check if the queue is full.
   if (isFull ())
     // double size of array.
@@ -216,7 +220,7 @@ void QueueArray<T>::push (const T i) {
 
 // remove an item from the queue.
 template<typename T>
-T QueueArray<T>::dequeue () {
+T QueueArray<T>::dequeueA () {
   // check if the queue is empty.
   if (isEmpty ())
     exit ("QUEUE: can't pop item from queue: queue is empty.");
