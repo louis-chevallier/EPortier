@@ -70,7 +70,7 @@ class QueueArray {
 
     // add an item to the queue.
     void enqueueA (const T &i);
-    void enqueue (const T &i) { ATOMIC() { enqueueA(i); }
+    void enqueue (const T &i) { ATOMIC() { enqueueA(i); } }
     
     // remove an item from the queue.
     T dequeueA ();
