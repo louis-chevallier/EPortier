@@ -190,12 +190,20 @@ void handle_index_main() {
 </html>
 )"""");
 
+
+bool porte_ouverte() {
+  Serial.println("statut porte");
+  int a0 = analogRead(A0);
+  return a0 < 500;
+}
+
+
 void handle_index() {
   Serial.println("index");
   int a0 = analogRead(A0);
   Serial.println("a0=" + String(a0));
 
-  String porte(a0 == 0 ? "ouverte" : "close");
+  String porte(porte_ouverte() ? "ouverte" : "fermée");
   
   String npage(page);
   npage.replace("WURL", WURL);
@@ -205,17 +213,13 @@ void handle_index() {
   Serial.println("end");
 }
 
-void statut_porte() {
-  Serial.println("statut porte");
-  int a0 = analogRead(A0);
-}
-
 void setup() {
   
   pinMode(A0,INPUT);
 
   Serial.begin(115200); //Begin Serial at 115200 Baud
   delay(10);
+  
   WiFi.begin(ssid, password);  //Connect to the WiFi network
   
   while (WiFi.status() != WL_CONNECTED) {  //Wait for connection
@@ -239,7 +243,7 @@ void setup() {
       String message = "POST form was:\n";
       for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
       Serial.println(message);
-      String stat(analogRead(A0) > 0 ? "ouverte" : "close");
+      String stat(porte_ouverte() ? "ouverte" : "fermée");
       String json = "{ \"porte\" : \"" + stat + "\" }";
       Serial.println(json);
       server.send(200, "text/json", json);
