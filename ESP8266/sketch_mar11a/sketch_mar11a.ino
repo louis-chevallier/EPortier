@@ -63,28 +63,35 @@ void handle_index_main() {
     <button class="bb", id="ouvrir">Ouvrir</button>
   </div>
     <script>
-      const myTimeout = setTimeout(statut, 1000);
+      count = "a";
+      const accueil = "Tapez le code";
+      const button = document.getElementById("ouvrir");
+
       function statut() {
         murl = "statut_porte";
         console.log("fetching");
+        count = count + "a";
+        //document.getElementById("statut").innerHTML = "fetching";
         fetch(murl).then(function(response) {
           console.log("reponse");
           d = response.json();
           console.log(d);
-          console.log(d["porte"]);
+          //console.log(d["porte"]);
           return d;
         }).then(function(data) {
+          //button.innerHTML = count;
           console.log("data");
           console.log(data);
           document.getElementById("statut").innerHTML = "La porte est " + data["porte"];
           setTimeout(statut, 1000);
-        }).catch(function() {
+        }).catch(function(ee) {
           console.log("Booo");
+          //document.getElementById("statut").innerHTML = ee;
+          
         });
       }
+      const myTimeout = setTimeout(statut, 1000);
 
-      const accueil = "Tapez le code";
-      const button = document.getElementById("ouvrir");
       cookies = document.cookies;
       console.log(cookies);
       reset = function(){
