@@ -1,5 +1,7 @@
 # EPortier
 
+## cloner le repo dans ~ a cause de ide arduino
+
 ## Sur le NUC
 
 - installer apache2 sur NUC : apt install apache2
@@ -42,3 +44,15 @@ si c'est le port ouvert par arduino
 ===> point d'entree : http://176.161.19.7:8080"
 
 c'est redirigé vers le nodemcu qui est à http://192.168.1.95/";
+
+## héberger une page dans un serveur http*s*
+
+ - https://www.blogtriggers.com/2021/03/how-to-host-website-in-google-drive.html
+ - https://api.drv.tw/~garbish.garbish@googlemail.com/gd/?a=admin#authed=1
+
+j'ai créé une page dans un folder www.mimosas.bzh dans le compte garbish.garbish
+
+https://api.drv.tw/~garbish.garbish@googlemail.com/gd/?a=admin#authed=1
+
+
+ 
