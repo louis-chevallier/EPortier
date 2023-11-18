@@ -6,6 +6,7 @@
 
 - installer apache2 sur NUC : apt install apache2
 - mettre le script html  dans /var/www/html
+
 ## sur la box :
   - donner une @ statique a NUC ( bail statique)
   - rediriger les ports sur la box : WAN 8083 => LN <ip nuc>:80 
@@ -32,8 +33,13 @@ https://arduino.stackexchange.com/questions/36330/how-to-make-a-5-volt-relay-wor
 https://randomnerdtutori
 
 
-## manip
-  
+## manip sur le pc dev
+
+install arduino ide from https://www.arduino.cc/en/software#future-version-of-the-arduino-ide ( zip file )
+
+chmod arduino-ide
+
+
 sudo usermod -a -G dialout louis
 
 

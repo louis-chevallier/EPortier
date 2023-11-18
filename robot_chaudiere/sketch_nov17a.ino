@@ -3,7 +3,7 @@
 
 #include <OneWire.h>
 
-OneWire  ds(8);  // on pin 10 (a 4.7K resistor is necessary)
+OneWire  _ds(2);  // on pin 10 (a 4.7K resistor is necessary)
 
 
 ESP8266WebServer server(80);
@@ -275,7 +275,7 @@ void setup() {
 }
 
 
-void onewire(void) {
+void onewire(OneWire &ds) {
   byte i;
   byte present = 0;
   byte type_s;
@@ -375,7 +375,9 @@ void onewire(void) {
 
 
 void loop() {
+  onewire(_ds);
   server.handleClient(); //Handling of incoming client requests
   count += 1;
-  //onewire();
+  
 }
+
