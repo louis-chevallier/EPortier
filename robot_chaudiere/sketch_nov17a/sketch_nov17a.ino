@@ -2,8 +2,11 @@
 #include <ESP8266WebServer.h>
 
 #include <OneWire.h>
-
+#include "mq/mq.ino"
 OneWire  _ds(2);  // on pin 10 (a 4.7K resistor is necessary)
+
+
+//https://projecthub.arduino.cc/m_karim02/arduino-and-mq2-gas-sensor-f3ae33
 
 
 ESP8266WebServer server(80);
@@ -285,7 +288,6 @@ void onewire(OneWire &ds) {
   
   if ( !ds.search(addr)) {
     Serial.println("No more addresses.");
-    Serial.println();
     ds.reset_search();
     delay(250);
     return;
