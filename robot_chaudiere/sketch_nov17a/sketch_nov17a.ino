@@ -1,13 +1,114 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-
+#include <DallasTemperature.h>
 #include <OneWire.h>
-#include "mq/mq.ino"
-OneWire  _ds(2);  // on pin 10 (a 4.7K resistor is necessary)
+#include <List.hpp>
+#include <DHT.h>
+#include <Hash.h>
+#include <Arduino.h>
+#include <microTuple.h>
+String S;
 
+long seko = millis();
+#define EKOT(x) Serial.println(S + __FILE__ + ":" + __LINE__ + "[" + (millis()-seko) + "] " + String(x)); seko=millis()
+#define EKOX(x) Serial.println(S + __FILE__ + ":" + __LINE__ + "[" + (millis()-seko) + "] " + #x + " = " + String(x)); seko=millis()
+#define EKO() Serial.println(S + __FILE__+ ":" + __LINE__ + "[" + (millis()-seko) + "]"); seko=millis()
+
+/********************************************/
+// DHT11
+
+// https://randomnerdtutorials.com/esp8266-dht11dht22-temperature-and-humidity-web-server-with-arduino-ide/
+
+#define DHTTYPE    DHT11     // DHT 11
+#define DHTPIN 5     // Digital pin connected to the DHT sensor : D1
+typedef MicroTuple<float, float> FF;
+DHT dht(DHTPIN, DHTTYPE);
+
+float aa = 3.2;
+
+void DHTSetup() {
+  dht.begin();
+}
+
+
+FF readDHT() {
+  float newT = dht.readTemperature();
+  float newH = dht.readHumidity();
+  auto t = FF(newT, newH);  	
+  return t;
+} 
+/*********************************/
+// MQ2
+// https://mindstormengg.com/nodemcu-esp8266-lab-9-mq-2-gas-sensor/
+int smokeA0 = A0;
+
+// Your threshold value. You might need to change it.
+int sensorThres = 600;
+
+void MQ2Setup() {
+  pinMode(smokeA0, INPUT);
+}
+
+int MQ2Read() {
+  int analogSensor = analogRead(smokeA0);
+  return analogSensor;
+}
+
+/*******************************/
+// Temperature
+
+OneWire  _ds(4);  // on pin D2 ( == GPIO4)  (a 4.7K resistor is necessary)
+DallasTemperature sensors(&_ds);
+
+int totalDurationMS = 24*60*60*1000;
+//int totalDurationMS = 12*1000;
+int delta = 60*1000; // intervals de mesure en ms
+//int delta = 3*1000; // intervals de mesure en ms
+int nmbSamples = totalDurationMS / delta; 
+List<float> temperatures;
+
+auto last = millis();
+
+//https://randomnerdtutorials.com/esp8266-ds18b20-temperature-sensor-web-server-with-arduino-ide/
 
 //https://projecthub.arduino.cc/m_karim02/arduino-and-mq2-gas-sensor-f3ae33
 
+// pins number
+// https://randomnerdtutorials.com/esp8266-pinout-reference-gpios/
+
+void onewireSetup() {
+  // Start the DS18B20 sensor
+  sensors.begin();
+}
+
+float getTemperature() {
+  sensors.requestTemperatures(); 
+  float temperatureC = sensors.getTempCByIndex(0);
+  return temperatureC;
+}
+
+void collectTemperature(bool fake=1>2) {
+  float t = fake ? 0. : getTemperature();
+  temperatures.add(t); 
+  if (temperatures.getSize() > nmbSamples) {
+    temperatures.remove(0);
+  } 
+}
+
+void onewireLoop() {
+  sensors.requestTemperatures(); 
+  float temperatureC = getTemperature();
+  float temperatureF = sensors.getTempFByIndex(0);
+  Serial.print(temperatureC);
+  Serial.println("ºC");
+  Serial.print(temperatureF);
+  Serial.println("ºF");
+  //delay(5000);
+}
+
+
+/********************************/
+// webserver
 
 ESP8266WebServer server(80);
 
@@ -30,25 +131,6 @@ long start = 0;
 
 // 15 = GPIO15, PIN=D8 on board
 long PINOUT=15;
-void handle_index_main() {
-  start = count;
-  Serial.print("handle_index_main");
-  //Print Hello at opening homepage
-  String message("count =");
-  message += String(count);
-  server.send(200, "text/html", message.c_str());
-  //"Hello! This is an index page.");
-  int v = ledv ? LOW : HIGH;
-  ledv = !ledv;
-  digitalWrite(2, LOW);   // Turn the LED on (Note that LOW is the voltage level
-                                    // but actually the LED is on; this is because 
-                                    // it is acive low on the ESP-01)
-  digitalWrite(PINOUT, HIGH); 
-  delay(2000);
-  digitalWrite(2, HIGH);   // Turn the LED on (Note that LOW is the voltage level
-  digitalWrite(PINOUT, LOW); 
-  Serial.println("end");
-}
 
  
  String page(R""""(
@@ -56,183 +138,139 @@ void handle_index_main() {
 <html>
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <title>Ouverture du garage</title>
+    <!-- 
+    <meta http-equiv="refresh" content="4">
+    --!>
+    <title>Thermostat / Chaudière</title>
     <style>
     .bb {
         font-size: 80px;
     }
     </style>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
   </head>
-  <body class="bb">
-  <div id="statut"> La porte est ??? </div>
-  <div>
-    <button class="bb", id="ouvrir">Ouvrir</button>
-  </div>
-    <script>
-      count = "a";
-      const accueil = "Tapez le code";
-      const button = document.getElementById("ouvrir");
-
-      function statut() {
-        murl = "statut_porte";
-        console.log("fetching");
-        count = count + "a";
-        //document.getElementById("statut").innerHTML = "fetching";
-        fetch(murl).then(function(response) {
-          console.log("reponse");
-          d = response.json();
-          console.log(d);
-          //console.log(d["porte"]);
-          return d;
-        }).then(function(data) {
-          //button.innerHTML = count;
-          console.log("data");
-          console.log(data);
-          document.getElementById("statut").innerHTML = "La porte est " + data["porte"];
-          setTimeout(statut, 1000);
-        }).catch(function(ee) {
-          console.log("Booo");
-          //document.getElementById("statut").innerHTML = ee;
-          
-        });
-      }
-      const myTimeout = setTimeout(statut, 1000);
-
-      cookies = document.cookies;
-      console.log(cookies);
-      reset = function(){
-                      button.style.fontSize="100px";
-                      button.innerHTML = accueil;
-                      button.disabled = false;
-                  };
-      //const url = "http://78.207.134.29:8083/main";
-      //const url = "http://78.207.134.29:8083/main";
-      //const url = "http://78.207.134.29:8083/main";
-      const url = "WURL";
-      //const url = "http://192.168.1.95/main";
-      
-      function getCookie(cname) {
-        let name = cname + "=";
-        let decodedCookie = decodeURIComponent(document.cookie);
-        let ca = decodedCookie.split(';');
-        for(let i = 0; i <ca.length; i++) {
-          let c = ca[i];
-          while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-          }
-          if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-          }
+  <body>
+  Temperature : TEMPERATURE °C
+   <div id="temperature"> _____ </div>
+   <div id="temperatureDHT"> _____ </div>
+   <div id="hygrometrieDHT"> _____ </div>
+   <div id="gaz"> _____ </div>
+   <div id="plot_temperature" style="width:1000px;height:550px;"> _____ </div>
+   
+   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+  <script>
+  function eko(x) {
+    console.log(x)
+  }
+  var temps= [33, 44];
+  var trace1 = {
+    y: temps,
+    type: 'scatter'
+  }
+  var data = [trace1];
+  //Plotly.newPlot('plot_temperature', data);
+  
+  function read_temperature() {
+    console.log("read temperature");
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "/temperature");
+    xhr.send();
+    xhr.responseType = "json";
+    xhr.onload = () => {
+      eko("received")
+      if (xhr.readyState == 4 && xhr.status == 200) {
+        response = xhr.response;
+        temps.push(response.temperature);
+        if (temps.length > 24*60) { // mn in a day
+          temps.shift();
         }
-        return "";
+        let labels = [];
+        // on oublie ca, le buffer est géré dans l'arduino
+
+        eko()
+        temps = response.valeurs;
+        tempDHT = response.DHT.temperature;
+        hygroDHT = response.DHT.hygrometry;
+        gaz = response.MQ2.gaz;
+
+        setd = function(l, v) {
+           document.getElementById(l).innerHTML = l + "=" + v;
+        }
+
+        setd("temperature", temperature);
+        setd("temperatureDHT", tempDHT);
+        setd("hygrometrieDHT", hygroDHT);
+        setd("gaz", gaz);
+
+        //console.log(temps); 
+        let interval = xhr.response.interval;
+        let now = new Date();
+        for (i in temps) {
+          let dd = new Date(now.getTime() - i * interval);
+          let ss = dd.toLocaleDateString('fr', { weekday:"long", hour:"numeric", minute:"numeric"});
+          labels.unshift(dd);
+        }
+
+        var trace1 = {
+          x : labels, 
+          y : temps,
+          type: 'scatter'
+        };
+        var data = [trace1];
+        Plotly.newPlot('plot_temperature', data);
       }
-      code =getCookie("eportiercode");
-      console.log(code);
-      function ouvre(cde) {
-                console.log(cde);
-                document.cookie = "eportiercode=" + cde + ";SameSite=Strict";
-                cookies = document.cookies;
-                console.log(cookies);
-                cookies = document.cookie;
-                console.log(cookies);
-                button.style.fontSize="30px";
-                button.innerHTML = "le verrou va s'ouvrir ...";
-                setTimeout(() => {
-                        button.disabled = true;
-                        console.log(url+code)
-                        window.fetch(url+cde, { mode: 'no-cors'}).then((result) => {
-                                console.log(result);
-                                if (result.ok) {                                
-                                  button.innerHTML = "Système contacté,<br>déverrouillage pendant 2 secondes ...";
-                                } else {
-                                  button.innerHTML = "Système contacté .. bad luck!";
-                                }
-                                setTimeout(reset, 2000);
-                        }).catch((e) => {
-                                button.innerHTML = "Pas moyen de contacter le système!.. fetching " + url + cde;
-                                setTimeout(reset, 2000);
-                        })}, 
-                        1000);
-      }
-      button.addEventListener('click', function() { ouvre(code); });
-      reset();
-      buttons = [];
-      clicked = [];
-      function addbutton(txt, x, y) {
-        // Create a button element
-          const nbutton = document.createElement('button');
-          nbutton.innerText = txt;
-          console.log(nbutton);
-          nbutton.style.position = "absolute";
-          nbutton.style.left = x + 'px';
-          nbutton.style.top = y + 'px';
-          nbutton.style.fontSize = "120px";
-          nbutton.style.backgroundColor = 'White';
-          nbutton.addEventListener('click', function() {
-              console.log( this );
-              this.style.backgroundColor = 'Red';
-              this.disabled = true;
-              clicked.push(this);
-              if (clicked.length == 5) {
-                code = "";
-                for (i=0; i < clicked.length; i++) {
-                  b = clicked[i];
-                  code += b.innerText;
-                  b.style.backgroundColor = 'White';
-                  b.disabled = false;
-                };
-                ouvre(code);
-                //console.log(code);
-                clicked = [];
-              }
-          });
-        buttons.push(nbutton);
-        document.body.appendChild(nbutton);
-      };
-      W=30*4;
-      H=75*2;
-      ML=  100;
-      MH = 230;
-      //console.log("create buttons");
-      for (i = 1; i < 10; i++) {
-        console.log(i);
-        addbutton(i, ((i-1) % 3) * W + ML, (~~((i-1) / 3) * H) + MH); 
-      }                        
-    </script>
+    }
+    //console.log("received");
+    setTimeout(read_temperature, 1000 * 60); // 1 mn
+  }
+  setTimeout(read_temperature, 1000);
+
+  const d = new Date();
+  let time = d.getTime();
+
+  </script>
+  
   </body>
 </html>
 )"""");
 
+void handle_temperature() {
+  EKOT("handle temperature");
+  auto st = String(getTemperature());
+  auto json = String("{") + "\"temperature\" : " + st + "," ;
+  
+  EKOX(temperatures.getSize());
+  json += "\"valeurs\" : [ " ;
+  for (int i = 0; i < temperatures.getSize(); i++) {
+    if (i > 0) json += ",";
+    json += String(temperatures[i]);
+    //Serial.println(json);
 
-bool porte_ouverte() {
-  Serial.println("statut porte");
-  int a0 = analogRead(A0);
-  return a0 < 500;
+  };
+  json += "  ],";
+  EKO();
+  auto th = readDHT();
+  json += S + "\"DHT\" : { \"temperature\" : " + th.get<0>() + ", \"hygrometry\" : " + th.get<1>() + "},";
+  EKO();
+  json += S + "\"MQ2\" : { \"gaz\" : " + MQ2Read() + "},";
+
+  json += S + "\"interval\" : " + String(delta);
+  EKO();
+  json += "}";
+  server.send(200, "application/json", json.c_str());
+  EKO(); 
 }
-
 
 void handle_index() {
   Serial.println("index");
-  int a0 = analogRead(A0);
-  Serial.println("a0=" + String(a0));
-
-  String porte(porte_ouverte() ? "ouverte" : "fermée");
-  
-  String npage(page);
-  npage.replace("WURL", WURL);
-  npage.replace("PORTE", porte);
  
-  server.send(505, "text/html", npage.c_str());
+  String npage(page);
+  npage.replace("TEMPERATURE", String(getTemperature()));
+  server.send(200, "text/html", npage.c_str());
   Serial.println("end");
 }
 
-void setup() {
-  
-  pinMode(A0,INPUT);
-
-  Serial.begin(115200); //Begin Serial at 115200 Baud
-  Serial.print("starting");
-  delay(10);
+void webSetup() {
   
   WiFi.begin(ssid, password);  //Connect to the WiFi network
   
@@ -251,135 +289,59 @@ void setup() {
   // Print the IP address
   Serial.println(WiFi.localIP());
   server.on("/", handle_index); //Handle Index page
-  server.on("/main96713", handle_index_main); //Handle Index page
-
-  server.on("/statut_porte", HTTP_GET, []() {
-      String message = "POST form was:\n";
-      for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
-      Serial.println(message);
-      String stat(porte_ouverte() ? "ouverte" : "fermée");
-      String json = "{ \"porte\" : \"" + stat + "\" }";
-      Serial.println(json);
-      server.send(200, "text/json", json);
-  });
+  server.on("/temperature", handle_temperature);
   
   server.begin(); //Start the server
   Serial.println("setup");
   pinMode(2, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
   digitalWrite(2, HIGH);  
-
-  // INPUT ANALOG
-  pinMode(A0,INPUT);
-
-  
-  pinMode(PINOUT, OUTPUT);
-  digitalWrite(PINOUT, LOW);  
   Serial.println("Server listening");
 }
 
-
-void onewire(OneWire &ds) {
-  byte i;
-  byte present = 0;
-  byte type_s;
-  byte data[12];
-  byte addr[8];
-  float celsius, fahrenheit;
-  
-  if ( !ds.search(addr)) {
-    Serial.println("No more addresses.");
-    ds.reset_search();
-    delay(250);
-    return;
-  }
-  
-  Serial.print("ROM =");
-  for( i = 0; i < 8; i++) {
-    Serial.write(' ');
-    Serial.print(addr[i], HEX);
-  }
-
-  if (OneWire::crc8(addr, 7) != addr[7]) {
-      Serial.println("CRC is not valid!");
-      return;
-  }
-  Serial.println();
- 
-  // the first ROM byte indicates which chip
-  switch (addr[0]) {
-    case 0x10:
-      Serial.println("  Chip = DS18S20");  // or old DS1820
-      type_s = 1;
-      break;
-    case 0x28:
-      Serial.println("  Chip = DS18B20");
-      type_s = 0;
-      break;
-    case 0x22:
-      Serial.println("  Chip = DS1822");
-      type_s = 0;
-      break;
-    default:
-      Serial.println("Device is not a DS18x20 family device.");
-      return;
-  } 
-
-  ds.reset();
-  ds.select(addr);
-  ds.write(0x44, 1);        // start conversion, with parasite power on at the end
-  
-  delay(1000);     // maybe 750ms is enough, maybe not
-  // we might do a ds.depower() here, but the reset will take care of it.
-  
-  present = ds.reset();
-  ds.select(addr);    
-  ds.write(0xBE);         // Read Scratchpad
-
-  Serial.print("  Data = ");
-  Serial.print(present, HEX);
-  Serial.print(" ");
-  for ( i = 0; i < 9; i++) {           // we need 9 bytes
-    data[i] = ds.read();
-    Serial.print(data[i], HEX);
-    Serial.print(" ");
-  }
-  Serial.print(" CRC=");
-  Serial.print(OneWire::crc8(data, 8), HEX);
-  Serial.println();
-
-  // Convert the data to actual temperature
-  // because the result is a 16 bit signed integer, it should
-  // be stored to an "int16_t" type, which is always 16 bits
-  // even when compiled on a 32 bit processor.
-  int16_t raw = (data[1] << 8) | data[0];
-  if (type_s) {
-    raw = raw << 3; // 9 bit resolution default
-    if (data[7] == 0x10) {
-      // "count remain" gives full 12 bit resolution
-      raw = (raw & 0xFFF0) + 12 - data[6];
-    }
-  } else {
-    byte cfg = (data[4] & 0x60);
-    // at lower res, the low bits are undefined, so let's zero them
-    if (cfg == 0x00) raw = raw & ~7;  // 9 bit resolution, 93.75 ms
-    else if (cfg == 0x20) raw = raw & ~3; // 10 bit res, 187.5 ms
-    else if (cfg == 0x40) raw = raw & ~1; // 11 bit res, 375 ms
-    //// default is 12 bit resolution, 750 ms conversion time
-  }
-  celsius = (float)raw / 16.0;
-  fahrenheit = celsius * 1.8 + 32.0;
-  Serial.print("  Temperature = ");
-  Serial.print(celsius);
-  Serial.print(" Celsius, ");
-  Serial.print(fahrenheit);
-  Serial.println(" Fahrenheit");
+void webLoop() {
+  server.handleClient(); //Handling of incoming client requests
 }
 
+/***********************/
+
+
+void  setup() {
+  Serial.begin(115200); //Begin Serial at 115200 Baud
+  Serial.print("starting");
+  EKOX(aa);
+  delay(10);
+  webSetup();
+  onewireSetup();
+  delay(5); 
+  onewireLoop();
+  //Serial.println(code);
+  Serial.println("ready...");
+
+  Serial.println(S + "nmsSamples " + nmbSamples);
+
+  for (int i = 0; i < nmbSamples; i++) {
+    collectTemperature(1>0); 
+  } 
+
+  DHTSetup();
+  EKOX(readDHT().get<0>());
+  EKOX(readDHT().get<1>());
+  MQ2Setup();
+  EKOX(MQ2Read());
+  Serial.println("ok");
+
+}
 
 void loop() {
-  onewire(_ds);
-  server.handleClient(); //Handling of incoming client requests
+  webLoop();
   count += 1;
-  
+  auto ddn = millis();
+  if (ddn - last > delta) {
+    last = ddn;
+    collectTemperature();
+  }
+  if (ddn < last) {
+    last = 0;
+  }
 }
 
