@@ -156,7 +156,6 @@ long PINOUT=15;
    <div id="hygrometrieDHT"> _____ </div>
    <div id="gaz"> _____ </div>
    <div id="plot_temperature" style="width:1000px;height:550px;"> _____ </div>
-   
    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
   <script>
   function eko(x) {
@@ -180,6 +179,7 @@ long PINOUT=15;
       eko("received")
       if (xhr.readyState == 4 && xhr.status == 200) {
         response = xhr.response;
+        /*
         temps.push(response.temperature);
         if (temps.length > 24*60) { // mn in a day
           temps.shift();
@@ -189,6 +189,7 @@ long PINOUT=15;
 
         eko()
         temps = response.valeurs;
+        */
         tempDHT = response.DHT.temperature;
         hygroDHT = response.DHT.hygrometry;
         gaz = response.MQ2.gaz;
@@ -197,14 +198,15 @@ long PINOUT=15;
            document.getElementById(l).innerHTML = l + "=" + v;
         }
 
-        setd("temperature", temperature);
-        setd("temperatureDHT", tempDHT);
+        setd("temperature", "" + response.temperature + "°C");
+        setd("temperatureDHT", "" + tempDHT + "°C");
         setd("hygrometrieDHT", hygroDHT);
         setd("gaz", gaz);
+        let now = new Date();
 
         //console.log(temps); 
         let interval = xhr.response.interval;
-        let now = new Date();
+        /*
         for (i in temps) {
           let dd = new Date(now.getTime() - i * interval);
           let ss = dd.toLocaleDateString('fr', { weekday:"long", hour:"numeric", minute:"numeric"});
@@ -218,6 +220,7 @@ long PINOUT=15;
         };
         var data = [trace1];
         Plotly.newPlot('plot_temperature', data);
+        */
       }
     }
     //console.log("received");
@@ -238,7 +241,7 @@ void handle_temperature() {
   EKOT("handle temperature");
   auto st = String(getTemperature());
   auto json = String("{") + "\"temperature\" : " + st + "," ;
-  
+  /*
   EKOX(temperatures.getSize());
   json += "\"valeurs\" : [ " ;
   for (int i = 0; i < temperatures.getSize(); i++) {
@@ -249,6 +252,7 @@ void handle_temperature() {
   };
   json += "  ],";
   EKO();
+  */
   auto th = readDHT();
   json += S + "\"DHT\" : { \"temperature\" : " + th.get<0>() + ", \"hygrometry\" : " + th.get<1>() + "},";
   EKO();
