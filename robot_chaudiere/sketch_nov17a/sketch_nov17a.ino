@@ -261,6 +261,7 @@ void handle_temperature() {
   json += S + "\"interval\" : " + String(delta);
   EKO();
   json += "}";
+  server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "application/json", json.c_str());
   EKO(); 
 }
@@ -270,6 +271,7 @@ void handle_index() {
  
   String npage(page);
   npage.replace("TEMPERATURE", String(getTemperature()));
+  server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "text/html", npage.c_str());
   Serial.println("end");
 }
