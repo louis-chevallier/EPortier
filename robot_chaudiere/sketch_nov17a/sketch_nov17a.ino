@@ -198,7 +198,7 @@ long PINOUT=15;
            document.getElementById(l).innerHTML = l + "=" + v;
         }
 
-        setd("temperature", "" + response.temperature + "°C");
+        //setd("temperature", "" + response.temperature + "°C");
         setd("temperatureDHT", "" + tempDHT + "°C");
         setd("hygrometrieDHT", hygroDHT);
         setd("gaz", gaz);
@@ -239,8 +239,10 @@ long PINOUT=15;
 
 void handle_temperature() {
   EKOT("handle temperature");
-  auto st = String(getTemperature());
-  auto json = String("{") + "\"temperature\" : " + st + "," ;
+  String json = "{";
+
+  //auto st = String(getTemperature());
+  //json += String("{") + "\"temperature\" : " + st + "," ;
   /*
   EKOX(temperatures.getSize());
   json += "\"valeurs\" : [ " ;
@@ -317,6 +319,8 @@ void  setup() {
   EKOX(aa);
   delay(10);
   webSetup();
+
+  /*
   onewireSetup();
   delay(5); 
   onewireLoop();
@@ -328,7 +332,7 @@ void  setup() {
   for (int i = 0; i < nmbSamples; i++) {
     collectTemperature(1>0); 
   } 
-
+  */
   DHTSetup();
   EKOX(readDHT().get<0>());
   EKOX(readDHT().get<1>());
