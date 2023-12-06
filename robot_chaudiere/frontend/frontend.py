@@ -1,41 +1,70 @@
 
-import cherrypy
+import cherrypy, os
 from time import sleep
 from threading import Thread
 from utillc import *
 import requests
-from xml.etree import ElementTree
+import time, json
+
+max_length = 1000
 
 
-tree = ElementTree.fromstring(response.content)
 class Task(object):
     def __init__(self, interval=1):
         self.interval = interval
-        thread = threading.Thread(target=self.run, args=())
-        thread.daemon = True                            # Daemonize thread
-        thread.start()                                  # Start the execution
-
+        self.thread = Thread(target=self.run, args=())
+        self.thread.daemon = True                            # Daemonize thread
+        self.thread.start()                                  # Start the execution
+        self.buffer = []
     def run(self):
         """ Method that runs forever """
         while True:
             # Do something
-
             url = "http://192.168.1.33/temperature"
             headers = {'Accept': 'application/json'}
             r = requests.get(url, headers=headers)
-            EKOX(r.json())
-            time.sleep(self.interval)
+            j = r.json()
+            j['d'] = time.time
+            #EKOX(j)
+            sleep(self.interval)
+            self.buffer.append(r.json())
+            if len(self.buffer) > max_length :
+                self.buffer.pop(0)
 
-
-            
-# create two new threads
-task = Task()
-
-def ff() :
-    print(f'It took {end_time- start_time: 0.2f} second(s) to complete.')
-    class HelloWorld(object):
-        @cherrypy.expose
-        def index(self):
-            return "Hello World!"
+class HelloWorld(object):
+    def __init__(self):
+        self.tasks = [ Task(24*3600/max_length), Task(1), Task(10)]
         
-    cherrypy.quickstart(HelloWorld())
+    @cherrypy.expose
+    def index__(self):
+        return "Hello World!"
+    @cherrypy.expose
+    def read(self, s=0) :
+        s = int(s)
+        j = self.tasks[s]
+        d = { 'buffer' : j.buffer, 'interval' : j.interval }
+        EKOX(len(j.buffer))
+        #cherrypy.response.headers["Access-Control-Allow-Origin"] = '*'
+        #cherrypy.response.headers['Content-Type'] = 'application/json'
+        return json.dumps(d) 
+            
+if __name__ == "__main__":
+    cherrypy.config.update({
+        "server.socket_port": 8088,
+    })
+    PATH = os.path.abspath(os.path.dirname(__file__))
+    EKOX(PATH)
+    class Root(object): pass
+    cherrypy.config.update({'server.socket_host': '0.0.0.0'})
+    config = {
+        "/": {
+            "tools.staticdir.on": True,
+            "tools.staticdir.dir": PATH,
+            'tools.staticdir.index': 'index.html',
+            'tools.response_headers.headers': [('Content-Type', 'image/jpeg'), ('Access-Control-Allow-Origin', '*')],
+        }
+    }
+    hello = HelloWorld()
+    sleep(2)
+    cherrypy.quickstart(hello, "/", config=config) 
+    hello.tasks[0].thread.join()

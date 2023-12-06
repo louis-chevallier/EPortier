@@ -1,0 +1,111 @@
+
+
+
+function eko(x) {
+    console.log(x)
+}
+
+
+
+var temps= [33, 44];
+var trace1 = {
+    y: temps,
+    type: 'scatter'
+}
+var data = [trace1];
+
+eko("start");
+
+function read_temperature() {
+    console.log("read temperature");
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "http://192.168.1.33/temperature");
+    xhr.send();
+    xhr.responseType = "json";
+    xhr.onload = () => {
+        //eko("received")
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            response = xhr.response;
+            //eko()
+            tempDHT = response.DHT.temperature;
+            hygroDHT = response.DHT.hygrometry;
+            gaz = response.MQ2.gaz;
+	    millis = response.millis;
+            setd = function(l, v) {
+		document.getElementById(l).innerHTML = l + "=" + v;
+            }
+            //setd("temperature", "" + response.temperature + "°C");
+            setd("temperatureDHT", "" + tempDHT + "°C");
+            setd("hygrometrieDHT", hygroDHT);
+            setd("gaz", gaz);
+            setd("millis", millis);
+	    
+	}
+	setTimeout(read_temperature, 1000 * 60); // 1 mn	
+    }
+}
+
+function gid(i) {
+    return document.getElementById(i);
+}
+
+function toggle(button)
+{
+    o = button;
+    o.value = (o.value =="OFF") ? "ON" : "OFF";
+    setTimeout(doplot, 1000 * 0.5); // 1 mn
+
+}
+
+
+//console.log("received");
+setTimeout(read_temperature, 1000 * 1); // 1 mn
+
+function doplot() {
+    const xhr1 = new XMLHttpRequest();
+    xhr1.open("GET", "read?s=0");
+    xhr1.send();
+    xhr1.responseType = "json";
+    
+    setTimeout(read_temperature, 1000);
+    
+    eko("read temp");
+    const d = new Date();
+    let time = d.getTime();
+    xhr1.onload = () => {
+	eko("received")
+	if (xhr1.readyState == 4 && xhr1.status == 200) {
+	    response = xhr1.response;
+	    buf = response.buffer;
+	    let labels = [];
+	    //eko()
+	    let li = buf.length;
+	    let interval = response.interval;
+	    let temps = [];	
+	    let begin = d.getTime() - li * interval*1000;
+	    let hygro = [];
+	    let gaz = []
+	    for (i in buf) {
+		let dd = new Date(begin + i * interval*1000);
+		let ss = dd.toLocaleDateString('fr', { weekday:"long", hour:"numeric", minute:"numeric"});
+		labels.unshift(dd);
+		temps.unshift(buf[i].DHT.temperature);
+		hygro.unshift(buf[i].DHT.hygrometry);
+		gaz.unshift(buf[i].MQ2.gaz);
+	    }
+	    const trace_temp = {  name: 'temperature', x : labels,  y : temps,  type: 'scatter' };
+	    const trace_hygro = {  name : 'hygrometry', x : labels,  y : hygro,  type: 'scatter' };
+	    const trace_gaz = {  name : 'gaz', x : labels,  y : gaz,  type: 'scatter' };
+	    var data = []
+	    if (gid("temp").value == "ON") { data.push(trace_temp); }
+	    if (gid("hygro").value == "ON") { data.push(trace_hygro); }
+	    if (gid("gaz").value == "ON") { data.push(trace_gaz); }
+	    [trace_temp, trace_hygro, trace_gaz];
+	    Plotly.newPlot('plot_temperature', data);
+	    eko("plotted");
+	}
+	eko("processed");
+    }    
+}
+setTimeout(doplot, 1000 * 2); // 1 mn
+eko("ok");	
