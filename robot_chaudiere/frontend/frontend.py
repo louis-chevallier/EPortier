@@ -19,17 +19,19 @@ class Task(object):
     def run(self):
         """ Method that runs forever """
         while True:
-            # Do something
-            url = "http://192.168.1.33/temperature"
-            headers = {'Accept': 'application/json'}
-            r = requests.get(url, headers=headers)
-            j = r.json()
-            j['d'] = time.time
-            #EKOX(j)
-            sleep(self.interval)
-            self.buffer.append(r.json())
-            if len(self.buffer) > max_length :
-                self.buffer.pop(0)
+            try :
+                url = "http://192.168.1.33/temperature"
+                headers = {'Accept': 'application/json'}
+                r = requests.get(url, headers=headers)
+                j = r.json()
+                j['d'] = time.time
+                #EKOX(j)
+                self.buffer.append(r.json())
+                if len(self.buffer) > max_length :
+                    self.buffer.pop(0)
+            except Exception as e :
+                EKOX(e)
+                sleep(self.interval)
 
 class HelloWorld(object):
     def __init__(self):
