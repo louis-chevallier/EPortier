@@ -33,7 +33,11 @@ class Task(object):
 
 class HelloWorld(object):
     def __init__(self):
-        self.tasks = [ Task(24*3600/max_length), Task(1), Task(10)]
+        self.tasks = [
+            Task(1*3600/max_length),
+            Task(24*3600/max_length),
+            Task(7*24*3600/max_length)
+        ]
         
     @cherrypy.expose
     def index__(self):

@@ -6,6 +6,7 @@ start  :
 #2>> trace.txt
 
 run :
+	date
 	source ${HOME}/scripts/.bashrc; spy; python_env; make start
 
 nothing :

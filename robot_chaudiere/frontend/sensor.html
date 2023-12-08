@@ -20,14 +20,19 @@
 
     <div id="temperatureDHT"> _____ </div>
     <div id="hygrometrieDHT"> _____ </div>
-    <div id="gaz"> _____ </div>
+    <div id="gazMQ2"> _____ </div>
     <div id="millis"> _____ </div>
     <form action="">
       Temperature <input type="button" id="temp" value="ON" style="color:blue"  onclick="toggle(this);">
       Hygrometry <input type="button" id="hygro" value="OFF" style="color:blue"  onclick="toggle(this);">
       Gaz <input type="button" id="gaz" value="OFF" style="color:blue"  onclick="toggle(this);">
     </form>
-
+    <label for="hist">Sélectionnez une durée d'historique :</label>
+    <select id="hist" name="historique" onclick="toggle_select(this);">
+      <option value="0">1h</option>
+      <option value="1" selected>24h</option>
+      <option value="2">1 semaine</option>
+    </select>
     <div id="plot_temperature" style="width:1000px;height:550px;"> _____ </div>
 
   
