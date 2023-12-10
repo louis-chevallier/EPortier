@@ -19,6 +19,7 @@ class Task(object):
     def run(self):
         """ Method that runs forever """
         while True:
+            sleep(self.interval)
             try :
                 url = "http://192.168.1.33/temperature"
                 headers = {'Accept': 'application/json'}
@@ -31,7 +32,6 @@ class Task(object):
                     self.buffer.pop(0)
             except Exception as e :
                 EKOX(e)
-                sleep(self.interval)
 
 class HelloWorld(object):
     def __init__(self):
@@ -47,9 +47,12 @@ class HelloWorld(object):
     @cherrypy.expose
     def read(self, s=0) :
         s = int(s)
+        EKOX(s)
         j = self.tasks[s]
+        EKOX(len(j.buffer))
         d = { 'buffer' : j.buffer, 'interval' : j.interval }
         EKOX(len(j.buffer))
+        EKOX(j.buffer)
         #cherrypy.response.headers["Access-Control-Allow-Origin"] = '*'
         #cherrypy.response.headers['Content-Type'] = 'application/json'
         return json.dumps(d) 
