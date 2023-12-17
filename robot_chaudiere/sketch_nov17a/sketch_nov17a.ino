@@ -83,8 +83,11 @@ void onewireSetup() {
 }
 
 float getTemperature() {
-  sensors.requestTemperatures(); 
+  EKO();
+  sensors.requestTemperatures();
+  EKO(); 
   float temperatureC = sensors.getTempCByIndex(0);
+  EKOX(temperatureC);
   return temperatureC;
 }
 
@@ -327,9 +330,10 @@ void  setup() {
   EKOX(aa);
   delay(10);
   webSetup();
-
-  /*
   onewireSetup();
+  EKOX(getTemperature());
+  /*
+  
   delay(5); 
   onewireLoop();
   //Serial.println(code);
@@ -346,6 +350,9 @@ void  setup() {
   EKOX(readDHT().get<1>());
   MQ2Setup();
   EKOX(MQ2Read());
+
+  EKOX(getTemperature());
+
   Serial.println("ok");
 
 }
