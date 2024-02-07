@@ -44,6 +44,7 @@ class HelloWorld(object):
     @cherrypy.expose
     def index__(self):
         return "Hello World!"
+
     @cherrypy.expose
     def read(self, s=0) :
         s = int(s)
