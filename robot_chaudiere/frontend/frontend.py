@@ -8,7 +8,6 @@ import time, json
 
 max_length = 1000
 
-
 class Task(object):
     def __init__(self, interval=1):
         self.interval = interval
@@ -40,10 +39,21 @@ class HelloWorld(object):
             Task(24*3600/max_length),
             Task(7*24*3600/max_length)
         ]
-        
+                    
     @cherrypy.expose
-    def index__(self):
-        return "Hello World!"
+    def index(self):
+        """ main 
+        """
+        with open('./sensor.html', 'r') as file:
+            data = file.read()
+            data = data.replace("INFO", self.info())
+            return data
+
+    def info(self) :
+        def read(gi) :
+            i = os.environ[gi] if gi in os.environ else ""
+            return gi + "=" + i
+        return read('GITINFO') + ", " + read("HOST") + ", " + read("DATE")
 
     @cherrypy.expose
     def read(self, s=0) :

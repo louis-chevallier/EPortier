@@ -24,6 +24,7 @@ long seko = millis();
 typedef MicroTuple<float, float> FF;
 DHT dht(DHTPIN, DHTTYPE);
 
+long request_number = 0;
 float aa = 3.2;
 
 void DHTSetup() {
@@ -82,8 +83,11 @@ void onewireSetup() {
 }
 
 float getTemperature() {
-  sensors.requestTemperatures(); 
+  EKO();
+  sensors.requestTemperatures();
+  EKO(); 
   float temperatureC = sensors.getTempCByIndex(0);
+  EKOX(temperatureC);
   return temperatureC;
 }
 
@@ -241,7 +245,7 @@ void handle_temperature() {
   EKOT("handle temperature");
   String json = "{";
 
-  //auto st = String(getTemperature());
+  auto st = String(getTemperature());
   //json += String("{") + "\"temperature\" : " + st + "," ;
   /*
   EKOX(temperatures.getSize());
@@ -260,12 +264,19 @@ void handle_temperature() {
   EKO();
   json += S + "\"MQ2\" : { \"gaz\" : " + MQ2Read() + "},";
 
-  json += S + "\"interval\" : " + String(delta);
+  json += S + "\"DS18B20\" : { \"value\" : " + String(st) + "},";
+
+  json += S + "\"interval\" : " + String(delta) + ", ";
+
+  json += S + "\"millis\" : " + String(millis()) + ", ";
+
+  json += S + "\"request_number\" : " + String(request_number);
   EKO();
   json += "}";
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "application/json", json.c_str());
   EKO(); 
+  request_number ++;
 }
 
 void handle_index() {
@@ -319,9 +330,10 @@ void  setup() {
   EKOX(aa);
   delay(10);
   webSetup();
-
-  /*
   onewireSetup();
+  EKOX(getTemperature());
+  /*
+  
   delay(5); 
   onewireLoop();
   //Serial.println(code);
@@ -338,6 +350,9 @@ void  setup() {
   EKOX(readDHT().get<1>());
   MQ2Setup();
   EKOX(MQ2Read());
+
+  EKOX(getTemperature());
+
   Serial.println("ok");
 
 }
