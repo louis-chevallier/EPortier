@@ -1,5 +1,14 @@
 # EPortier
 
+
+
+```mermaid
+graph TD;
+  A --> B;
+  C -- xx --> D;
+
+```
+
 ## cloner le repo dans ~ a cause de ide arduino
 
 ## Sur le NUC
