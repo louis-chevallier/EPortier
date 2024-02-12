@@ -64,11 +64,15 @@ DallasTemperature sensors(&_ds);
 int totalDurationMS = 24*60*60*1000;
 //int totalDurationMS = 12*1000;
 int delta = 60*1000; // intervals de mesure en ms
+int period_automaton = 5*1000; // intervals de mesure en ms
 //int delta = 3*1000; // intervals de mesure en ms
 int nmbSamples = totalDurationMS / delta; 
 List<float> temperatures;
 
 auto last = millis();
+auto last_automaton = millis();
+
+float consigne = 25., delta_hysteresis = 1;
 
 //https://randomnerdtutorials.com/esp8266-ds18b20-temperature-sensor-web-server-with-arduino-ide/
 
@@ -289,6 +293,28 @@ void handle_index() {
   Serial.println("end");
 }
 
+void handle_consigne() {
+  Serial.println("consigne");
+  String message = F("");
+  message += F("URI: ");
+  message += server.uri();
+  message += F("\nMethod: ");
+  message += (server.method() == HTTP_GET) ? F("GET") : F("POST");
+  message += F("\nArguments: ");
+  message += server.args();
+  message += F("\n");
+
+  for (uint8_t i = 0; i < server.args(); i++)
+  {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  Serial.print(message);
+  String npage("ok");
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "text/html", npage.c_str());
+  Serial.println("end");
+}
+
 void webSetup() {
   
   WiFi.begin(ssid, password);  //Connect to the WiFi network
@@ -309,6 +335,7 @@ void webSetup() {
   Serial.println(WiFi.localIP());
   server.on("/", handle_index); //Handle Index page
   server.on("/temperature", handle_temperature);
+  server.on("/consigne", handle_consigne);
   
   server.begin(); //Start the server
   Serial.println("setup");
@@ -357,6 +384,27 @@ void  setup() {
 
 }
 
+void setContact(int v) {
+
+}
+
+int state = 0;
+void automaton()  {
+  switch (state) {
+    case 0 : state = 1;
+    break;
+
+    case 1 : if (getTemperature() <  consigne - delta_hysteresis) { state = 2; setContact(1); }
+    break;
+
+    case 2 : if (getTemperature() >  consigne + delta_hysteresis) { state = 1; setContact(0); }
+    break;
+ 
+  }
+
+}
+
+
 void loop() {
   webLoop();
   count += 1;
@@ -364,6 +412,10 @@ void loop() {
   if (ddn - last > delta) {
     last = ddn;
     collectTemperature();
+  }
+  if (ddn - last_automaton > period_automaton) {
+    last_automaton = ddn;
+    automaton();
   }
   if (ddn < last) {
     last = 0;
