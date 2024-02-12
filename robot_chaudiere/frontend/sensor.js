@@ -9,30 +9,37 @@ var trace1 = {
 }
 var data = [trace1];
 
-eko("start");
+eko("start xxx");
 
 function read_temperature() {
     console.log("read temperature");
     const xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://192.168.1.33/temperature");
+    //xhr.open("GET", "http://192.168.1.33/temperature");
+    xhr.open("GET", "./data");
     xhr.send();
     xhr.responseType = "json";
     xhr.onload = () => {
-        //eko("received")
+        eko("received")
         if (xhr.readyState == 4 && xhr.status == 200) {
             response = xhr.response;
             //eko()
+            console.log("response", response)
             tempDHT = response.DHT.temperature;
             hygroDHT = response.DHT.hygrometry;
             gaz = response.MQ2.gaz;
 	    millis = response.millis;
+            tempext = response.tempext;
+            tempchaudiere = response.tempchaudiere;
             setd = function(l, v) {
 		document.getElementById(l).innerHTML = l + "=" + v;
             }
+            console.log("tempext", tempext)
             //setd("temperature", "" + response.temperature + "°C");
             setd("temperatureDHT", "" + tempDHT + "°C");
             setd("hygrometrieDHT", hygroDHT);
             setd("gazMQ2", gaz);
+            setd("tempext", tempext);
+            setd("tempchaudiere", tempchaudiere);
             setd("millis", millis);
 	    
 	}
@@ -94,6 +101,8 @@ function doplot() {
 	    let begin = d.getTime() - li * interval*1000;
 	    let hygro = [];
 	    let gaz = []
+            let tempext = []
+            let tempchaudiere = []
 	    for (i in buf) {
 		let dd = new Date(begin + i * interval*1000);
 		let ss = dd.toLocaleDateString('fr', { weekday:"long", hour:"numeric", minute:"numeric"});
@@ -101,11 +110,15 @@ function doplot() {
 		temps.unshift(buf[i].DHT.temperature);
 		hygro.unshift(buf[i].DHT.hygrometry);
 		gaz.unshift(buf[i].MQ2.gaz);
+		tempext.unshift(buf[i].tempext);
+		tempchaudiere.unshift(buf[i].tempchaudiere);
 	    }
 	    eko("refresh plot");
 	    const trace_temp = {  name: 'temperature', x : labels,  y : temps,  type: 'scatter', 'line': {'shape': 'spline'}};
 	    const trace_hygro = {  name : 'hygrometry', x : labels,  y : hygro,  type: 'scatter' , 'line': {'shape': 'spline', 'smoothing': 1.3}};
 	    const trace_gaz = {  name : 'gaz', x : labels,  y : gaz,  type: 'scatter', 'line': {'shape': 'spline', 'smoothing': 5.3} };
+	    const trace_tempext = {  name : 'tempext', x : labels,  y : tempext,  type: 'scatter', 'line': {'shape': 'spline', 'smoothing': 5.3} };            
+	    const trace_tempchaudiere = {  name : 'tempchaudiere', x : labels,  y : tempchaudiere,  type: 'scatter', 'line': {'shape': 'spline', 'smoothing': 5.3} };            
 	    var data = []
 	    eko(gid("temp").value);
 	    eko(gid("hygro").value);
@@ -114,6 +127,8 @@ function doplot() {
 	    if (gid("temp").value == "ON") { data.push(trace_temp); }
 	    if (gid("hygro").value == "ON") { data.push(trace_hygro); }
 	    if (gid("gaz").value == "ON") { eko("gaz"); data.push(trace_gaz); }
+	    if (gid("tempextb").value == "ON") { eko("tempext"); data.push(trace_tempext); }
+	    if (gid("tempchaudiereb").value == "ON") { eko("tempchaudiere"); data.push(trace_tempchaudiere); }
 	    Plotly.newPlot('plot_temperature', data);
 	    eko("plotted");
 	}
