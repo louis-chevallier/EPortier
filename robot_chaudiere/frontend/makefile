@@ -11,7 +11,7 @@ start  :
 
 run :
 	date
-	source ${HOME}/scripts/.bashrc; spy; penv; make start
+	source ${HOME}/scripts/.bashrc; spy; pyenv; make start
 
 nothing :
 	echo done

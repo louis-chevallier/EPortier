@@ -21,9 +21,18 @@ class Task(object):
     def data(self) :
         url = "http://192.168.1.33/temperature"
         headers = {'Accept': 'application/json'}
-        r = requests.get(url, headers=headers)
-        j = r.json()
-        #j['d'] = time.time
+        try :
+            r = requests.get(url, headers=headers)
+            j = r.json()
+        except :
+            j = {
+                'DHT' : { 'temperature' : -999, 'hygrometry' : -999 },
+                'MQ2' : { 'gaz' : -999 },
+                'millis' : 0
+                }
+                
+                
+            #j['d'] = time.time
         
         obs = self.meteo.get_observation(48.216671,-1.75) # gps de la meziere
         j['tempext'] = obs.temperature
