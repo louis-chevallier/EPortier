@@ -6,6 +6,17 @@ a mettre dans cron ( via sudo crontab -u louis -e )
 
 ## schéma
 
+
+
+
+
+
+
+
+xx
+
+
+
 ```mermaid
 graph LR;
     subgraph arduino
@@ -13,32 +24,42 @@ graph LR;
         P3V
         D1;
         D2;
+        D3;
         A0;
     end
-    subgraph Thermo1
+    subgraph DS18B20_Temp_Sensor
         Red;
         Yellow;
         Black;
     end
-    subgraph MH
-        MHA0 --- A0;
-        D0;
-        plus --- P3V;
-        gnd --- GND;
+    subgraph MH_MQ2_Gaz_Sensor
+        MH_A0 --- A0;
+        MH_D0;
+        MH_gnd --- GND;
+        MH_vcc --- P3V;
+        
+
+
     end
-    subgraph Thermo2
-        P0 --- GND;
-        P1;
-        P2 --- D1;
-        P3 --- GND;
+    subgraph DHT11_Temp_hygrometry_Sensor
+        DHT11_VCC --- P3V;
+        DHT11_Data --- D1;
+        DHT11_nc ;
+        DHT11_GND --- GND;
+    end
+    subgraph Relay
+        relay_vcc --- GND;
+        relay_in --- D3;
+        relay_gnd --- GND;
     end
 
     Red --- P3V;
     Yellow --- D2
     Black --- GND;
+    D2 --- |R1_3K23K| P3V;
+    D1 --- |R2_4K5| P3V;
 
-    D2 -- R1_3_23K --- P3V;
-    D1 -- R2_4_5K --- P3V;
+
 
 ```
 
