@@ -48,12 +48,22 @@ install arduino ide from https://www.arduino.cc/en/software#future-version-of-th
 
 chmod arduino-ide
 
+checker le port en connectant/deconnectant l'arduino
+faire
+lsub
+ll /dev/tty*
+une ligne devrait (dis)apparaitre
+si c'est USB0
+sudo chown louis /dev/ttyUSB0
 
+faire aussi
 sudo usermod -a -G dialout louis
 
+dans l'ide choisir ce port  ( tool/port )
 
-sudo chown louis /dev/ttyUSB0
-si c'est le port ouvert par arduino
+
+
+
 
 
 ===> point d'entree : http://176.161.19.7:8080"

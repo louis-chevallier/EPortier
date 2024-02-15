@@ -27,14 +27,22 @@ DHT dht(DHTPIN, DHTTYPE);
 long request_number = 0;
 float aa = 3.2;
 
+//int D3 = 3;
+
 void DHTSetup() {
   dht.begin();
 }
 
+float nonan(float f) {
+  return f != f ? -9999. : f;
+}
 
 FF readDHT() {
-  float newT = dht.readTemperature();
-  float newH = dht.readHumidity();
+  float newT = nonan(dht.readTemperature());
+  float newH = nonan(dht.readHumidity());
+
+
+
   auto t = FF(newT, newH);  	
   return t;
 } 
@@ -86,12 +94,22 @@ void onewireSetup() {
   sensors.begin();
 }
 
+void set_consigne(float v) {
+  consigne = v;
+} 
+
+void set_relay(int value) {
+  //D3 = v;
+  digitalWrite(D3, value);
+} 
+
+
 float getTemperature() {
-  EKO();
+  //EKO();
   sensors.requestTemperatures();
-  EKO(); 
+  //EKO(); 
   float temperatureC = sensors.getTempCByIndex(0);
-  EKOX(temperatureC);
+  //EKOX(temperatureC);
   return temperatureC;
 }
 
@@ -107,10 +125,10 @@ void onewireLoop() {
   sensors.requestTemperatures(); 
   float temperatureC = getTemperature();
   float temperatureF = sensors.getTempFByIndex(0);
-  Serial.print(temperatureC);
-  Serial.println("ºC");
-  Serial.print(temperatureF);
-  Serial.println("ºF");
+  //Serial.print(temperatureC);
+  //Serial.println("ºC");
+  //Serial.print(temperatureF);
+  //Serial.println("ºF");
   //delay(5000);
 }
 
@@ -246,13 +264,13 @@ long PINOUT=15;
 )"""");
 
 void handle_temperature() {
-  EKOT("handle temperature");
+  //EKOT("handle temperature");
   String json = "{";
 
   auto st = String(getTemperature());
   //json += String("{") + "\"temperature\" : " + st + "," ;
   /*
-  EKOX(temperatures.getSize());
+  //EKOX(temperatures.getSize());
   json += "\"valeurs\" : [ " ;
   for (int i = 0; i < temperatures.getSize(); i++) {
     if (i > 0) json += ",";
@@ -261,11 +279,11 @@ void handle_temperature() {
 
   };
   json += "  ],";
-  EKO();
+  //EKO();
   */
   auto th = readDHT();
   json += S + "\"DHT\" : { \"temperature\" : " + th.get<0>() + ", \"hygrometry\" : " + th.get<1>() + "},";
-  EKO();
+  //EKO();
   json += S + "\"MQ2\" : { \"gaz\" : " + MQ2Read() + "},";
 
   json += S + "\"DS18B20\" : { \"value\" : " + String(st) + "},";
@@ -275,11 +293,11 @@ void handle_temperature() {
   json += S + "\"millis\" : " + String(millis()) + ", ";
 
   json += S + "\"request_number\" : " + String(request_number);
-  EKO();
+  //EKO();
   json += "}";
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "application/json", json.c_str());
-  EKO(); 
+  //EKO(); 
   request_number ++;
 }
 
@@ -293,23 +311,26 @@ void handle_index() {
   Serial.println("end");
 }
 
-void handle_consigne() {
-  Serial.println("consigne");
-  String message = F("");
-  message += F("URI: ");
-  message += server.uri();
-  message += F("\nMethod: ");
-  message += (server.method() == HTTP_GET) ? F("GET") : F("POST");
-  message += F("\nArguments: ");
-  message += server.args();
-  message += F("\n");
-
-  for (uint8_t i = 0; i < server.args(); i++)
-  {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-  }
-  Serial.print(message);
+void handle_relay() {
+  // method get
   String npage("ok");
+  if (server.argName(0) == "value") {
+    set_relay(server.arg(0).toInt());
+  } else {
+    npage = "fail";
+  }
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "text/html", npage.c_str());
+  Serial.println("end");
+};
+
+void handle_consigne() {
+  String npage("ok");
+  if (server.argName(0) == "value") {
+    set_consigne(server.arg(0).toFloat());
+  } else {
+    npage = "fail";
+  }
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "text/html", npage.c_str());
   Serial.println("end");
@@ -336,6 +357,7 @@ void webSetup() {
   server.on("/", handle_index); //Handle Index page
   server.on("/temperature", handle_temperature);
   server.on("/consigne", handle_consigne);
+  server.on("/relay", handle_relay);
   
   server.begin(); //Start the server
   Serial.println("setup");
@@ -359,6 +381,7 @@ void  setup() {
   webSetup();
   onewireSetup();
   EKOX(getTemperature());
+  pinMode(D3, OUTPUT);  
   /*
   
   delay(5); 
@@ -381,7 +404,9 @@ void  setup() {
   EKOX(getTemperature());
 
   Serial.println("ok");
-
+  Serial.println(D1);
+  Serial.println(D2);
+  Serial.println(D3);
 }
 
 void setContact(int v) {
