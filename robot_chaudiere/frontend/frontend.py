@@ -97,20 +97,32 @@ class HelloWorld(object):
         return json.dumps(d) 
             
 if __name__ == "__main__":
-    cherrypy.config.update({
-        "server.socket_port": 8088,
-    })
     PATH = os.path.abspath(os.path.dirname(__file__))
     EKOX(PATH)
     class Root(object): pass
     cherrypy.config.update({'server.socket_host': '0.0.0.0'})
+
+    port = 8093
+    
     config = {
         "/": {
             "tools.staticdir.on": True,
             "tools.staticdir.dir": PATH,
             'tools.staticdir.index': 'index.html',
             'tools.response_headers.headers': [('Content-Type', 'image/jpeg'), ('Access-Control-Allow-Origin', '*')],
-        }
+        },
+        'global' : {
+            'server.ssl_module' : 'builtin',
+            'server.ssl_certificate' : "cert.pem",
+            'server.ssl_private_key' : "privkey.pem",
+            
+            'server.socket_host' : '0.0.0.0', #192.168.1.5', #'127.0.0.1',
+            'server.socket_port' : port,
+            'server.thread_pool' : 8,
+            'log.screen': False,
+            'log.error_file': './error.log',
+            'log.access_file': './access.log'
+        },
     }
     hello = HelloWorld()
     sleep(2)
