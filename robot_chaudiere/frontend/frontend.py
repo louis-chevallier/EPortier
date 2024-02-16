@@ -6,6 +6,7 @@ from utillc import *
 import requests
 import time, json
 import meteofrance_api
+import datetime
 
 max_length = 1000
 
@@ -17,6 +18,8 @@ class Task(object):
         self.thread.daemon = True                            # Daemonize thread
         self.thread.start()                                  # Start the execution
         self.buffer = []
+        self.obs = None
+        self.t1 = datetime.datetime.now()
 
     def data(self) :
         url = "http://192.168.1.33/temperature"
@@ -33,9 +36,13 @@ class Task(object):
                 
                 
             #j['d'] = time.time
-        
-        obs = self.meteo.get_observation(48.216671,-1.75) # gps de la meziere
-        j['tempext'] = obs.temperature
+
+
+        if datetime.datetime.now() > self.t1 + datetime.timedelta(minutes = 10) or self.obs is None :
+            EKO()
+            self.t1 = datetime.datetime.now()
+            self.obs = self.meteo.get_observation(48.216671,-1.75) # gps de la meziere
+        j['tempext'] = self.obs.temperature
         
         j['tempchaudiere'] = 100.
         
