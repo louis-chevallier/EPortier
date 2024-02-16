@@ -9,7 +9,7 @@ start  :
 
 #2>> trace.txt
 
-run :
+run : privkey.pem  privkey.pem
 	date
 	source ${HOME}/scripts/.bashrc; spy; pyenv; make start
 
@@ -18,3 +18,8 @@ nothing :
 
 install :
 	cp sensor.html  /var/www/html/capteur_salon
+
+%.pem :
+# https://docs.cherrypy.dev/en/latest/deploy.html
+	openssl genrsa -out privkey.pem 2048
+	openssl req -new -x509 -days 365 -key privkey.pem -out cert.pem
