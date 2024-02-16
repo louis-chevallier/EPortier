@@ -41,8 +41,6 @@ FF readDHT() {
   float newT = nonan(dht.readTemperature());
   float newH = nonan(dht.readHumidity());
 
-
-
   auto t = FF(newT, newH);  	
   return t;
 } 
@@ -66,7 +64,7 @@ int MQ2Read() {
 /*******************************/
 // Temperature
 
-OneWire  _ds(4);  // on pin D2 ( == GPIO4)  (a 4.7K resistor is necessary)
+OneWire  _ds(D5); // now on D5 // on pin D2 ( == GPIO4)  (a 4.7K resistor is necessary)
 DallasTemperature sensors(&_ds);
 
 int totalDurationMS = 24*60*60*1000;
@@ -81,6 +79,7 @@ auto last = millis();
 auto last_automaton = millis();
 
 float consigne = 25., delta_hysteresis = 1;
+int relay = -1;
 
 //https://randomnerdtutorials.com/esp8266-ds18b20-temperature-sensor-web-server-with-arduino-ide/
 
@@ -99,10 +98,12 @@ void set_consigne(float v) {
 } 
 
 void set_relay(int value) {
+  // value = 1 => relais fermé, le bruleur peut chauffer ( sauf seuil haut atteint)
   //D3 = v;
+  EKOX(value);
+  relay = value;
   digitalWrite(D3, value);
 } 
-
 
 float getTemperature() {
   //EKO();
@@ -181,6 +182,8 @@ long PINOUT=15;
    <div id="temperatureDHT"> _____ </div>
    <div id="hygrometrieDHT"> _____ </div>
    <div id="gaz"> _____ </div>
+   <div id="consigne"> _____ </div>
+   <div id="relay"> _____ </div>
    <div id="plot_temperature" style="width:1000px;height:550px;"> _____ </div>
    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
   <script>
@@ -206,7 +209,7 @@ long PINOUT=15;
       if (xhr.readyState == 4 && xhr.status == 200) {
         response = xhr.response;
         /*
-        temps.push(response.temperature);
+        temps.push(response.temperature);i aussi mais peut-être plus vers 18h30 je fais au mie
         if (temps.length > 24*60) { // mn in a day
           temps.shift();
         }
@@ -227,7 +230,9 @@ long PINOUT=15;
         //setd("temperature", "" + response.temperature + "°C");
         setd("temperatureDHT", "" + tempDHT + "°C");
         setd("hygrometrieDHT", hygroDHT);
-        setd("gaz", gaz);
+        setd("gaz", gaz); 
+        setd("consigne", response.consigne);
+        setd("relay", response.relay);
         let now = new Date();
 
         //console.log(temps); 
@@ -291,6 +296,10 @@ void handle_temperature() {
   json += S + "\"interval\" : " + String(delta) + ", ";
 
   json += S + "\"millis\" : " + String(millis()) + ", ";
+
+  json += S + "\"consigne\" : " + String(consigne) + ", ";
+  
+  json += S + "\"relay\" : " + String(relay) + ", ";
 
   json += S + "\"request_number\" : " + String(request_number);
   //EKO();
@@ -382,6 +391,7 @@ void  setup() {
   onewireSetup();
   EKOX(getTemperature());
   pinMode(D3, OUTPUT);  
+  //pinMode(D2, INPUT_PULLUP);  
   /*
   
   delay(5); 
@@ -407,22 +417,22 @@ void  setup() {
   Serial.println(D1);
   Serial.println(D2);
   Serial.println(D3);
-}
-
-void setContact(int v) {
-
+  Serial.println(D4);
+  Serial.println(D5);
 }
 
 int state = 0;
 void automaton()  {
+  EKOX(state);
+  EKOX(millis());
   switch (state) {
     case 0 : state = 1;
     break;
 
-    case 1 : if (getTemperature() <  consigne - delta_hysteresis) { state = 2; setContact(1); }
+    case 1 : if (getTemperature() <  consigne - delta_hysteresis) { state = 2; set_relay(1); }
     break;
 
-    case 2 : if (getTemperature() >  consigne + delta_hysteresis) { state = 1; setContact(0); }
+    case 2 : if (getTemperature() >  consigne + delta_hysteresis) { state = 1; set_relay(0); }
     break;
  
   }
