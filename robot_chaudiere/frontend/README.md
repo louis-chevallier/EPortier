@@ -31,6 +31,16 @@ xx
 graph TD;
 
 
+    subgraph arduino
+        GND;
+        P3V
+        D1;
+
+        D3;
+        D5;
+        A0;
+    end
+
     subgraph DS18B20_Temp_Sensor
         Red;
         Yellow;
@@ -51,24 +61,17 @@ graph TD;
         DHT11_nc ;
         DHT11_GND --- GND;
     end
+
+
+
+
     subgraph Relay
         relay_vcc --- GND;
         relay_in --- D3;
         relay_gnd --- GND;
     end
-    subgraph arduino
-        GND;
-        P3V
-        D1;
-
-        D3;
-        D5;
-        A0;
-    end
-
-
     Red --- P3V;
-    Yellow --- D2
+    Yellow --- D5;
     Black --- GND;
     D5 --- |R1_2K2_RRR| P3V;
     D1 --- |R2_3K3_OOR| P3V;
