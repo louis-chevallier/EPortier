@@ -22,7 +22,7 @@ class Task(object):
         self.t1 = datetime.datetime.now()
 
     def data(self) :
-        url = "http://192.168.1.33/temperature"
+        url = "http://192.168.1.74/temperature"
         headers = {'Accept': 'application/json'}
         try :
             r = requests.get(url, headers=headers)
