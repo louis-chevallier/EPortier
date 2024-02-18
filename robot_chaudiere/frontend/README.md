@@ -16,17 +16,31 @@ a mettre dans cron ( via sudo crontab -u louis -e )
 xx
 
 
+![DHT11](https://components101.com/sites/default/files/component_pin/DHT11%E2%80%93Temperature-Sensor-Pinout.jpg)
+
+
+
+
+
+
+
+
+
 
 ```mermaid
-graph LR;
+graph TD;
+
+
     subgraph arduino
         GND;
         P3V
         D1;
-        D2;
+
         D3;
+        D5;
         A0;
     end
+
     subgraph DS18B20_Temp_Sensor
         Red;
         Yellow;
@@ -47,17 +61,21 @@ graph LR;
         DHT11_nc ;
         DHT11_GND --- GND;
     end
+
+
+
+
     subgraph Relay
         relay_vcc --- GND;
         relay_in --- D3;
         relay_gnd --- GND;
     end
-
     Red --- P3V;
-    Yellow --- D2
+    Yellow --- D5;
     Black --- GND;
-    D2 --- |R1_3K23K| P3V;
-    D1 --- |R2_4K5| P3V;
+    D5 --- |R1_2K2_RRR| P3V;
+    D1 --- |R2_3K3_OOR| P3V;
+
 
 
 
