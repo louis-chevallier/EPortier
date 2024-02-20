@@ -3,8 +3,52 @@ from utillc import *
 from datetime import datetime, timedelta, time
 import numpy as np
 import matplotlib.pyplot as plt
-
+import numpy as np
+from scipy.signal import butter, lfilter, freqz
+import matplotlib.pyplot as plt
+from scipy import stats
 app = App()
+
+def butter_lowpass(cutoff, fs, order=5):
+    return butter(order, cutoff, fs=fs, btype='low', analog=False)
+
+def butter_lowpass_filter(data, cutoff, fs, order=5):
+    b, a = butter_lowpass(cutoff, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
+
+timestep = 1 #sec
+hour = 1*3600
+jour = 24*hour
+Fmax, Fmin = 1./jour, 1./(10*jour)
+
+fs = 1./timestep
+T = 10 * jour # 3600 * 30 # 5.0         # seconds
+n = int(T * fs) # total number of samples
+EKOX(n)
+nc = 7
+t = np.linspace(0, T, n, endpoint=False)
+Fa = np.random.uniform(Fmax, Fmin, size=(nc, 1))
+pa = np.random.uniform(Fmax, Fmin, size=(nc, 1))
+aa = np.random.uniform(0.5, 1, size=(nc, 1))
+
+EKOX(t)
+
+data = (np.sin(Fa * 2*np.pi * t) + 1) / 2 * 20 * aa / nc * 2
+EKOX(data.shape)
+data = np.sum(data, axis=0)
+EKOX(data.shape)
+
+"""
+plt.subplot(2, 1, 2)
+plt.plot(t, data, 'b-', label='data')
+plt.xlabel('Time [sec]')
+plt.grid()
+plt.legend()
+plt.subplots_adjust(hspace=0.35)
+plt.show()
+"""
+
 
 
 class Maison :
@@ -23,6 +67,7 @@ class Maison :
         self.temp_chaudiere_t = Text(app, text="")
         self.temp_maison_t = Text(app, text="")
         self.temp_ext_t = Text(app, text="")
+        self.consigne = 19.
         self.l = []
         self.ticks = []
 
@@ -67,7 +112,7 @@ class Maison :
         self.temp_maison_t.value = "maison %f" % self.temp_maison
         self.temp_ext_t.value = "ext %f" % self.temp_ext
 
-        self.l += [ (self.thermostat, self.temp_chaudiere,  self.temp_maison,  self.temp_ext)]
+        self.l += [ (self.thermostat, self.temp_chaudiere,  self.temp_maison,  self.temp_ext, self.consigne)]
 
         self.date += timedelta(seconds=T)
         self.ticks.append(self.date)
@@ -88,9 +133,28 @@ maison = Maison(app, Ts=1)
 
 
 class PID :
-    def __init__(self, T) :
-        self.T = T
+    def __init__(self) :
+        self.max_len = hour / timestep
+        self.ie = [0] * int(self.max_len)
+        self.cpt = 0
+        pass
 
+    def next(self, mesure, consigne) :
+        Kp, Ki, Kd = 1./100, 1./100000, 0 # 2./1000, 1000.
+        D = len(self.ie)
+        error = consigne - mesure
+        X = np.linspace(-D * timestep, 0, D)
+        slope, intercept = 0, 0 #np.polyfit(X, self.ie, deg=1)
+        self.ie.append(error)        
+        u = Kp * error + Ki * sum(self.ie) + Kd * slope
+        if len(self.ie) > self.max_len : self.ie.pop(0)
+        self.cpt += 1
+        if (self.cpt > 4000 and self.cpt < 4100) :
+            EKOX(slope)
+            EKOX(u)
+        return u
+
+    
 Text(app, text="temp maison")
 sliderMeasurement = Slider(app,
                            start=0, end = 50,
@@ -116,17 +180,30 @@ def callback() :
     sliderMeasurement.value = maison.temp_maison
     
 Tms=10 # ms
-m.repeat(Tms, callback)
 
-app.display()
+pid = PID()
+if True :
+    for t in range(hour*24) :
+        maison.step()
+
+        maison.temp_ext = 21 if t < 13*hour else 6
+        maison.consigne = 18.if t < 6*hour else 22
+        v = pid.next(maison.temp_maison, maison.consigne)
+        
+        th =  maison.thermostat
+        maison.thermostat = min(80, max(float(th + v), 0))
+
+else :
+    m.repeat(Tms, callback)
+    app.display()
 
 if True :
     #for t in range(10000) :         maison.step()
 
     l = np.asarray(maison.l)
     EKOX(l.shape)
-    lb = [ "thermostat", "chaudiere", "maison", "exterieur"]
-    for j in range(4) :
-        plt.plot(maison.ticks, l[:,j], label=lb[j])    
+    lb = [ "thermostat", "chaudiere", "maison", "exterieur", "consigne"]
+    for j, lbb in enumerate(lb) :
+        plt.plot(maison.ticks, l[:,j], label=lbb)    
     plt.legend(loc="lower right")
     plt.show()
