@@ -423,8 +423,8 @@ void  setup() {
 
 int state = 0;
 void automaton()  {
-  EKOX(state);
-  EKOX(millis());
+  //EKOX(state);
+  //EKOX(millis());
   switch (state) {
     case 0 : state = 1;
     break;

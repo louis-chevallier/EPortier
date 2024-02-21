@@ -5,7 +5,7 @@ SHELL=bash
 export GITINFO=$(shell git log --pretty=format:"%h - %an, %ar : %s" -1)
 
 start  :
-	python frontend.py
+	python pid.py 
 
 #2>> trace.txt
 
