@@ -29,7 +29,7 @@ function read_temperature() {
             gaz = response.MQ2.gaz;
 	    millis = response.millis;
             tempext = response.tempext;
-            tempchaudiere = response.tempchaudiere;
+            tempchaudiere = response.tempchaudiere.value;
             setd = function(l, v) {
 		document.getElementById(l).innerHTML = l + "=" + v;
             }

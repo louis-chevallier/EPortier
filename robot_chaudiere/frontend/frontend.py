@@ -22,6 +22,8 @@ class Task(object):
         self.t1 = datetime.datetime.now()
 
     def data(self) :
+
+        # maison
         url = "http://192.168.1.74/temperature"
         headers = {'Accept': 'application/json'}
         try :
@@ -29,14 +31,27 @@ class Task(object):
             j = r.json()
         except :
             j = {
+                'DS18B20' : { 'value' : -999},
                 'DHT' : { 'temperature' : -999, 'hygrometry' : -999 },
                 'MQ2' : { 'gaz' : -999 },
                 'millis' : 0
                 }
-                
-                
-            #j['d'] = time.time
 
+        # chaudiere
+        url = "http://192.168.1.33/temperature"
+        headers = {'Accept': 'application/json'}
+        try :
+            r = requests.get(url, headers=headers)
+            j1 = r.json()
+            j['DS18B20'] = j1['DS18B20'] 
+        except :
+            j = {
+                'DS18B20' : { 'value' : -999},                
+                'DHT' : { 'temperature' : -999, 'hygrometry' : -999 },
+                'MQ2' : { 'gaz' : -999 },
+                'millis' : 0
+                }
+            #j['d'] = time.time
 
         if datetime.datetime.now() > self.t1 + datetime.timedelta(minutes = 10) or self.obs is None :
             EKO()
@@ -44,7 +59,7 @@ class Task(object):
             self.obs = self.meteo.get_observation(48.216671,-1.75) # gps de la meziere
         j['tempext'] = self.obs.temperature
         
-        j['tempchaudiere'] = 100.
+        j['tempchaudiere'] =  j['DS18B20']
         
         EKOX(j)
         return j
