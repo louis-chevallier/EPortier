@@ -3,7 +3,7 @@ import cherrypy, os, pickle
 from time import sleep
 from threading import Thread
 from utillc import *
-from utillc import EKO, EKOX
+from utillc import EKO, EKOX, EKOT
 import requests
 import time, json
 import meteofrance_api
@@ -76,8 +76,8 @@ class Task(object):
     def run(self):
         """ Method that runs forever """
         while True:
-            if datetime.datetime.now() > self.save_time + datetime.timedelta(seconds = 60)  :
-                with open("buffer_%05d.pickle" % self.interval, "wb") as fd :
+            if datetime.datetime.now() > self.save_time + datetime.timedelta(hours = 24)  :
+                with open("/tmp/buffer_%05d.pickle" % self.interval, "wb") as fd :
                     pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
                 self.save_time = datetime.datetime.now()
             sleep(self.interval)
@@ -163,5 +163,6 @@ if __name__ == "__main__":
     }
     hello = HelloWorld()
     sleep(2)
+    EKOT("running")
     cherrypy.quickstart(hello, "/", config=config) 
     hello.tasks[0].thread.join()
