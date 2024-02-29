@@ -103,6 +103,30 @@ function doplot() {
 	    let gaz = []
             let tempext = []
             let tempchaudiere = []
+
+            l = [ ['temperature', temps, (ee) => ee.DHT.temeprature, 'temp'],
+                  ["hygrometry", hygro, (ee) => ee.DHT.hygrometry, 'hygro'],
+                  ["gaz", gaz, (ee) => ee.MQ2.gaz, 'gaz'],
+                  ["tempext", tempext, (ee) => ee.tempext, 'tempextb'],
+                  ["tempchaudiere", tempchaudiere, (ee) => ee.tempchaudiere, 'tempchaudiereb']
+                ]
+
+            function ff(e, i) {
+	        let labels2 = [];
+                for (i in buf) {
+		    let dd = new Date(begin + i * interval*1000);
+		    let ss = dd.toLocaleDateString('fr', { weekday:"long", hour:"numeric", minute:"numeric"});
+                    let v = e[2](buf[i]);
+                    if (v > 0) {
+                        labels2.unshift(dd);
+                        e[1].unshift(v);
+                    }
+                }
+	        const trace = {  name: e[0], x : labels2,  y : e[1],  type: 'scatter', 'line': {'shape': 'spline'}};
+                return trace;
+            }
+            let traces = l.map(l.filter( (e) => gid(e[3]).value == "ON"));
+            
 	    for (i in buf) {
 		let dd = new Date(begin + i * interval*1000);
 		let ss = dd.toLocaleDateString('fr', { weekday:"long", hour:"numeric", minute:"numeric"});
@@ -129,6 +153,9 @@ function doplot() {
 	    if (gid("gaz").value == "ON") { eko("gaz"); data.push(trace_gaz); }
 	    if (gid("tempextb").value == "ON") { eko("tempext"); data.push(trace_tempext); }
 	    if (gid("tempchaudiereb").value == "ON") { eko("tempchaudiere"); data.push(trace_tempchaudiere); }
+
+            data = traces;
+            
 	    Plotly.newPlot('plot_temperature', data);
 	    eko("plotted");
 	}
