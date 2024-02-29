@@ -94,7 +94,6 @@ function doplot() {
 	    buf = response.buffer;
 	    let labels = [];
 	    let li = buf.length;
-	    eko(li)
 	    
 	    let interval = response.interval;
 	    let temps = [];	
@@ -104,56 +103,30 @@ function doplot() {
             let tempext = []
             let tempchaudiere = []
 
-            l = [ ['temperature', temps, (ee) => ee.DHT.temeprature, 'temp'],
+            l = [ ['temperature', temps, (ee) => ee.DHT.temperature, 'temp'],
                   ["hygrometry", hygro, (ee) => ee.DHT.hygrometry, 'hygro'],
                   ["gaz", gaz, (ee) => ee.MQ2.gaz, 'gaz'],
                   ["tempext", tempext, (ee) => ee.tempext, 'tempextb'],
-                  ["tempchaudiere", tempchaudiere, (ee) => ee.tempchaudiere, 'tempchaudiereb']
+                  ["tempchaudiere", tempchaudiere, (ee) => ee.tempchaudiere.value, 'tempchaudiereb']
                 ]
 
             function ff(e, i) {
 	        let labels2 = [];
+                let yv = [];
                 for (i in buf) {
 		    let dd = new Date(begin + i * interval*1000);
 		    let ss = dd.toLocaleDateString('fr', { weekday:"long", hour:"numeric", minute:"numeric"});
                     let v = e[2](buf[i]);
                     if (v > 0) {
                         labels2.unshift(dd);
-                        e[1].unshift(v);
+                        yv.unshift(v);
                     }
                 }
-	        const trace = {  name: e[0], x : labels2,  y : e[1],  type: 'scatter', 'line': {'shape': 'spline'}};
+	        const trace = {  name: e[0], x : labels2,  y : yv,  type: 'scatter', 'line': {'shape': 'spline'}};
                 return trace;
             }
-            let traces = l.map(l.filter( (e) => gid(e[3]).value == "ON"));
-            
-	    for (i in buf) {
-		let dd = new Date(begin + i * interval*1000);
-		let ss = dd.toLocaleDateString('fr', { weekday:"long", hour:"numeric", minute:"numeric"});
-		labels.unshift(dd);
-		temps.unshift(buf[i].DHT.temperature);
-		hygro.unshift(buf[i].DHT.hygrometry);
-		gaz.unshift(buf[i].MQ2.gaz);
-		tempext.unshift(buf[i].tempext);
-		tempchaudiere.unshift(buf[i].tempchaudiere.value);
-	    }
-	    eko("refresh plot");
-	    const trace_temp = {  name: 'temperature', x : labels,  y : temps,  type: 'scatter', 'line': {'shape': 'spline'}};
-	    const trace_hygro = {  name : 'hygrometry', x : labels,  y : hygro,  type: 'scatter' , 'line': {'shape': 'spline', 'smoothing': 1.3}};
-	    const trace_gaz = {  name : 'gaz', x : labels,  y : gaz,  type: 'scatter', 'line': {'shape': 'spline', 'smoothing': 5.3} };
-	    const trace_tempext = {  name : 'tempext', x : labels,  y : tempext,  type: 'scatter', 'line': {'shape': 'spline', 'smoothing': 5.3} };            
-	    const trace_tempchaudiere = {  name : 'tempchaudiere', x : labels,  y : tempchaudiere,  type: 'scatter', 'line': {'shape': 'spline', 'smoothing': 5.3} };            
-	    var data = []
-	    eko(gid("temp").value);
-	    eko(gid("hygro").value);
-	    eko(gid("gaz").value);
-
-	    if (gid("temp").value == "ON") { data.push(trace_temp); }
-	    if (gid("hygro").value == "ON") { data.push(trace_hygro); }
-	    if (gid("gaz").value == "ON") { eko("gaz"); data.push(trace_gaz); }
-	    if (gid("tempextb").value == "ON") { eko("tempext"); data.push(trace_tempext); }
-	    if (gid("tempchaudiereb").value == "ON") { eko("tempchaudiere"); data.push(trace_tempchaudiere); }
-
+            const traces2 = l.filter( (e) => gid(e[3]).value == "ON");
+            const traces = traces2.map(ff);
             data = traces;
             
 	    Plotly.newPlot('plot_temperature', data);
