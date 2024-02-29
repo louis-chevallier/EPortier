@@ -5,7 +5,8 @@ SHELL=bash
 export GITINFO=$(shell git log --pretty=format:"%h - %an, %ar : %s" -1)
 
 start  :
-	python pid.py 
+	mypy --install-types --ignore-missing-imports  frontend.py
+	python frontend.py
 
 #2>> trace.txt
 

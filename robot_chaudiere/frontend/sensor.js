@@ -29,7 +29,7 @@ function read_temperature() {
             gaz = response.MQ2.gaz;
 	    millis = response.millis;
             tempext = response.tempext;
-            tempchaudiere = response.tempchaudiere;
+            tempchaudiere = response.tempchaudiere.value;
             setd = function(l, v) {
 		document.getElementById(l).innerHTML = l + "=" + v;
             }
@@ -135,7 +135,7 @@ function doplot() {
 		hygro.unshift(buf[i].DHT.hygrometry);
 		gaz.unshift(buf[i].MQ2.gaz);
 		tempext.unshift(buf[i].tempext);
-		tempchaudiere.unshift(buf[i].tempchaudiere);
+		tempchaudiere.unshift(buf[i].tempchaudiere.value);
 	    }
 	    eko("refresh plot");
 	    const trace_temp = {  name: 'temperature', x : labels,  y : temps,  type: 'scatter', 'line': {'shape': 'spline'}};

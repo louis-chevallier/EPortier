@@ -1,8 +1,9 @@
 
-import cherrypy, os
+import cherrypy, os, pickle
 from time import sleep
 from threading import Thread
 from utillc import *
+from utillc import EKO, EKOX, EKOT
 import requests
 import time, json
 import meteofrance_api
@@ -11,17 +12,26 @@ import datetime
 max_length = 1000
 
 class Task(object):
-    def __init__(self, interval=1):
+    def __init__(self, interval:int = 1):
         self.meteo = meteofrance_api.MeteoFranceClient()
         self.interval = interval
+        self.buffer = []
+        try :
+            with open("buffer_%05d.pickle" % self.interval, "rb") as fd :
+                self.buffer = pickle.load(fd)
+        except Exception as e:
+            EKOX(e)
+        
+        self.obs = None
+        self.save_time = self.t1 = datetime.datetime.now()
+    
         self.thread = Thread(target=self.run, args=())
         self.thread.daemon = True                            # Daemonize thread
         self.thread.start()                                  # Start the execution
-        self.buffer = []
-        self.obs = None
-        self.t1 = datetime.datetime.now()
 
     def data(self) :
+
+        # maison
         url = "http://192.168.1.74/temperature"
         headers = {'Accept': 'application/json'}
         try :
@@ -29,35 +39,55 @@ class Task(object):
             j = r.json()
         except :
             j = {
+                'DS18B20' : { 'value' : -999},
                 'DHT' : { 'temperature' : -999, 'hygrometry' : -999 },
                 'MQ2' : { 'gaz' : -999 },
                 'millis' : 0
                 }
-                
-                
+
+        # chaudiere
+        url = "http://192.168.1.33/temperature"
+        headers = {'Accept': 'application/json'}
+        try :
+            r = requests.get(url, headers=headers)
+            j1 = r.json()
+            j['DS18B20'] = j1['DS18B20'] 
+        except :
+            j = {
+                'DS18B20' : { 'value' : -999},                
+                'DHT' : { 'temperature' : -999, 'hygrometry' : -999 },
+                'MQ2' : { 'gaz' : -999 },
+                'millis' : 0
+                }
             #j['d'] = time.time
 
-
+            
         if datetime.datetime.now() > self.t1 + datetime.timedelta(minutes = 10) or self.obs is None :
             EKO()
             self.t1 = datetime.datetime.now()
             self.obs = self.meteo.get_observation(48.216671,-1.75) # gps de la meziere
         j['tempext'] = self.obs.temperature
         
-        j['tempchaudiere'] = 100.
+        j['tempchaudiere'] =  j['DS18B20']
         
-        EKOX(j)
+        #EKOX(j)
         return j
         
     def run(self):
         """ Method that runs forever """
         while True:
+            if datetime.datetime.now() > self.save_time + datetime.timedelta(hours = 24)  :
+                with open("/tmp/buffer_%05d.pickle" % self.interval, "wb") as fd :
+                    pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
+                self.save_time = datetime.datetime.now()
             sleep(self.interval)
+
             try :
                 j = self.data()
                 self.buffer.append(j)
                 if len(self.buffer) > max_length :
                     self.buffer.pop(0)
+                    
             except Exception as e :
                 EKOX(e)
 
@@ -93,12 +123,12 @@ class HelloWorld(object):
     @cherrypy.expose
     def read(self, s=0) :
         s = int(s)
-        EKOX(s)
+        #EKOX(s)
         j = self.tasks[s]
-        EKOX(len(j.buffer))
+        #EKOX(len(j.buffer))
         d = { 'buffer' : j.buffer, 'interval' : j.interval }
-        EKOX(len(j.buffer))
-        EKOX(j.buffer)
+        #EKOX(len(j.buffer))
+        #EKOX(j.buffer)
         #cherrypy.response.headers["Access-Control-Allow-Origin"] = '*'
         #cherrypy.response.headers['Content-Type'] = 'application/json'
         return json.dumps(d) 
@@ -133,5 +163,6 @@ if __name__ == "__main__":
     }
     hello = HelloWorld()
     sleep(2)
+    EKOT("running")
     cherrypy.quickstart(hello, "/", config=config) 
     hello.tasks[0].thread.join()
