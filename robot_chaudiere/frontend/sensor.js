@@ -24,6 +24,7 @@ function read_temperature() {
             response = xhr.response;
             //eko()
             console.log("response", response)
+            tempds18 = response.DS18B20_salon.value;
             tempDHT = response.DHT.temperature;
             hygroDHT = response.DHT.hygrometry;
             gaz = response.MQ2.gaz;
@@ -35,6 +36,7 @@ function read_temperature() {
             }
             console.log("tempext", tempext)
             //setd("temperature", "" + response.temperature + "°C");
+            setd("temperatureDS18", "" + tempds18 + "°C");
             setd("temperatureDHT", "" + tempDHT + "°C");
             setd("hygrometrieDHT", hygroDHT);
             setd("gazMQ2", gaz);
@@ -97,13 +99,17 @@ function doplot() {
 	    
 	    let interval = response.interval;
 	    let temps = [];	
+	    let temps2 = [];	
 	    let begin = d.getTime() - li * interval*1000;
 	    let hygro = [];
 	    let gaz = []
             let tempext = []
             let tempchaudiere = []
 
+
+            
             l = [ ['temperature', temps, (ee) => ee.DHT.temperature, 'temp'],
+                  ["temperature2", temps2, (ee) => "DS18B20_salon" in ee ? ee.DS18B20_salon.value: -1 , 'tempds18'],
                   ["hygrometry", hygro, (ee) => ee.DHT.hygrometry, 'hygro'],
                   ["gaz", gaz, (ee) => ee.MQ2.gaz, 'gaz'],
                   ["tempext", tempext, (ee) => ee.tempext, 'tempextb'],

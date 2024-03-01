@@ -37,8 +37,10 @@ class Task(object):
         try :
             r = requests.get(url, headers=headers)
             j = r.json()
+            j['DS18B20_salon'] = j['DS18B20']
         except :
             j = {
+                'DS18B20_salon' : { 'value' : -999},
                 'DS18B20' : { 'value' : -999},
                 'DHT' : { 'temperature' : -999, 'hygrometry' : -999 },
                 'MQ2' : { 'gaz' : -999 },
@@ -72,13 +74,17 @@ class Task(object):
         
         #EKOX(j)
         return j
-        
+
+    def save(self) :
+        with open("/tmp/buffer_%05d.pickle" % self.interval, "wb") as fd :
+            pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
+            
+    
     def run(self):
         """ Method that runs forever """
         while True:
             if datetime.datetime.now() > self.save_time + datetime.timedelta(hours = 24)  :
-                with open("/tmp/buffer_%05d.pickle" % self.interval, "wb") as fd :
-                    pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
+                self.save()
                 self.save_time = datetime.datetime.now()
             sleep(self.interval)
 
@@ -98,7 +104,12 @@ class HelloWorld(object):
             Task(24*3600/max_length),
             Task(7*24*3600/max_length)
         ]
-                    
+
+    @cherrypy.expose
+    def save(self) :
+        for t in self.tasks :
+            t.save()
+            
     @cherrypy.expose
     def index(self):
         """ main 
