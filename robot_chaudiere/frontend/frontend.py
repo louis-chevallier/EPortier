@@ -130,6 +130,12 @@ class HelloWorld(object):
         d = self.tasks[0].data()
         return json.dumps(d)         
 
+    @cherrypy.expose
+    def log(self, data=None) :
+        #EKO()
+        p = urlparse(data);
+        rp = os.path.relpath(p.path, start = "/")
+        print(rp)
         
     @cherrypy.expose
     def read(self, s=0) :

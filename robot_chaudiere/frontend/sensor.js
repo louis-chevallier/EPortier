@@ -123,6 +123,12 @@ function doplot() {
 		    let dd = new Date(begin + i * interval*1000);
 		    let ss = dd.toLocaleDateString('fr', { weekday:"long", hour:"numeric", minute:"numeric"});
                     let v = e[2](buf[i]);
+                    /*
+                    if (e[0] == "temperature2") {
+                        console.log('buf', buf[i]);
+                        console.log('v' , v);
+                    }
+                    */
                     if (v > 0) {
                         labels2.unshift(dd);
                         yv.unshift(v);
