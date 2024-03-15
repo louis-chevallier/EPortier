@@ -260,6 +260,8 @@ void handle_temperature() {
   EKO();
   json += S + "\"MQ2\" : { \"gaz\" : " + MQ2Read() + "},";
 
+  json += S + "\"millis\" : " + String(millis()) + ",";
+
   json += S + "\"interval\" : " + String(delta);
   EKO();
   json += "}";
