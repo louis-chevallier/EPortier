@@ -24,16 +24,23 @@ long seko = millis();
 typedef MicroTuple<float, float> FF;
 DHT dht(DHTPIN, DHTTYPE);
 
+long request_number = 0;
 float aa = 3.2;
+
+//int D3 = 3;
 
 void DHTSetup() {
   dht.begin();
 }
 
+float nonan(float f) {
+  return f != f ? -9999. : f;
+}
 
 FF readDHT() {
-  float newT = dht.readTemperature();
-  float newH = dht.readHumidity();
+  float newT = nonan(dht.readTemperature());
+  float newH = nonan(dht.readHumidity());
+
   auto t = FF(newT, newH);  	
   return t;
 } 
@@ -57,17 +64,22 @@ int MQ2Read() {
 /*******************************/
 // Temperature
 
-OneWire  _ds(4);  // on pin D2 ( == GPIO4)  (a 4.7K resistor is necessary)
+OneWire  _ds(D5); // now on D5 // on pin D2 ( == GPIO4)  (a 4.7K resistor is necessary)
 DallasTemperature sensors(&_ds);
 
 int totalDurationMS = 24*60*60*1000;
 //int totalDurationMS = 12*1000;
 int delta = 60*1000; // intervals de mesure en ms
+int period_automaton = 5*1000; // intervals de mesure en ms
 //int delta = 3*1000; // intervals de mesure en ms
 int nmbSamples = totalDurationMS / delta; 
 List<float> temperatures;
 
 auto last = millis();
+auto last_automaton = millis();
+
+float consigne = 25., delta_hysteresis = 1;
+int relay = -1;
 
 //https://randomnerdtutorials.com/esp8266-ds18b20-temperature-sensor-web-server-with-arduino-ide/
 
@@ -81,9 +93,24 @@ void onewireSetup() {
   sensors.begin();
 }
 
+void set_consigne(float v) {
+  consigne = v;
+} 
+
+void set_relay(int value) {
+  // value = 1 => relais fermé, le bruleur peut chauffer ( sauf seuil haut atteint)
+  //D3 = v;
+  EKOX(value);
+  relay = value;
+  digitalWrite(D3, value);
+} 
+
 float getTemperature() {
-  sensors.requestTemperatures(); 
+  //EKO();
+  sensors.requestTemperatures();
+  //EKO(); 
   float temperatureC = sensors.getTempCByIndex(0);
+  //EKOX(temperatureC);
   return temperatureC;
 }
 
@@ -99,10 +126,10 @@ void onewireLoop() {
   sensors.requestTemperatures(); 
   float temperatureC = getTemperature();
   float temperatureF = sensors.getTempFByIndex(0);
-  Serial.print(temperatureC);
-  Serial.println("ºC");
-  Serial.print(temperatureF);
-  Serial.println("ºF");
+  //Serial.print(temperatureC);
+  //Serial.println("ºC");
+  //Serial.print(temperatureF);
+  //Serial.println("ºF");
   //delay(5000);
 }
 
@@ -155,6 +182,8 @@ long PINOUT=15;
    <div id="temperatureDHT"> _____ </div>
    <div id="hygrometrieDHT"> _____ </div>
    <div id="gaz"> _____ </div>
+   <div id="consigne"> _____ </div>
+   <div id="relay"> _____ </div>
    <div id="plot_temperature" style="width:1000px;height:550px;"> _____ </div>
    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
   <script>
@@ -180,7 +209,7 @@ long PINOUT=15;
       if (xhr.readyState == 4 && xhr.status == 200) {
         response = xhr.response;
         /*
-        temps.push(response.temperature);
+        temps.push(response.temperature);i aussi mais peut-être plus vers 18h30 je fais au mie
         if (temps.length > 24*60) { // mn in a day
           temps.shift();
         }
@@ -201,7 +230,9 @@ long PINOUT=15;
         //setd("temperature", "" + response.temperature + "°C");
         setd("temperatureDHT", "" + tempDHT + "°C");
         setd("hygrometrieDHT", hygroDHT);
-        setd("gaz", gaz);
+        setd("gaz", gaz); 
+        setd("consigne", response.consigne);
+        setd("relay", response.relay);
         let now = new Date();
 
         //console.log(temps); 
@@ -238,13 +269,13 @@ long PINOUT=15;
 )"""");
 
 void handle_temperature() {
-  EKOT("handle temperature");
+  //EKOT("handle temperature");
   String json = "{";
 
-  //auto st = String(getTemperature());
+  auto st = String(getTemperature());
   //json += String("{") + "\"temperature\" : " + st + "," ;
   /*
-  EKOX(temperatures.getSize());
+  //EKOX(temperatures.getSize());
   json += "\"valeurs\" : [ " ;
   for (int i = 0; i < temperatures.getSize(); i++) {
     if (i > 0) json += ",";
@@ -253,21 +284,31 @@ void handle_temperature() {
 
   };
   json += "  ],";
-  EKO();
+  //EKO();
   */
   auto th = readDHT();
   json += S + "\"DHT\" : { \"temperature\" : " + th.get<0>() + ", \"hygrometry\" : " + th.get<1>() + "},";
-  EKO();
+  //EKO();
   json += S + "\"MQ2\" : { \"gaz\" : " + MQ2Read() + "},";
 
-  json += S + "\"millis\" : " + String(millis()) + ",";
+  json += S + "\"DS18B20\" : { \"value\" : " + String(st) + "},";
 
-  json += S + "\"interval\" : " + String(delta);
-  EKO();
+  json += S + "\"interval\" : " + String(delta) + ", ";
+
+  json += S + "\"millis\" : " + String(millis()) + ", ";
+
+  json += S + "\"consigne\" : " + String(consigne) + ", ";
+  
+  json += S + "\"relay\" : " + String(relay) + ", ";
+
+  json += S + "\"request_number\" : " + String(request_number);
+  //EKO();
+>>>>>>> 3e231aa362246af95b0e72b6ff2d9359b500fb49
   json += "}";
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "application/json", json.c_str());
-  EKO(); 
+  //EKO(); 
+  request_number ++;
 }
 
 void handle_index() {
@@ -275,6 +316,31 @@ void handle_index() {
  
   String npage(page);
   npage.replace("TEMPERATURE", String(getTemperature()));
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "text/html", npage.c_str());
+  Serial.println("end");
+}
+
+void handle_relay() {
+  // method get
+  String npage("ok");
+  if (server.argName(0) == "value") {
+    set_relay(server.arg(0).toInt());
+  } else {
+    npage = "fail";
+  }
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "text/html", npage.c_str());
+  Serial.println("end");
+};
+
+void handle_consigne() {
+  String npage("ok");
+  if (server.argName(0) == "value") {
+    set_consigne(server.arg(0).toFloat());
+  } else {
+    npage = "fail";
+  }
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "text/html", npage.c_str());
   Serial.println("end");
@@ -300,6 +366,8 @@ void webSetup() {
   Serial.println(WiFi.localIP());
   server.on("/", handle_index); //Handle Index page
   server.on("/temperature", handle_temperature);
+  server.on("/consigne", handle_consigne);
+  server.on("/relay", handle_relay);
   
   server.begin(); //Start the server
   Serial.println("setup");
@@ -321,9 +389,12 @@ void  setup() {
   EKOX(aa);
   delay(10);
   webSetup();
-
-  /*
   onewireSetup();
+  EKOX(getTemperature());
+  pinMode(D3, OUTPUT);  
+  //pinMode(D2, INPUT_PULLUP);  
+  /*
+  
   delay(5); 
   onewireLoop();
   //Serial.println(code);
@@ -340,9 +411,35 @@ void  setup() {
   EKOX(readDHT().get<1>());
   MQ2Setup();
   EKOX(MQ2Read());
+
+  EKOX(getTemperature());
+
   Serial.println("ok");
+  Serial.println(D1);
+  Serial.println(D2);
+  Serial.println(D3);
+  Serial.println(D4);
+  Serial.println(D5);
+}
+
+int state = 0;
+void automaton()  {
+  //EKOX(state);
+  //EKOX(millis());
+  switch (state) {
+    case 0 : state = 1;
+    break;
+
+    case 1 : if (getTemperature() <  consigne - delta_hysteresis) { state = 2; set_relay(1); }
+    break;
+
+    case 2 : if (getTemperature() >  consigne + delta_hysteresis) { state = 1; set_relay(0); }
+    break;
+ 
+  }
 
 }
+
 
 void loop() {
   webLoop();
@@ -351,6 +448,10 @@ void loop() {
   if (ddn - last > delta) {
     last = ddn;
     collectTemperature();
+  }
+  if (ddn - last_automaton > period_automaton) {
+    last_automaton = ddn;
+    automaton();
   }
   if (ddn < last) {
     last = 0;

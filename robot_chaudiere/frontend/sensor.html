@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    body { font-size: 30px; }
+    @media only screen and (max-width: 600px) {
+        body { font-size: 32px; }            
+    }
+
+  </style>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <!--     <meta http-equiv="refresh" content="4"> 
+      --!>
+    <title>Capteurs Salon</title>
+    <style>
+    .bb {
+        font-size: 80px;
+    }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <script src="lclog.js" charset="utf-8"></script>    
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+    <script  type = "text/javascript" src="sensor.js" ></script>
+    <script  type = "text/javascript" src="fff.js" ></script>
+
+    INFO
+
+    <div id="temperatureDS18"> _____ </div>
+    <div id="temperatureDHT"> _____ </div>
+    <div id="hygrometrieDHT"> _____ </div>
+    <div id="gazMQ2"> _____ </div>
+    <div id="millis"> _____ </div>
+    <div id="tempext"> ______</div>
+    <div id="tempchaudiere"> ______</div>
+    <form action="">
+      Temperature <input type="button" id="temp" value="ON" style="color:blue"  onclick="toggle(this);">
+      Temperature ds18 <input type="button" id="tempds18" value="ON" style="color:blue"  onclick="toggle(this);">
+      Hygrometry <input type="button" id="hygro" value="OFF" style="color:blue"  onclick="toggle(this);">
+      Gaz <input type="button" id="gaz" value="OFF" style="color:blue"  onclick="toggle(this);">
+      Temp ext <input type="button" id="tempextb" value="OFF" style="color:blue"  onclick="toggle(this);">
+      Temp chaudiere <input type="button" id="tempchaudiereb" value="OFF" style="color:blue"  onclick="toggle(this);">
+    </form>
+    <label for="hist">Sélectionnez une durée d'historique :</label>
+    <select id="hist" name="historique" onclick="toggle_select(this);">
+      <option value="0">1h</option>
+      <option value="1" selected>24h</option>
+      <option value="2">1 semaine</option>
+    </select>
+    <div id="plot_temperature" style="width:1000px;height:550px;"> _____ </div>
+
+  
+  </body>
+</html>

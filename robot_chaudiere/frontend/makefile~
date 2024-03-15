@@ -1,0 +1,2 @@
+install :
+	cp sensor.html  /var/www/html/capteur_salon
