@@ -31,17 +31,20 @@ function read_temperature() {
 	    millis = response.millis;
             tempext = response.tempext;
             tempchaudiere = response.tempchaudiere.value;
-            setd = function(l, v) {
-		document.getElementById(l).innerHTML = l + "=" + v;
+            setd = function(l, v, lab) {
+                if (lab == undefined) {
+                    lab = l;
+                }
+		document.getElementById(l).innerHTML = lab + "=" + v;
             }
             console.log("tempext", tempext)
             //setd("temperature", "" + response.temperature + "°C");
-            setd("temperatureDS18", "" + tempds18 + "°C");
-            setd("temperatureDHT", "" + tempDHT + "°C");
-            setd("hygrometrieDHT", hygroDHT);
-            setd("gazMQ2", gaz);
-            setd("tempext", tempext);
-            setd("tempchaudiere", tempchaudiere);
+            setd("temperatureDS18", "" + tempds18 + "°C", "Température intérieure");
+            setd("temperatureDHT", "" + tempDHT + "°C", "Température intérieure");
+            setd("hygrometrieDHT", hygroDHT, "Hygrométrie");
+            setd("gazMQ2", gaz, "Niveau Gaz ambiant");
+            setd("tempext", tempext, "Température extérieure");
+            setd("tempchaudiere", tempchaudiere, "Température chaudière");
             setd("millis", millis);
 	    
 	}
@@ -146,7 +149,7 @@ function doplot() {
 	}
 	eko("processed");
     }
-    setTimeout(doplot, 1000 * 60); // 1 mn
+    //setTimeout(doplot, 1000 * 60); // 1 mn
 }
-setTimeout(doplot, 1000 * 2); // 1 mn
+setTimeout(doplot, 1000 * 1); // 1 mn
 eko("ok");	

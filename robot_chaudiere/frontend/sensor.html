@@ -27,7 +27,7 @@
 
     INFO
 
-    <div id="temperatureDS18"> _____ </div>
+    <div id="temperatureDS18" style="display: none;"> _____ </div>
     <div id="temperatureDHT"> _____ </div>
     <div id="hygrometrieDHT"> _____ </div>
     <div id="gazMQ2"> _____ </div>
@@ -36,11 +36,11 @@
     <div id="tempchaudiere"> ______</div>
     <form action="">
       Temperature <input type="button" id="temp" value="ON" style="color:blue"  onclick="toggle(this);">
-      Temperature ds18 <input type="button" id="tempds18" value="ON" style="color:blue"  onclick="toggle(this);">
-      Hygrometry <input type="button" id="hygro" value="OFF" style="color:blue"  onclick="toggle(this);">
+       <input type="button" id="tempds18" value="OFF" style="color:blue;display:none;"  onclick="toggle(this)">
+      Hygrometrie <input type="button" id="hygro" value="OFF" style="color:blue"  onclick="toggle(this);">
       Gaz <input type="button" id="gaz" value="OFF" style="color:blue"  onclick="toggle(this);">
-      Temp ext <input type="button" id="tempextb" value="OFF" style="color:blue"  onclick="toggle(this);">
-      Temp chaudiere <input type="button" id="tempchaudiereb" value="OFF" style="color:blue"  onclick="toggle(this);">
+      Temp. extérieure <input type="button" id="tempextb" value="OFF" style="color:blue"  onclick="toggle(this);">
+      Temp. chaudière <input type="button" id="tempchaudiereb" value="OFF" style="color:blue"  onclick="toggle(this);">
     </form>
     <label for="hist">Sélectionnez une durée d'historique :</label>
     <select id="hist" name="historique" onclick="toggle_select(this);">

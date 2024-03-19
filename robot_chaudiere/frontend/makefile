@@ -4,7 +4,11 @@ export HOST=$(shell hostname)
 SHELL=bash
 export GITINFO=$(shell git log --pretty=format:"%h - %an, %ar : %s" -1)
 
-start  :
+start :
+	python pid.py
+
+
+start1  :
 	mypy --install-types --ignore-missing-imports  frontend.py
 	python frontend.py
 
