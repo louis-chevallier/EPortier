@@ -303,6 +303,7 @@ void handle_temperature() {
 
   json += S + "\"request_number\" : " + String(request_number);
   //EKO();
+>>>>>>> 3e231aa362246af95b0e72b6ff2d9359b500fb49
   json += "}";
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "application/json", json.c_str());
