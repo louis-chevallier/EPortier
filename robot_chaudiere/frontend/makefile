@@ -8,7 +8,7 @@ start :
 	python pid.py
 
 
-start1  :
+server  :
 	mypy --install-types --ignore-missing-imports  frontend.py
 	python frontend.py
 
@@ -16,7 +16,7 @@ start1  :
 
 run : privkey.pem  privkey.pem
 	date
-	source ${HOME}/scripts/.bashrc; spy; pyenv; make start
+	source ${HOME}/scripts/.bashrc; spy; pyenv; make server
 
 nothing :
 	echo done
