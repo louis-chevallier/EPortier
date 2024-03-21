@@ -27,16 +27,16 @@
 
     INFO
 
-    <div id="temperatureDS18" style="display: none;"> _____ </div>
-    <div id="temperatureDHT"> _____ </div>
+    <div id="temperatureDS18" style="display: true;"> _____ </div>
+    <div id="temperatureDHT" style="display: none;" > _____ </div>
     <div id="hygrometrieDHT"> _____ </div>
     <div id="gazMQ2"> _____ </div>
     <div id="millis"> _____ </div>
     <div id="tempext"> ______</div>
     <div id="tempchaudiere"> ______</div>
     <form action="">
-      Temperature <input type="button" id="temp" value="ON" style="color:blue"  onclick="toggle(this);">
-       <input type="button" id="tempds18" value="OFF" style="color:blue;display:none;"  onclick="toggle(this)">
+      Temperature <input type="button" id="temp" value="OFF" style="color:blue; display:none"  onclick="toggle(this);">
+       <input type="button" id="tempds18" value="ON" style="color:blue;display:true;"  onclick="toggle(this)">
       Hygrometrie <input type="button" id="hygro" value="OFF" style="color:blue"  onclick="toggle(this);">
       Gaz <input type="button" id="gaz" value="OFF" style="color:blue"  onclick="toggle(this);">
       Temp. extérieure <input type="button" id="tempextb" value="OFF" style="color:blue"  onclick="toggle(this);">
