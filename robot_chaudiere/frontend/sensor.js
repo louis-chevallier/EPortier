@@ -23,7 +23,7 @@ function read_temperature() {
         if (xhr.readyState == 4 && xhr.status == 200) {
             response = xhr.response;
             //eko()
-            console.log("response", response)
+            //console.log("response", response)
             tempds18 = response.DS18B20_salon.value;
             tempDHT = response.DHT.temperature;
             hygroDHT = response.DHT.hygrometry;
