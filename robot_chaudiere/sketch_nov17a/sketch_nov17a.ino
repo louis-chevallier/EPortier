@@ -79,7 +79,7 @@ auto last = millis();
 auto last_automaton = millis();
 
 float consigne = 25., delta_hysteresis = 1;
-int relay = -1;
+int relay[2] = {-1, -1};
 
 //https://randomnerdtutorials.com/esp8266-ds18b20-temperature-sensor-web-server-with-arduino-ide/
 
@@ -97,12 +97,17 @@ void set_consigne(float v) {
   consigne = v;
 } 
 
-void set_relay(int value) {
+
+
+void set_relay(int value, int relay_id) {
   // value = 1 => relais fermé, le bruleur peut chauffer ( sauf seuil haut atteint)
   //D3 = v;
   EKOX(value);
-  relay = value;
-  digitalWrite(D3, value);
+
+  relay[relay_id] = value;
+  int r = D3 ? relay_id == 0 : D4;
+
+  digitalWrite(r, value);
 } 
 
 float getTemperature() {
@@ -299,11 +304,13 @@ void handle_temperature() {
 
   json += S + "\"consigne\" : " + String(consigne) + ", ";
   
-  json += S + "\"relay\" : " + String(relay) + ", ";
+  json += S + "\"relay bruleur\" : " + String(relay[0]) + ", ";
+
+  json += S + "\"relay_circulateur\" : " + String(relay[1]) + ", ";
 
   json += S + "\"request_number\" : " + String(request_number);
   //EKO();
->>>>>>> 3e231aa362246af95b0e72b6ff2d9359b500fb49
+
   json += "}";
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "application/json", json.c_str());
@@ -325,7 +332,7 @@ void handle_relay() {
   // method get
   String npage("ok");
   if (server.argName(0) == "value") {
-    set_relay(server.arg(0).toInt());
+    set_relay(server.arg(0).toInt(), server.arg(1).toInt());
   } else {
     npage = "fail";
   }
@@ -392,6 +399,7 @@ void  setup() {
   onewireSetup();
   EKOX(getTemperature());
   pinMode(D3, OUTPUT);  
+  pinMode(D4, OUTPUT);
   //pinMode(D2, INPUT_PULLUP);  
   /*
   
@@ -430,10 +438,10 @@ void automaton()  {
     case 0 : state = 1;
     break;
 
-    case 1 : if (getTemperature() <  consigne - delta_hysteresis) { state = 2; set_relay(1); }
+    case 1 : if (getTemperature() <  consigne - delta_hysteresis) { state = 2; set_relay(1, 0); }
     break;
 
-    case 2 : if (getTemperature() >  consigne + delta_hysteresis) { state = 1; set_relay(0); }
+    case 2 : if (getTemperature() >  consigne + delta_hysteresis) { state = 1; set_relay(0, 0); }
     break;
  
   }

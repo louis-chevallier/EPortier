@@ -39,7 +39,9 @@ def butter_lowpass_filter(data, cutoff, fs, order=5):
     return y
 
 timestep = 1 #sec
-hour = 1*3600
+second = 1
+minute = 60 * second
+hour = 60*minute
 jour = 24*hour
 Fmax, Fmin = 1./jour, 1./(10*jour)
 
@@ -110,14 +112,14 @@ class Maison :
         T = self.T
 
 
-        Q1 = 1./2000 # quantité d'energie passant de l'eau de la chaudiere vers la maison par sec par °
+        Q1 = 1./4000 # quantité d'energie passant de l'eau de la chaudiere vers la maison par sec par °
         Q2 = 1./2000 # quantité d'energie passant de la maison vers l'extérieur par sec par °
         
         # chaudiere
-        p = 15. / (10 * 60) # puissance chaudiere : augmente de 5° en 10mn (observé)
+        p = 35. / (10 * 60 * second) # puissance chaudiere : augmente de 5° en 10mn (observé)
         #EKOX(self.temp_chaudiere)
 
-        hysteresis = 3
+        hysteresis = 10
 
         self.bruleur.bg = "red" if self.state == 1 else "grey"        
         if self.state == 0 :
@@ -130,11 +132,11 @@ class Maison :
             
 
         cal1 = (self.temp_chaudiere - self.temp_maison) * Q1 * T
-        self.temp_maison += cal1
-        self.temp_chaudiere -= cal1
+        self.temp_maison += cal1 / 4
+        self.temp_chaudiere -= cal1 / 1
 
         cal2 = (self.temp_maison - self.temp_ext) * Q2 * T
-        self.temp_maison -= cal2
+        self.temp_maison -= cal2 / 6
 
         self.temp_chaudiere_t.value = "chaudiere %f" % self.temp_chaudiere
         self.thermostat_t.value = "thermostat %f" % self.thermostat        
@@ -212,19 +214,33 @@ def callback() :
 Tms=10 # ms
 
 pid = PID()
+
+if False :
+    maison.temp_chaudiere = 40
+    maison.temp_ext = 17
+    maison.consigne = 22
+    maison.temp_maison = 23
+    maison.thermostat = 60
+    for t in range(hour*3) :
+        maison.thermostat =  60 if t < 6*minute else 45
+        maison.step()
+        
+
 if True :
+    
     for t in range(hour*24) :
         maison.step()
 
         maison.temp_ext = 21 if t < 13*hour else 6
-        maison.consigne = 18.if t < 6*hour else 22
+        maison.consigne = 18 if t < 6*hour else 22
         v = pid.next(maison.temp_maison, maison.consigne)
         
         th =  maison.thermostat
         maison.thermostat = min(80, max(float(th + v), 0))
 
-else :
+if False :
     m.repeat(Tms, callback)
+    EKOT("run gui")
     app.display()
 
 if True :

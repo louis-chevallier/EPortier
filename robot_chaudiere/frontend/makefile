@@ -7,7 +7,7 @@ export GITINFO=$(shell git log --pretty=format:"%h - %an, %ar : %s" -1)
 start :
 	python pid.py
 
-start2  :
+server  :
 	mypy --install-types --ignore-missing-imports  frontend.py
 	python frontend.py
 
@@ -15,7 +15,7 @@ start2  :
 
 run : privkey.pem  privkey.pem
 	date
-	source ${HOME}/scripts/.bashrc; spy; pyenv; make start
+	source ${HOME}/scripts/.bashrc; spy; pyenv; make server
 
 nothing :
 	echo done
