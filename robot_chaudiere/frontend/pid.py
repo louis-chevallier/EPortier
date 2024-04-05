@@ -1,12 +1,33 @@
 from guizero import App, TextBox, Text, Slider, CheckBox
 from utillc import *
 from datetime import datetime, timedelta, time
-import numpy as np
+#import numpy as np
 import matplotlib.pyplot as plt
-import numpy as np
+
 from scipy.signal import butter, lfilter, freqz
 import matplotlib.pyplot as plt
 from scipy import stats
+
+import jax
+from jax import jit
+from jax.lib import xla_bridge
+import jax.numpy as np
+from jax import grad, jit, vmap
+
+#from jax import random
+
+EKOX(f"{xla_bridge.get_backend().platform=}")
+def slow_f(x):
+    # Element-wise ops see a large benefit from fusion
+    y = x * x + x * 2.0
+    return y
+x = np.ones((5000, 5000))
+
+using_jax = True
+
+if using_jax :
+    key = jax.random.PRNGKey(758493)  # Random seed is explicit in JAX
+
 app = App()
 
 def butter_lowpass(cutoff, fs, order=5):
@@ -28,11 +49,19 @@ n = int(T * fs) # total number of samples
 EKOX(n)
 nc = 7
 t = np.linspace(0, T, n, endpoint=False)
-Fa = np.random.uniform(Fmax, Fmin, size=(nc, 1))
-pa = np.random.uniform(Fmax, Fmin, size=(nc, 1))
-aa = np.random.uniform(0.5, 1, size=(nc, 1))
 
+def uniform(max, min, shp) :
+    if using_jax :
+        return jax.random.uniform(key, minval=min, maxval=max, shape=shp)
+    else :
+        return np.random.uniform(low=min, high=max, size=shp)
+
+Fa = uniform(Fmax, Fmin, (nc, 1))
+pa = uniform(Fmax, Fmin, (nc, 1))
+aa = uniform(0.5, 1, (nc, 1))
 EKOX(t)
+
+
 
 data = (np.sin(Fa * 2*np.pi * t) + 1) / 2 * 20 * aa / nc * 2
 EKOX(data.shape)
@@ -150,8 +179,9 @@ class PID :
         if len(self.ie) > self.max_len : self.ie.pop(0)
         self.cpt += 1
         if (self.cpt > 4000 and self.cpt < 4100) :
-            EKOX(slope)
-            EKOX(u)
+            #EKOX(slope)
+            #EKOX(u)
+            pass
         return u
 
     
