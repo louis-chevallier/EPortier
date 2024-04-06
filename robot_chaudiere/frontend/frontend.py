@@ -35,6 +35,7 @@ class Task(object):
         url = "http://192.168.1.74/temperature"
         headers = {'Accept': 'application/json'}
         try :
+            EKO()
             r = requests.get(url, headers=headers)
             j = r.json()
             j['DS18B20_salon'] = j['DS18B20']
@@ -46,7 +47,6 @@ class Task(object):
                 'MQ2' : { 'gaz' : -999 },
                 'millis' : 0
                 }
-
         # chaudiere
         url = "http://192.168.1.33/temperature"
         headers = {'Accept': 'application/json'}
@@ -55,13 +55,7 @@ class Task(object):
             j1 = r.json()
             j['DS18B20'] = j1['DS18B20'] 
         except :
-            j = {
-                'DS18B20' : { 'value' : -999},                
-                'DHT' : { 'temperature' : -999, 'hygrometry' : -999 },
-                'MQ2' : { 'gaz' : -999 },
-                'millis' : 0
-                }
-            #j['d'] = time.time
+            j['DS18B20'] =  { 'value' : -999}
 
             
         if datetime.datetime.now() > self.t1 + datetime.timedelta(minutes = 10) or self.obs is None :
@@ -72,7 +66,6 @@ class Task(object):
         
         j['tempchaudiere'] =  j['DS18B20']
         
-        #EKOX(j)
         return j
 
     def save(self) :

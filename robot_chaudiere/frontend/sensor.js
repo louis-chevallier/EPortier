@@ -23,7 +23,7 @@ function read_temperature() {
         if (xhr.readyState == 4 && xhr.status == 200) {
             response = xhr.response;
             //eko()
-            //console.log("response", response)
+            console.log("response", response)
             tempds18 = response.DS18B20_salon.value;
             tempDHT = response.DHT.temperature;
             hygroDHT = response.DHT.hygrometry;
@@ -71,6 +71,14 @@ function toggle(button)
     eko(o.value);
     o.value = (o.value =="OFF") ? "ON" : "OFF";
     setTimeout(doplot, 1000 * 0.5); // 0.5 sec
+    eko();
+}
+
+function send(button)
+{
+    o = button;
+    eko(o.id);
+    eko(o.value);
     eko();
 }
 
