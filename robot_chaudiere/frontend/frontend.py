@@ -4,10 +4,13 @@ from time import sleep
 from threading import Thread
 from utillc import *
 from utillc import EKO, EKOX, EKOT
+import utillc
 import requests
 import time, json
 import meteofrance_api
 import datetime
+
+utillc.default_opt["with_date"] = 1
 
 max_length = 1000
 
@@ -69,7 +72,9 @@ class Task(object):
         return j
 
     def save(self) :
-        with open("/tmp/buffer_%05d.pickle" % self.interval, "wb") as fd :
+        EKOX(saving_to)
+        saving_to = "/tmp/buffer_%05d.pickle" % self.interval
+        with open(saving_to, "wb") as fd :
             pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
             
     
@@ -150,6 +155,8 @@ if __name__ == "__main__":
     cherrypy.config.update({'server.socket_host': '0.0.0.0'})
 
     port = 8093
+    if "PORT" in os.environ :
+        port = int(os.environ["PORT"])
     
     config = {
         "/": {

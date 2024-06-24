@@ -4,6 +4,12 @@ export HOST=$(shell hostname)
 SHELL=bash
 export GITINFO=$(shell git log --pretty=format:"%h - %an, %ar : %s" -1)
 
+REPO=https://github.com/louis-chevallier/EPortier.git
+DEPLOY_DIR = /deploy
+
+deploy :
+	cd $(DEPLOY_DIR); rm -fr EPortier; git clone $(REPO); cd EPortier
+
 start :
 	python pid.py
 
