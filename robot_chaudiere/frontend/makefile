@@ -8,9 +8,9 @@ REPO=https://github.com/louis-chevallier/EPortier.git
 DEPLOY_DIR = /deploy
 
 deploy :
-	-git commit -a -m "$(shell fortune -s)"
+	-git commit -a -m '$(shell fortune -s)'
 	-git push
-	cd $(DEPLOY_DIR); rm -fr EPortier; git clone $(REPO); cd EPortier/robot_chaudiere; make 
+	cd $(DEPLOY_DIR); rm -fr EPortier; git clone $(REPO); cd EPortier/robot_chaudiere; make pem
 
 start :
 	python pid.py
