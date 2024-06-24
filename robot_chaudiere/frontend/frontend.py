@@ -14,13 +14,15 @@ utillc.default_opt["with_date"] = 1
 
 max_length = 1000
 
+DATA_DIR="/deploy/data"
+
 class Task(object):
     def __init__(self, interval:int = 1):
         self.meteo = meteofrance_api.MeteoFranceClient()
         self.interval = interval
         self.buffer = []
         try :
-            with open("buffer_%05d.pickle" % self.interval, "rb") as fd :
+            with open(os.path.join(DATA_DIR, "buffer_%05d.pickle" % self.interval), "rb") as fd :
                 self.buffer = pickle.load(fd)
         except Exception as e:
             EKOX(e)
