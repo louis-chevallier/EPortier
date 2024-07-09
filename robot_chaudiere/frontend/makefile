@@ -19,16 +19,18 @@ start :
 	python pid.py
 
 server  :
-	mypy --install-types --ignore-missing-imports  frontend.py
+#	mypy --install-types --ignore-missing-imports  frontend.py
+	echo bpython
 	python frontend.py
 
 #2>> trace.txt
 
 pem : privkey.pem  privkey.pem
 
-run : 
+run :
+	echo run
 	date
-	source ${HOME}/scripts/.bashrc; spy; pyenv; make server
+	source ${HOME}/scripts/.bashrc; echo bspy; spy; echo bpyenv; pyenv; echo bmake; make server
 
 nothing :
 	echo done

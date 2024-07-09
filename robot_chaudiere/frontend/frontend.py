@@ -28,7 +28,7 @@ class Task(object):
             EKOX(e)
         
         self.obs = None
-        self.save_time = self.t1 = datetime.datetime.now()
+        self.save_time = self.t1 = datetime.datetime.now() - 2 * datetime.timedelta(hours = 24) 
     
         self.thread = Thread(target=self.run, args=())
         self.thread.daemon = True                            # Daemonize thread
@@ -67,27 +67,49 @@ class Task(object):
             EKO()
             self.t1 = datetime.datetime.now()
             self.obs = self.meteo.get_observation(48.216671,-1.75) # gps de la meziere
-        j['tempext'] = self.obs.temperature
+            self.suliac = self.meteo.get_observation(48.568886594144104, -1.975317996277762)
+
+            # select forecast for st suliac in +2 days closest to 12am
+            self.suliac_forecast = self.meteo.get_forecast(48.568886594144104, -1.975317996277762).forecast
+            dd = lambda f  : abs(datetime.datetime.fromtimestamp(f['dt']).hour - 12)
+            ff = [ f for f in self.suliac_forecast if (datetime.datetime.fromtimestamp(f['dt']) - self.t1).days == 2 ]
+            ff = sorted(ff, key = dd)
+            self.forecast = ff[0]
+            EKOX(self.forecast)
+
+        j['tempext'] = self.obs.temperature        
+
+        # speed m/s
+        j['force_vent'] = self.obs.wind_speed
+        EKOX(self.obs.wind_speed)
+        j['direction_vent'] = self.obs.wind_direction
+        EKOX( self.suliac.wind_speed)
+        j['suliac_force_vent'] = self.suliac.wind_speed
+        
+        j['suliac_direction_vent'] = self.suliac.wind_direction
+        j['suliac_forecast_force_vent'] = self.forecast['wind']['speed']        
+        j['suliac_forecast_direction_vent'] = self.forecast['wind']['direction']
+        j['suliac_forecast_date'] = self.forecast['dt']
         
         j['tempchaudiere'] =  j['DS18B20']
         
         return j
 
     def save(self) :
-        EKOX(saving_to)
         saving_to = "/tmp/buffer_%05d.pickle" % self.interval
+        EKOX(saving_to)
         with open(saving_to, "wb") as fd :
             pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
             
     
     def run(self):
         """ Method that runs forever """
+        j = self.data()        
         while True:
             if datetime.datetime.now() > self.save_time + datetime.timedelta(hours = 24)  :
                 self.save()
                 self.save_time = datetime.datetime.now()
             sleep(self.interval)
-
             try :
                 j = self.data()
                 self.buffer.append(j)
