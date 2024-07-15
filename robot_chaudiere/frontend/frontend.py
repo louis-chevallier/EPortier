@@ -17,13 +17,14 @@ utillc.default_opt["with_date"] = 1
 DATA_DIR="/deploy/data"
 
 class Task(object):
-    def __init__(self, interval:int = 1, max_length=1000):
+    def __init__(self, duration_sec, max_length=1000):
         """
         interval : seconds
         """
         self.max_length = max_length
         self.meteo = meteofrance_api.MeteoFranceClient()
-        self.interval = interval
+        self.interval = duration_sec / max_length
+        EKON(duration_sec, max_length, self.interval)
         self.buffer = []
         try :
             with open(os.path.join(DATA_DIR, "buffer_%05d.pickle" % self.interval), "rb") as fd :
@@ -44,7 +45,7 @@ class Task(object):
         url = "http://192.168.1.74/temperature"
         headers = {'Accept': 'application/json'}
         try :
-            EKO()
+            #EKO()
             r = requests.get(url, headers=headers)
             j = r.json()
             j['DS18B20_salon'] = j['DS18B20']
@@ -79,15 +80,15 @@ class Task(object):
             ff = [ f for f in self.suliac_forecast if (datetime.datetime.fromtimestamp(f['dt']) - self.t1).days == 2 ]
             ff = sorted(ff, key = dd)
             self.forecast = ff[0]
-            EKOX(self.forecast)
+            #EKOX(self.forecast)
 
         j['tempext'] = self.obs.temperature        
 
         # speed m/s
         j['force_vent'] = self.obs.wind_speed
-        EKOX(self.obs.wind_speed)
+        #EKOX(self.obs.wind_speed)
         j['direction_vent'] = self.obs.wind_direction
-        EKOX( self.suliac.wind_speed)
+        #EKOX( self.suliac.wind_speed)
         j['suliac_force_vent'] = self.suliac.wind_speed
         
         j['suliac_direction_vent'] = self.suliac.wind_direction
@@ -126,10 +127,10 @@ class Task(object):
 class HelloWorld(object):
     def __init__(self):
         self.tasks = [
-            Task(1*3600/self.max_length),
-            Task(24*3600/self.max_length),
-            Task(7*24*3600/self.max_length),
-            Task(600, 10000)            
+            Task(1*3600),
+            Task(24*3600),
+            Task(7*24*3600),
+            Task(30*24*3600, 10000)            
         ]
 
     @cherrypy.expose

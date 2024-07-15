@@ -6,12 +6,11 @@ export GITINFO=$(shell git log --pretty=format:"%h - %an, %ar : %s" -1)
 
 REPO=https://github.com/louis-chevallier/EPortier.git
 DEPLOY_DIR = /deploy
+WOD='$(shell fortune -s | sed -e 's/["]//g' | sed -e "s/[']//g")'
 
-xxx :
-	echo '$(shell fortune -s | sed -e 's/["]//g')'
 
 deploy :
-	-git commit -a -m '$(shell fortune -s | sed -e 's/["]//g')'
+	-git commit -a -m $(WOD)
 	-git push
 	cd $(DEPLOY_DIR); rm -fr EPortier; git clone $(REPO); cd EPortier/robot_chaudiere/frontend; make pem
 
