@@ -12,12 +12,16 @@ import datetime
 
 utillc.default_opt["with_date"] = 1
 
-max_length = 1000
+
 
 DATA_DIR="/deploy/data"
 
 class Task(object):
-    def __init__(self, interval:int = 1):
+    def __init__(self, interval:int = 1, max_length=1000):
+        """
+        interval : seconds
+        """
+        self.max_length = max_length
         self.meteo = meteofrance_api.MeteoFranceClient()
         self.interval = interval
         self.buffer = []
@@ -113,7 +117,7 @@ class Task(object):
             try :
                 j = self.data()
                 self.buffer.append(j)
-                if len(self.buffer) > max_length :
+                if len(self.buffer) > self.max_length :
                     self.buffer.pop(0)
                     
             except Exception as e :
@@ -122,9 +126,10 @@ class Task(object):
 class HelloWorld(object):
     def __init__(self):
         self.tasks = [
-            Task(1*3600/max_length),
-            Task(24*3600/max_length),
-            Task(7*24*3600/max_length)
+            Task(1*3600/self.max_length),
+            Task(24*3600/self.max_length),
+            Task(7*24*3600/self.max_length),
+            Task(600, 10000)            
         ]
 
     @cherrypy.expose
