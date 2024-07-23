@@ -1,12 +1,28 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
+#include "ESPAsyncWebServer.h"
 
+//#include <ESP8266WiFi.h>
+//#include <ESP8266WebServer.h>
+#include <ArduinoOTA.h>    //Modification On The Air
+#include <RemoteDebug.h>   //Debug via Wifi
 #include <OneWire.h>
+#include <SoftwareSerial.h>
+String S;
+
+long seko = millis();
+#define EKOT(x) Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + String(x) + "."); seko=millis()
+#define EKOX(x) Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + #x + "=" + String(x) + "."); seko=millis()
+#define EKO()   Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms]"); seko=millis()
+
 
 OneWire  ds(8);  // on pin 10 (a 4.7K resistor is necessary)
 
 
-ESP8266WebServer server(80);
+//ESP8266WebServer server(80);
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+AsyncWebSocketClient * globalClient(NULL);
+
+
 
 // chez nous
 const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
@@ -27,179 +43,17 @@ long start = 0;
 
 // 15 = GPIO15, PIN=D8 on board
 long PINOUT=15;
-void handle_index_main() {
-  start = count;
-  Serial.print("handle_index_main");
-  //Print Hello at opening homepage
-  String message("count =");
-  message += String(count);
-  server.send(200, "text/html", message.c_str());
-  //"Hello! This is an index page.");
-  int v = ledv ? LOW : HIGH;
-  ledv = !ledv;
-  digitalWrite(2, LOW);   // Turn the LED on (Note that LOW is the voltage level
-                                    // but actually the LED is on; this is because 
-                                    // it is acive low on the ESP-01)
-  digitalWrite(PINOUT, HIGH); 
-  delay(2000);
-  digitalWrite(2, HIGH);   // Turn the LED on (Note that LOW is the voltage level
-  digitalWrite(PINOUT, LOW); 
-  Serial.println("end");
-}
 
- 
- String page(R""""(
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <title>Ouverture du garage</title>
-    <style>
-    .bb {
-        font-size: 80px;
-    }
-    </style>
-  </head>
-  <body class="bb">
-  <div id="statut"> La porte est ??? </div>
-  <div>
-    <button class="bb", id="ouvrir">Ouvrir</button>
-  </div>
-    <script>
-      count = "a";
-      const accueil = "Tapez le code";
-      const button = document.getElementById("ouvrir");
+//PINS - GPIO
+#define RXD2 26
+#define TXD2 27
+#define LED 19
 
-      function statut() {
-        murl = "statut_porte";
-        console.log("fetching");
-        count = count + "a";
-        //document.getElementById("statut").innerHTML = "fetching";
-        fetch(murl).then(function(response) {
-          console.log("reponse");
-          d = response.json();
-          console.log(d);
-          //console.log(d["porte"]);
-          return d;
-        }).then(function(data) {
-          //button.innerHTML = count;
-          console.log("data");
-          console.log(data);
-          document.getElementById("statut").innerHTML = "La porte est " + data["porte"];
-          setTimeout(statut, 1000);
-        }).catch(function(ee) {
-          console.log("Booo");
-          //document.getElementById("statut").innerHTML = ee;
-          
-        });
-      }
-      const myTimeout = setTimeout(statut, 1000);
 
-      cookies = document.cookies;
-      console.log(cookies);
-      reset = function(){
-                      button.style.fontSize="100px";
-                      button.innerHTML = accueil;
-                      button.disabled = false;
-                  };
-      //const url = "http://78.207.134.29:8083/main";
-      //const url = "http://78.207.134.29:8083/main";
-      //const url = "http://78.207.134.29:8083/main";
-      const url = "WURL";
-      //const url = "http://192.168.1.95/main";
-      
-      function getCookie(cname) {
-        let name = cname + "=";
-        let decodedCookie = decodeURIComponent(document.cookie);
-        let ca = decodedCookie.split(';');
-        for(let i = 0; i <ca.length; i++) {
-          let c = ca[i];
-          while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-          }
-          if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-          }
-        }
-        return "";
-      }
-      code =getCookie("eportiercode");
-      console.log(code);
-      function ouvre(cde) {
-                console.log(cde);
-                document.cookie = "eportiercode=" + cde + ";SameSite=Strict";
-                cookies = document.cookies;
-                console.log(cookies);
-                cookies = document.cookie;
-                console.log(cookies);
-                button.style.fontSize="30px";
-                button.innerHTML = "le verrou va s'ouvrir ...";
-                setTimeout(() => {
-                        button.disabled = true;
-                        console.log(url+code)
-                        window.fetch(url+cde, { mode: 'no-cors'}).then((result) => {
-                                console.log(result);
-                                if (result.ok) {                                
-                                  button.innerHTML = "Système contacté,<br>déverrouillage pendant 2 secondes ...";
-                                } else {
-                                  button.innerHTML = "Système contacté .. bad luck!";
-                                }
-                                setTimeout(reset, 2000);
-                        }).catch((e) => {
-                                button.innerHTML = "Pas moyen de contacter le système!.. fetching " + url + cde;
-                                setTimeout(reset, 2000);
-                        })}, 
-                        1000);
-      }
-      button.addEventListener('click', function() { ouvre(code); });
-      reset();
-      buttons = [];
-      clicked = [];
-      function addbutton(txt, x, y) {
-        // Create a button element
-          const nbutton = document.createElement('button');
-          nbutton.innerText = txt;
-          console.log(nbutton);
-          nbutton.style.position = "absolute";
-          nbutton.style.left = x + 'px';
-          nbutton.style.top = y + 'px';
-          nbutton.style.fontSize = "120px";
-          nbutton.style.backgroundColor = 'White';
-          nbutton.addEventListener('click', function() {
-              console.log( this );
-              this.style.backgroundColor = 'Red';
-              this.disabled = true;
-              clicked.push(this);
-              if (clicked.length == 5) {
-                code = "";
-                for (i=0; i < clicked.length; i++) {
-                  b = clicked[i];
-                  code += b.innerText;
-                  b.style.backgroundColor = 'White';
-                  b.disabled = false;
-                };
-                ouvre(code);
-                //console.log(code);
-                clicked = [];
-              }
-          });
-        buttons.push(nbutton);
-        document.body.appendChild(nbutton);
-      };
-      W=30*4;
-      H=75*2;
-      ML=  100;
-      MH = 230;
-      //console.log("create buttons");
-      for (i = 1; i < 10; i++) {
-        console.log(i);
-        addbutton(i, ((i-1) % 3) * W + ML, (~~((i-1) / 3) * H) + MH); 
-      }                        
-    </script>
-  </body>
-</html>
-)"""");
-
+#include "code.h"
+String jscode((const char*)bin2c_code_js);
+#include "page.h"
+String page((const char*)bin2c_page_html);
 
 bool porte_ouverte() {
   Serial.println("statut porte");
@@ -207,21 +61,27 @@ bool porte_ouverte() {
   return a0 < 500;
 }
 
-
-void handle_index() {
-  Serial.println("index");
-  int a0 = analogRead(A0);
-  Serial.println("a0=" + String(a0));
-
-  String porte(porte_ouverte() ? "ouverte" : "fermée");
-  
-  String npage(page);
-  npage.replace("WURL", WURL);
-  npage.replace("PORTE", porte);
- 
-  server.send(505, "text/html", npage.c_str());
-  Serial.println("end");
+void send(const String &s) {
+  if (globalClient != NULL) {
+    globalClient->text(s);
+  }
 }
+
+void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+  //EKOX(type);
+  if(type == WS_EVT_CONNECT){
+    EKOT("connect");
+    EKOT("Websocket client connection received");
+    globalClient = client;
+ 
+  } else if(type == WS_EVT_DISCONNECT){
+    EKOT("disconnect");
+    EKOT("Websocket client connection finished");
+    globalClient = NULL;
+  } 
+}
+
+SoftwareSerial sserial(RXD2, TXD2);
 
 void setup() {
   
@@ -230,7 +90,10 @@ void setup() {
   Serial.begin(115200); //Begin Serial at 115200 Baud
   Serial.print("starting");
   delay(10);
-  
+
+  // linky
+  sserial.begin(1200); //, SERIAL_7E1, RXD2, TXD2);  //  7-bit Even parity 1 stop bit pour le Linky
+  //////////////////////////////////////
   WiFi.begin(ssid, password);  //Connect to the WiFi network
   
   while (WiFi.status() != WL_CONNECTED) {  //Wait for connection
@@ -241,23 +104,94 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());  //Print the local IP
   
+  /////////////////////////////////
+
+  ArduinoOTA
+    .onStart([]() {
+        String type;
+        if (ArduinoOTA.getCommand() == U_FLASH)
+          type = "sketch";
+        else // U_SPIFFS
+          type = "filesystem";
+        
+        // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+        Serial.println("Start updating " + type);
+      });
+  ArduinoOTA.onEnd([]() {
+      Serial.println("\nEnd");
+    });
+  
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    });
+  ArduinoOTA.onError([](ota_error_t error) {
+      Serial.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    });
+  
+  ArduinoOTA.begin();
+
+
+  ///////////////////////////////////////////////////////////
+  
+  page.replace("JSCODE", jscode);
+
   // Start the server
   server.begin();
   Serial.println("Server started");
 
   // Print the IP address
   Serial.println(WiFi.localIP());
-  server.on("/", handle_index); //Handle Index page
-  server.on("/main96713", handle_index_main); //Handle Index page
+  server.on("/main96713", HTTP_GET, [](AsyncWebServerRequest *request){
+      start = count;
+      Serial.print("handle_index_main");
+      //Print Hello at opening homepage
+      String message("count =");
+      message += String(count);
+      request->send(200, "text/html", message.c_str());
+      //"Hello! This is an index page.");
+      int v = ledv ? LOW : HIGH;
+      ledv = !ledv;
+      digitalWrite(2, LOW);   // Turn the LED on (Note that LOW is the voltage level
+      // but actually the LED is on; this is because 
+      // it is acive low on the ESP-01)
+      digitalWrite(PINOUT, HIGH); 
+      delay(2000);
+      digitalWrite(2, HIGH);   // Turn the LED on (Note that LOW is the voltage level
+      digitalWrite(PINOUT, LOW); 
+      Serial.println("end");
+    });
 
-  server.on("/statut_porte", HTTP_GET, []() {
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+      
+      Serial.println("index");
+      int a0 = analogRead(A0);
+      Serial.println("a0=" + String(a0));
+      
+      String porte(porte_ouverte() ? "ouverte" : "fermée");
+      
+      String npage(page);
+      npage.replace("WURL", WURL);
+      npage.replace("PORTE", porte);
+      
+      request->send(505, "text/html", npage.c_str());
+      Serial.println("end");
+    });
+
+
+  
+  server.on("/statut_porte", HTTP_GET, [](AsyncWebServerRequest *request) {
       String message = "POST form was:\n";
-      for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
+      //for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
       Serial.println(message);
       String stat(porte_ouverte() ? "ouverte" : "fermée");
       String json = "{ \"porte\" : \"" + stat + "\" }";
       Serial.println(json);
-      server.send(200, "text/json", json);
+      request->send(200, "text/json", json);
   });
   
   server.begin(); //Start the server
@@ -375,7 +309,8 @@ void onewire(void) {
 
 
 void loop() {
-  server.handleClient(); //Handling of incoming client requests
+  ArduinoOTA.handle();
+  //server.handleClient(); //Handling of incoming client requests
   count += 1;
   //onewire();
 }
