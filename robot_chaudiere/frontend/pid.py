@@ -8,6 +8,7 @@ from scipy.signal import butter, lfilter, freqz
 import matplotlib.pyplot as plt
 from scipy import stats
 
+
 import jax
 from jax import jit
 from jax.lib import xla_bridge
@@ -27,6 +28,12 @@ using_jax = True
 
 if using_jax :
     key = jax.random.PRNGKey(758493)  # Random seed is explicit in JAX
+
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from matplotlib.dates import DateFormatter
+
+
 
 app = App()
 
@@ -81,23 +88,32 @@ plt.show()
 """
 
 
-
 class Maison :
     """
     simule la maison : inertie thermique ...
     """
-    def __init__(self, app, Ts=1) :
+    def __init__(self, app : App, Ts : float = 1) :
         self.T = Ts # le timestep en sec
         self.date = datetime.now(); # date (sec)
         self.temp_chaudiere = 10 # temp chaudiere en °C
-        self.temp_maison = 20 # temp chaudiere en °C
+        self.temp_maison = 15 # temp chaudiere en °C
         self.temp_ext = 15 # °
+
+        # thermostat interne a la chaudiere
+        # controle le bruleur        
         self.thermostat = 50
+
+
+
         self.thermostat_t = Text(app, text="thermostat=%f" % self.thermostat)        
+
         self.bruleur = CheckBox(app, text="bruleur")
         self.temp_chaudiere_t = Text(app, text="")
         self.temp_maison_t = Text(app, text="")
         self.temp_ext_t = Text(app, text="")
+
+        # consigne pour le PID
+        # le PID va controller le thermostat
         self.consigne = 19.
         self.l = []
         self.ticks = []
@@ -129,10 +145,9 @@ class Maison :
             self.temp_chaudiere += (p * T) # le bruleur crache
             if self.thermostat < self.temp_chaudiere - hysteresis :
                 self.state = 0
-            
 
         cal1 = (self.temp_chaudiere - self.temp_maison) * Q1 * T
-        self.temp_maison += cal1 / 4
+        self.temp_maison += cal1 / 4 / 2
         self.temp_chaudiere -= cal1 / 1
 
         cal2 = (self.temp_maison - self.temp_ext) * Q2 * T
@@ -159,33 +174,67 @@ class Maison :
 
 m = Text(app, text="PID\n")
 
-maison = Maison(app, Ts=1)
+maison:Maison = Maison(app, Ts=timestep)
 
 
+class CPID :
 
-class PID :
+    """
+    If it overshoots a lot and oscillates, either the integral gain (I) needs to be increased or all gains (P,I,D) should be reduced
+    Too much overshoot? Increase D, decrease P.
+    Response too damped? Increase P.
+    Ramps up quickly to a value below target value and then slows down as it approaches target value? Try increasing the I constant    
+"""
+
     def __init__(self) :
         self.max_len = hour / timestep
         self.ie = [0] * int(self.max_len)
         self.cpt = 0
+
         pass
 
-    def next(self, mesure, consigne) :
-        Kp, Ki, Kd = 1./100, 1./100000, 0 # 2./1000, 1000.
+
+    def next(self, mesure, consigne, t) :
+        Kp, Ki, Kd = 10, 10, 1./10
+        Kp, Ki, Kd = 5, 40, 5
+        Kp, Ki, Kd = 3/4, 40, 15*2              
+        Kp, Ki, Kd = 3/4/2/10, 40, 15*2*2*10
+
+        Kp, Ki, Kd = 3/4/2/10/5, 100, 15*2*2*10*5
+        #Kp, Ki, Kd = [ e * 0.8 for e in (Kp, Ki, Kd)]
+        
+
+        
         D = len(self.ie)
         error = consigne - mesure
-        X = np.linspace(-D * timestep, 0, D)
-        slope, intercept = 0, 0 #np.polyfit(X, self.ie, deg=1)
+
+        #X = np.linspace(-D * timestep, 0, D)        
+        #slope, _ = np.polyfit(X, self.ie, deg=1)
+
+        slope = (self.ie[-1] - self.ie[-2]) / timestep
+        
         self.ie.append(error)        
-        u = Kp * error + Ki * sum(self.ie) + Kd * slope
+        u = Kp * error + Ki * sum(self.ie) / D + Kd * slope
         if len(self.ie) > self.max_len : self.ie.pop(0)
         self.cpt += 1
+        """
         if (self.cpt > 4000 and self.cpt < 4100) :
             #EKOX(slope)
             #EKOX(u)
             pass
+            EKOX(slope)
+            EKOX(u)
+            EKOX((self.ie[-1] - self.ie[-2]) / timestep)
+
+        if (t % hour == 0) :
+            EKOX(slope)
+            EKOX(u)
+            EKOX((self.ie[-1] - self.ie[-2]) / timestep)
+
         return u
 
+
+pid = CPID()
     
 Text(app, text="temp maison")
 sliderMeasurement = Slider(app,
@@ -197,6 +246,7 @@ Text(app, text="thermostat")
 
 def thermostat_f(x) :
     maison.thermostat = float(x)
+
 sliderThermostat = Slider(app, width=500,
                           start=10, end = 70,
                           command = thermostat_f)
@@ -213,7 +263,6 @@ def callback() :
     
 Tms=10 # ms
 
-pid = PID()
 
 if False :
     maison.temp_chaudiere = 40
@@ -224,20 +273,31 @@ if False :
     for t in range(hour*3) :
         maison.thermostat =  60 if t < 6*minute else 45
         maison.step()
-        
 
-if True :
-    
-    for t in range(hour*24) :
+use_pid = True
+
+
+def run() :
+    for t in range(hour*48) :
         maison.step()
 
-        maison.temp_ext = 21 if t < 13*hour else 6
-        maison.consigne = 18 if t < 6*hour else 22
-        v = pid.next(maison.temp_maison, maison.consigne)
+        maison.temp_ext = 20 if t < 24*hour else 6
+        #maison.temp_ext = 15
         
-        th =  maison.thermostat
-        maison.thermostat = min(80, max(float(th + v), 0))
+        if use_pid :
+            maison.consigne = 18 if t < 6*hour else 22
+            maison.consigne = 19
+            v = pid.next(maison.temp_maison, maison.consigne, t)
+            th =  maison.thermostat
+            maison.thermostat = min(80, max(float(v), 0))
+        else :
+            maison.thermostat = 50
 
+if True :
+    EKO()
+    run()
+    EKO()
+            
 if False :
     m.repeat(Tms, callback)
     EKOT("run gui")
@@ -245,11 +305,14 @@ if False :
 
 if True :
     #for t in range(10000) :         maison.step()
-
+    date_form = DateFormatter("%d-%Hh%Mmn")
+    fig, ax = plt.subplots(figsize=(12, 12))
+    
+    ax.xaxis.set_major_formatter(date_form)
     l = np.asarray(maison.l)
     EKOX(l.shape)
     lb = [ "thermostat", "chaudiere", "maison", "exterieur", "consigne"]
     for j, lbb in enumerate(lb) :
-        plt.plot(maison.ticks, l[:,j], label=lbb)    
+        ax.plot(maison.ticks, l[:,j], label=lbb)    
     plt.legend(loc="lower right")
     plt.show()
