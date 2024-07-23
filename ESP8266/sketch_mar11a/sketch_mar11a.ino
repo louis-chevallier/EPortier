@@ -13,6 +13,24 @@ long seko = millis();
 #define EKOX(x) Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + #x + "=" + String(x) + "."); seko=millis()
 #define EKO()   Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms]"); seko=millis()
 
+/* pinout
+
+   Label	GPIO	Input           Output                  Notes
+   D0	GPIO16	no interrupt	no PWM  or I2C support	HIGH at boot, used to wake up from deep sleep                           HCB
+   D1	GPIO05	OK	        OK	                often used as SCL (I2C)                                                 IN2 A
+   D2	GPIO04	OK	        OK	                often used as SDA (I2C)                                                 IN1 A
+   D3	GPIO00	pulled up	OK	                connected to FLASH button, boot fails if pulled LOW                     IN2 B in4
+   D4	GPIO02	pulled up	OK	                HIGH at boot, connected to on-board LED, boot fails if pulled LOW       IN1 B in3
+   D5	GPIO14	OK	        OK	                SPI (SCLK)                                                              ENB
+   D6	GPIO12	OK	        OK	                SPI (MISO)                                                              HCA
+   D7	GPIO13	OK	        OK	                SPI (MOSI)                                                              ENA
+   D8	GPIO15	pulled to GND	OK	                SPI (CS), Boot fails if pulled HIGH                                     HCC
+   RX	GPIO03	OK	        RX pin	                HIGH at boot                                                            Trigger                
+   TX	GPIO01	TX pin	        OK	                HIGH at boot, debug output at boot, boot fails if pulled LOW            
+   A0	ADC0	Analog Input	X	
+*/
+
+
 
 OneWire  ds(8);  // on pin 10 (a 4.7K resistor is necessary)
 
@@ -42,7 +60,7 @@ int ledv = 1>2;
 long start = 0;
 
 // 15 = GPIO15, PIN=D8 on board
-long PINOUT=15;
+long PINOUT=15; // pour le relais de la porte
 
 //PINS - GPIO
 #define RXD2 26
