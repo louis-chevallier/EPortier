@@ -192,9 +192,9 @@ void setup() {
 #ifdef SERVER
   page.replace("JSCODE", jscode);
 
-  // Start the server
-  server.begin();
-  EKOT("Server started");
+  ws.onEvent(onWsEvent);
+  server.addHandler(&ws);
+  
 
   // Print the IP address
   //Serial.println(WiFi.localIP());
@@ -248,6 +248,7 @@ void setup() {
       request->send(200, "text/json", json);
   });
   
+  // Start the server
   server.begin(); //Start the server
   EKOT("setup");
 #endif
