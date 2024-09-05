@@ -2,7 +2,7 @@ count = "a";
 const accueil = "Tapez le code";
 const button = document.getElementById("ouvrir");
 
-const ws = new WebSocket('ws://192.168.1.177:80/ws')
+const ws = new WebSocket('ws://IPADDRESS:PORT/ws')
 
 ws.onopen = () => {
     console.log('ws opened on browser')
@@ -16,19 +16,19 @@ ws.onmessage = (message) => {
 
 function statut() {
     murl = "statut_porte";
-    console.log("fetching");
+    //console.log("fetching");
     count = count + "a";
     //document.getElementById("statut").innerHTML = "fetching";
     fetch(murl).then(function(response) {
-        console.log("reponse");
+        //console.log("reponse");
         d = response.json();
-        console.log(d);
+        //console.log(d);
         //console.log(d["porte"]);
         return d;
     }).then(function(data) {
         //button.innerHTML = count;
-        console.log("data");
-        console.log(data);
+        //console.log("data");
+        //console.log(data);
         document.getElementById("statut").innerHTML = "La porte est " + data["porte"];
         setTimeout(statut, 1000);
     }).catch(function(ee) {
