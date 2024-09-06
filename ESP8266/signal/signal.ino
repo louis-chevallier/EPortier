@@ -123,7 +123,7 @@ void setup() {
   
   pinMode(A0,INPUT);
 
-  dac.begin(0x60);
+  dac.begin(0x61);
   
   Serial.begin(115200); //Begin Serial at 115200 Baud
   EKOT("starting");
