@@ -1,3 +1,7 @@
+const button = document.getElementById("data");
+const value = document.getElementById("value");
+const slider = document.getElementById("range");
+const step = document.getElementById("step");
 
 count = "a";
 
@@ -9,7 +13,10 @@ ws.onopen = () => {
 
 
 ws.onmessage = (message) => {
-    console.log(`message received ` + message.data)
+    //console.log(`message received ` + message.data)
+    let obj = JSON.parse(message.data);
+    value.innerHTML = obj.value;
+    range.value = obj.value;
 }
 
 
@@ -21,11 +28,11 @@ cookies = document.cookies;
 console.log(cookies);
 const url = "WURL";
 
-function eko(x) {
-    console.log(x)
+function eko(...args) {
+    args.forEach(arg => console.log(arg))
 }
 
-const button = document.getElementById("data");
+
 
 function getCookie(cname) {
     let name = cname + "=";
@@ -53,7 +60,7 @@ function doplot() {
     eko("doplot");
     
     const xhr1 = new XMLHttpRequest();
-    xhr1.open("GET", "data");
+    xhr1.open("GET", "data?step=" + step.value);
     xhr1.send();
     eko("sent");
     xhr1.responseType = "json";
@@ -63,19 +70,14 @@ function doplot() {
 	eko("temps received")
 	if (xhr1.readyState == 4 && xhr1.status == 200) {
 	    response = xhr1.response;
-	    buf = response.buffer;
+            //eko('response', response);
+            //eko('response x', response.x);
             var trace1 = {
-                x: [1, 2, 3, 4],
-                y: [10, 15, 13, 17],
+                x: response.x,
+                y: response.y,
                 type: 'scatter'
             };
-            var trace2 = {
-                x: [1, 2, 3, 4],
-                y: [16, 5, 11, 9],                
-                type: 'scatter'
-                
-            };
-            var data = [trace1, trace2];
+            var data = [trace1];
 	    Plotly.newPlot('plot', data);
 	    eko("plotted");
 	}

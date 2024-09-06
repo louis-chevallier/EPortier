@@ -21,7 +21,7 @@ struct Ramp : Segment {
 };
 
 template<class T> struct Rev {
-  const T &r;
+  const T r;
   Rev(const T &_r) : r(_r) {
   }
   float duration_ms() const { return r.duration_ms(); }
@@ -29,8 +29,8 @@ template<class T> struct Rev {
 };
 
 template<class T1, class T2> struct Cat {
-  const T1 &r1;
-  const T2 &r2;
+  const T1 r1;
+  const T2 r2;
   Cat(const T1 &_r1, const T2 &_r2) : r1(_r1), r2(_r2) {
   }
   float duration_ms() const { return r1.duration_ms() + r2.duration_ms(); }
@@ -40,7 +40,7 @@ template<class T1, class T2> struct Cat {
 };
 
 template<class T> struct Repeat {
-  const T &r;
+  const T r;
   const int n;
   Repeat(const T &_r, int _n) : r(_r), n(_n) {}
   float duration_ms()  const { return r.duration_ms() * n; }

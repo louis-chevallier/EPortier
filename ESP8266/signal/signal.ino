@@ -1,5 +1,8 @@
 
 #include "ESPAsyncWebServer.h"
+#include <Adafruit_MCP4725.h>
+Adafruit_MCP4725 dac;
+
 String S;
 
 long seko = millis();
@@ -55,15 +58,14 @@ long start = 0;
 
 #include "segment.hpp"
 
-auto r1 = Ramp(10, 0, 1);
+auto r1 = Ramp(1000, 0, 1);
 auto signal1 = rev(r1);
-auto signal = repeat(cat(r1, rev(r1)), 3);
+auto signal = repeat(cat(r1, rev(r1)), 10000);
 
 void send(const String &s) {
   if (globalClient != NULL) {
     globalClient->text(s);
   }
-
 }
 
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
@@ -82,12 +84,19 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 
 void handle_data(AsyncWebServerRequest *request) {
   String jx, jy;
-
-  for (int t_ms = 0; t_ms < signal.duration_ms(); t_ms++) {
+  auto step_s = request->getParam("step")->value();
+  EKOX(step_s);
+  auto step = step_s.toFloat();
+  EKOX(signal.duration_ms());
+  EKOX(signal.data(10));
+  for (int t_ms = 0; t_ms < signal.duration_ms(); t_ms += step) {
     if (t_ms > 0) jx += " ,"; 
-    jx += String(t_ms);
+    jx += String(float(t_ms) / 1000); // sec
     if (t_ms > 0) jy += " ,"; 
     jy += String(signal.data(t_ms));
+    if ((t_ms / step) > 300) {
+      break;
+    }
   }
 
   /*
@@ -99,9 +108,9 @@ void handle_data(AsyncWebServerRequest *request) {
   }
   */
   String json = S + "{ \"x\" : [" + jx + "], \"y\" : [" + jy + "]}" ;
-  EKOX(json);
+  //EKOX(json);
   AsyncWebServerResponse *response = request->beginResponse(200, "application/json", json.c_str());
-  response->addHeader("Refresh", "3");
+  //response->addHeader("Refresh", "3");
   //request->sendHeader("Access-Control-Allow-Origin", "*");
   //request->send(200, "application/json", json.c_str());
   request->send(response);
@@ -114,8 +123,11 @@ void setup() {
   
   pinMode(A0,INPUT);
 
+  dac.begin(0x60);
+  
   Serial.begin(115200); //Begin Serial at 115200 Baud
   EKOT("starting");
+  EKOX(signal.duration_ms());
   delay(10);
   EKO();
 
@@ -149,6 +161,16 @@ void setup() {
       EKOT("end");
     });
 
+  server.on("/value", HTTP_GET, [](AsyncWebServerRequest *request){      
+      int a0 = analogRead(A0);
+      String json = S + "{ \"value\" : " + a0 +  "}" ;
+      EKOX(json);
+      AsyncWebServerResponse *response = request->beginResponse(200, "application/json", json.c_str());
+      request->send(response);      
+      EKOX(a0);
+
+    });
+
   server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request){
       EKOT("data");
       handle_data(request);
@@ -159,17 +181,38 @@ void setup() {
   server.begin(); //Start the server
   EKOT("setup");
 
-  pinMode(2, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
-  digitalWrite(2, HIGH);  
+  //pinMode(2, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
+  //digitalWrite(2, HIGH);  
 
   // INPUT ANALOG
   pinMode(A0,INPUT);
 
-  
+  dac.setVoltage(4095, true);
   EKOT("Server listening");
 }
 
+long sss(0);
 
+long last = 0;
 void loop() {
   count += 1;
+  auto now = millis();
+
+  if (now % 10 == 0) {
+    /*
+    if (sss++ < 100) {
+      EKOX(now);
+      EKOX(signal.data(now));
+    }
+    */
+    //dac.setVoltage(signal.data(now) * 4095, true);
+  }
+
+  if (now > last + 1000) {
+    last = now;
+    int a0 = analogRead(A0);
+    String json = S + "{ \"value\" : " + a0 +  "}" ;
+    send(json);
+  }
+  
 }
