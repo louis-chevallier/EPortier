@@ -18,6 +18,12 @@
       <input type="range" min="0" max="10000" value="0" class="slider" id="range">
       <output id="value"> </output>
     </div>
+
+    <div>
+      Period (ms) :
+      <input type="range" min="0" max="500" value="100" class="slider" id="period" oninput="this.nextElementSibling.value = this.value">
+      <output>24</output>
+    </div>
     
     <div>
       Step (ms) :

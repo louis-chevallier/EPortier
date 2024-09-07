@@ -1,7 +1,10 @@
 
 #include "ESPAsyncWebServer.h"
 #include <Adafruit_MCP4725.h>
+#include "Wire.h"
+
 Adafruit_MCP4725 dac;
+
 
 String S;
 
@@ -57,6 +60,9 @@ long start = 0;
 #define LED 19
 
 #include "segment.hpp"
+
+int buffer[1000];
+int i_buffer(0);
 
 auto r1 = Ramp(1000, 0, 1);
 auto signal1 = rev(r1);
@@ -123,7 +129,7 @@ void setup() {
   
   pinMode(A0,INPUT);
 
-  dac.begin(0x61);
+  dac.begin(0x62);
   
   Serial.begin(115200); //Begin Serial at 115200 Baud
   EKOT("starting");
@@ -195,6 +201,43 @@ long sss(0);
 
 long last = 0;
 void loop() {
+
+
+ 
+  if (false) {
+  byte error, address;
+  int nDevices;
+  Serial.println("Scanning...");
+  nDevices = 0;
+  for(address = 1; address < 127; address++ ) {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+    if (error == 0) {
+      Serial.print("I2C device found at address 0x");
+      if (address<16) {
+        Serial.print("0");
+      }
+      Serial.println(address,HEX);
+      nDevices++;
+    }
+    else if (error==4) {
+      Serial.print("Unknow error at address 0x");
+      if (address<16) {
+        Serial.print("0");
+      }
+      Serial.println(address,HEX);
+    }    
+  }
+  if (nDevices == 0) {
+    Serial.println("No I2C devices found\n");
+  }
+  else {
+    Serial.println("done\n");
+  }
+  delay(5000);          
+}
+
+  
   count += 1;
   auto now = millis();
 
@@ -205,10 +248,10 @@ void loop() {
       EKOX(signal.data(now));
     }
     */
-    //dac.setVoltage(signal.data(now) * 4095, true);
+    dac.setVoltage(signal.data(now) * 4095, true);
   }
 
-  if (now > last + 1000) {
+  if (now > last + 100) {
     last = now;
     int a0 = analogRead(A0);
     String json = S + "{ \"value\" : " + a0 +  "}" ;
