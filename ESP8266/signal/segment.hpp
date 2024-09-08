@@ -6,16 +6,16 @@ struct Segment {
 
 struct Ramp : Segment {
   const float duration, begin, end;
- Ramp(float _duration, float _begin, float _end) :
+ Ramp(float _duration_ms, float _begin, float _end) :
   begin(_begin),
     end(_end),
-    duration(_duration)
+    duration(_duration_ms)
       {}
   float duration_ms() const { return duration; }
   float data(float t_ms) const {
     auto
       slope = (end - begin)/duration_ms(),
-      d = t_ms - begin;
+      d = t_ms;
     return d*slope;
   }
 };

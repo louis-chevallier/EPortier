@@ -2,7 +2,8 @@
 #include "ESPAsyncWebServer.h"
 #include <Adafruit_MCP4725.h>
 #include "Wire.h"
-
+#include <vector>
+#include <algorithm>
 Adafruit_MCP4725 dac;
 
 
@@ -61,12 +62,20 @@ long start = 0;
 
 #include "segment.hpp"
 
-int buffer[1000];
-int i_buffer(0);
+auto BUFFER_SIZE=1000;
+std::vector<float> buffer;
 
-auto r1 = Ramp(1000, 0, 1);
+
+const int SIGNAL_FREQ = 10; // Hz
+const auto SIGNAL_PERIOD = 1. / SIGNAL_FREQ; // Sec
+
+const auto SAMPLING_FREQ = 1000.; // Hz
+const auto SAMPLING_PERIOD = 1. / SAMPLING_FREQ;
+
+
+auto r1 = Ramp(SIGNAL_PERIOD / 2 * 1000, 0, 1);
 auto signal1 = rev(r1);
-auto signal = repeat(cat(r1, rev(r1)), 10000);
+auto signal = repeat(cat(r1, rev(r1)), 100000);
 
 void send(const String &s) {
   if (globalClient != NULL) {
@@ -195,60 +204,90 @@ void setup() {
 
   dac.setVoltage(4095, true);
   EKOT("Server listening");
+
+
+  for (float t_ms = 0; t_ms < 1000; t_ms++) {
+    auto ss = String("t ") + t_ms + "signal " + signal.data(t_ms);
+    EKOX(ss); 
+  }
+
+  EKOX(String(SAMPLING_PERIOD, 4));
+  EKOX(SIGNAL_PERIOD);
+  
 }
 
 long sss(0);
 
 long last = 0;
-void loop() {
 
+auto last_sample = micros();
+
+auto stop = false;
+void loop() {
 
  
   if (false) {
-  byte error, address;
-  int nDevices;
-  Serial.println("Scanning...");
-  nDevices = 0;
-  for(address = 1; address < 127; address++ ) {
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
-    if (error == 0) {
-      Serial.print("I2C device found at address 0x");
-      if (address<16) {
-        Serial.print("0");
+    // scan I2C devices
+    byte error, address;
+    int nDevices;
+    Serial.println("Scanning...");
+    nDevices = 0;
+    for(address = 1; address < 127; address++ ) {
+      Wire.beginTransmission(address);
+      error = Wire.endTransmission();
+      if (error == 0) {
+        Serial.print("I2C device found at address 0x");
+        if (address<16) {
+          Serial.print("0");
+        }
+        Serial.println(address,HEX);
+        nDevices++;
       }
-      Serial.println(address,HEX);
-      nDevices++;
+      else if (error==4) {
+        Serial.print("Unknow error at address 0x");
+        if (address<16) {
+          Serial.print("0");
+        }
+        Serial.println(address,HEX);
+      }    
     }
-    else if (error==4) {
-      Serial.print("Unknow error at address 0x");
-      if (address<16) {
-        Serial.print("0");
-      }
-      Serial.println(address,HEX);
-    }    
+    if (nDevices == 0) {
+      Serial.println("No I2C devices found\n");
+    }
+    else {
+      Serial.println("done\n");
+    }
+    delay(5000);          
   }
-  if (nDevices == 0) {
-    Serial.println("No I2C devices found\n");
-  }
-  else {
-    Serial.println("done\n");
-  }
-  delay(5000);          
-}
 
   
   count += 1;
   auto now = millis();
+  auto _micros = micros();
 
-  if (now % 10 == 0) {
+  if (_micros > last_sample + SAMPLING_PERIOD) {
+    last_sample = _micros;
     /*
     if (sss++ < 100) {
       EKOX(now);
       EKOX(signal.data(now));
     }
     */
-    dac.setVoltage(signal.data(now) * 4095, true);
+    dac.setVoltage(signal.data(float(_micros) / 1000) * 4095, true);
+    /*
+    if (buffer.size() >= BUFFER_SIZE) {
+      if (!stop) {
+        for (auto i = 1; i < buffer.size(); i++) {
+          auto ss = String("i ") + i + " val " + buffer[i] + " diff " + (buffer[i] - buffer[i-1]) + " v " + signal.data(buffer[i] / 1000);
+          EKOX(ss);
+        }
+        
+        stop = true;
+      }
+    } else {
+      buffer.push_back(_micros);
+    }
+    */
   }
 
   if (now > last + 100) {
