@@ -29,22 +29,31 @@ long seko = millis();
 #define EKO()   Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms]"); seko=millis()
 
 /* pinout
-
+   GPIO ==  numero dans le code
+   Label == marque
    Label	GPIO	Input           Output                  Notes
-   D0	GPIO16	no interrupt	no PWM  or I2C support	HIGH at boot, used to wake up from deep sleep                           HCB
-   D1	GPIO05	OK	        OK	                often used as SCL (I2C)                                                 IN2 A
-   D2	GPIO04	OK	        OK	                often used as SDA (I2C)                                                 IN1 A
-   D3	GPIO00	pulled up	OK	                connected to FLASH button, boot fails if pulled LOW                     IN2 B in4
-   D4	GPIO02	pulled up	OK	                HIGH at boot, connected to on-board LED, boot fails if pulled LOW       IN1 B in3
-   D5	GPIO14	OK	        OK	                SPI (SCLK)                                                              ENB
-   D6	GPIO12	OK	        OK	                SPI (MISO)                                                              HCA
-   D7	GPIO13	OK	        OK	                SPI (MOSI)                                                              ENA
-   D8	GPIO15	pulled to GND	OK	                SPI (CS), Boot fails if pulled HIGH                                     HCC
-   RX	GPIO03	OK	        RX pin	                HIGH at boot                                                            Trigger                
-   TX	GPIO01	TX pin	        OK	                HIGH at boot, debug output at boot, boot fails if pulled LOW            
-   A0	ADC0	Analog Input	X	
+   D0		GPIO16	no interrupt	no PWM  or I2C support	HIGH at boot, used to wake up from deep sleep                           HCB
+   D1		GPIO05	OK	        OK	                often used as SCL (I2C)                                                 IN2 A
+   D2		GPIO04	OK	        OK	                often used as SDA (I2C)                                                 IN1 A
+   D3		GPIO00	pulled up	OK	                connected to FLASH button, boot fails if pulled LOW                     IN2 B in4
+   D4		GPIO02	pulled up	OK	                HIGH at boot, connected to on-board LED, boot fails if pulled LOW       IN1 B in3
+   D5		GPIO14	OK	        OK	                SPI (SCLK)                                                              ENB
+   D6		GPIO12	OK	        OK	                SPI (MISO)                                                              HCA
+   D7		GPIO13	OK	        OK	                SPI (MOSI)                                                              ENA
+   D8		GPIO15	pulled to GND	OK	                SPI (CS), Boot fails if pulled HIGH                                     HCC
+   RX		GPIO03	OK	        RX pin	                HIGH at boot                                                            Trigger                
+   TX		GPIO01	TX pin	        OK	                HIGH at boot, debug output at boot, boot fails if pulled LOW            
+   A0		ADC0	Analog Input	X	
 */
 
+/**
+
+RX/TX (1,3) sont connectée à l'usb, donc pas possible d'utiliser Serial pour le debug et pour un autre communication a la fois
+solutions : 
+  OTA pour changer le code à la volée
+  utiliser serial swap pour diriger Serial sur les pins 15/13 ( = D8/D7)
+ 
+ */
 
 #ifdef ONEWIRE
 OneWire  ds(8);  // on pin 10 (a 4.7K resistor is necessary)
@@ -81,12 +90,12 @@ long count = 0;
 int ledv = 1>2;
 long start = 0;
 
-// 15 = GPIO15, PIN=D8 on board
-long PINOUT=15; // pour le relais de la porte
+// 15 = GPIO14, PIN=D5 on board
+long PINOUT=D5; // pour le relais de la porte
 
 //PINS - GPIO
-#define RXD2 26
-#define TXD2 27
+#define RXD2 12
+#define TXD2 14
 #define LED 19
 
 
@@ -125,10 +134,18 @@ int use_linky = 0;
 
 //SoftwareSerial sserial(RXD2, TXD2);
 
+bool swapped(false);
+
+void swap() {
+  Serial.swap();
+  swapped = !swapped;
+  EKOX(swapped);
+}
 
 void setup() {
   
   pinMode(A0,INPUT);
+  pinMode(D4,INPUT);  
 
   Serial.begin(115200); //Begin Serial at 115200 Baud
   EKOT("starting");
@@ -223,7 +240,7 @@ void setup() {
       EKOT("index");
       int a0 = analogRead(A0);
       EKOX(a0);
-      
+      EKOX(digitalRead(D1));
       String porte(porte_ouverte() ? "ouverte" : "fermée");
       
       String npage(page);
@@ -236,7 +253,12 @@ void setup() {
       EKOT("end");
     });
 
-
+  server.on("/swap", HTTP_GET, [](AsyncWebServerRequest *request) {
+    EKO();
+    swap();
+    String json = "{ \"swap\" : \"ok\" }";
+      request->send(200, "text/json", json);
+  });
   
   server.on("/statut_porte", HTTP_GET, [](AsyncWebServerRequest *request) {
       String message = "POST form was:\n";
@@ -246,6 +268,14 @@ void setup() {
       String json = "{ \"porte\" : \"" + stat + "\" }";
       //Serial.println(json);
       request->send(200, "text/json", json);
+
+      if (swapped) {
+        EKOT("dragunai");
+        //String c =  Serial.readString();
+        //EKOT(c);
+      }
+      
+      
   });
   
   // Start the server

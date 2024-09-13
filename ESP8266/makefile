@@ -36,7 +36,12 @@ upload :
 	plink /dev/ttyUSB0 -serial -sercfg 115200,8,n,1,N
 
 lib :
-	arduino-cli lib search HC_SR04
+#	arduino-cli lib search HC_SR04
 #	arduino-cli lib install FTDebouncer
+#	arduino-cli lib install ESP8266TimerInterrupt
+#	arduino-cli lib uninstall MCP4725
+#	arduino-cli lib search MCP4725
+	arduino-cli lib install "Adafruit MCP4725"
+
 
 

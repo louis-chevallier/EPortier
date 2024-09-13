@@ -1,6 +1,7 @@
 count = "a";
 const accueil = "Tapez le code";
 const button = document.getElementById("ouvrir");
+const swap = document.getElementById("swap");
 
 const ws = new WebSocket('ws://IPADDRESS:PORT/ws')
 
@@ -95,7 +96,23 @@ function ouvre(cde) {
         })}, 
                1000);
 }
+function swap_func(cde) {
+    murl = "swap";
+    fetch(murl).then(function(response) {
+        d = response.json();
+        return d;
+    }).then(function(data) {
+        document.getElementById("statut").innerHTML = "La porte est " + data["porte"];
+        setTimeout(statut, 1000);
+    }).catch(function(ee) {
+        console.log("Booo");
+        //document.getElementById("statut").innerHTML = ee;
+        
+    });    
+}
+
 button.addEventListener('click', function() { ouvre(code); });
+swap.addEventListener('click', function() { swap_func(); });
 reset();
 buttons = [];
 clicked = [];

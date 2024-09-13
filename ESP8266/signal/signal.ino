@@ -1,10 +1,15 @@
 
 #include "ESPAsyncWebServer.h"
 #include <Adafruit_MCP4725.h>
+//#include <MCP4725.h>
 #include "Wire.h"
 #include <vector>
 #include <algorithm>
-Adafruit_MCP4725 dac;
+
+#include "ESP8266TimerInterrupt.h"
+
+//MCP4725 dac; //(0x62);
+Adafruit_MCP4725 dac; //(0x62);
 
 
 String S;
@@ -17,29 +22,32 @@ long seko = millis();
 /* pinout
 
    Label	GPIO	Input           Output                  Notes
-   D0	GPIO16	no interrupt	no PWM  or I2C support	HIGH at boot, used to wake up from deep sleep                           HCB
-   D1	GPIO05	OK	        OK	                often used as SCL (I2C)                                                 IN2 A
-   D2	GPIO04	OK	        OK	                often used as SDA (I2C)                                                 IN1 A
-   D3	GPIO00	pulled up	OK	                connected to FLASH button, boot fails if pulled LOW                     IN2 B in4
-   D4	GPIO02	pulled up	OK	                HIGH at boot, connected to on-board LED, boot fails if pulled LOW       IN1 B in3
-   D5	GPIO14	OK	        OK	                SPI (SCLK)                                                              ENB
-   D6	GPIO12	OK	        OK	                SPI (MISO)                                                              HCA
-   D7	GPIO13	OK	        OK	                SPI (MOSI)                                                              ENA
-   D8	GPIO15	pulled to GND	OK	                SPI (CS), Boot fails if pulled HIGH                                     HCC
-   RX	GPIO03	OK	        RX pin	                HIGH at boot                                                            Trigger                
-   TX	GPIO01	TX pin	        OK	                HIGH at boot, debug output at boot, boot fails if pulled LOW            
-   A0	ADC0	Analog Input	X	
+   D0		GPIO16	no interrupt	no PWM  or I2C support	HIGH at boot, used to wake up from deep sleep                           HCB
+   D1		GPIO05	OK	        OK	                often used as SCL (I2C)                                                 IN2 A
+   D2		GPIO04	OK	        OK	                often used as SDA (I2C)                                                 IN1 A
+   D3		GPIO00	pulled up	OK	                connected to FLASH button, boot fails if pulled LOW                     IN2 B in4
+   D4		GPIO02	pulled up	OK	                HIGH at boot, connected to on-board LED, boot fails if pulled LOW       IN1 B in3
+   D5		GPIO14	OK	        OK	                SPI (SCLK)                                                              ENB
+   D6		GPIO12	OK	        OK	                SPI (MISO)                                                              HCA
+   D7		GPIO13	OK	        OK	                SPI (MOSI)                                                              ENA
+   D8		GPIO15	pulled to GND	OK	                SPI (CS), Boot fails if pulled HIGH                                     HCC
+   RX		GPIO03	OK	        RX pin	                HIGH at boot                                                            Trigger                
+   TX		GPIO01	TX pin	        OK	                HIGH at boot, debug output at boot, boot fails if pulled LOW            
+   A0		ADC0	Analog Input	X	
 */
 
 
+#ifdef SERVER
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
+AsyncWebSocketClient * globalClient(NULL);
+#endif
 
 #include "code.h"
 String jscode((const char*)bin2c_code_js);
 #include "page.h"
 String page((const char*)bin2c_page_html);
-AsyncWebSocketClient * globalClient(NULL);
+
 
 long request_number(0);
 
@@ -67,16 +75,16 @@ std::vector<float> buffer;
 
 
 const int SIGNAL_FREQ = 10; // Hz
-const auto SIGNAL_PERIOD = 1. / SIGNAL_FREQ; // Sec
+const auto SIGNAL_PERIOD_SEC = 1. / SIGNAL_FREQ; // Sec
 
 const auto SAMPLING_FREQ = 1000.; // Hz
-const auto SAMPLING_PERIOD = 1. / SAMPLING_FREQ;
+const auto SAMPLING_PERIOD_SEC = 1. / SAMPLING_FREQ;
 
-
-auto r1 = Ramp(SIGNAL_PERIOD / 2 * 1000, 0, 1);
+auto r1 = Ramp(SIGNAL_PERIOD_SEC / 2 * 1000, 0, 1);
 auto signal1 = rev(r1);
 auto signal = repeat(cat(r1, rev(r1)), 100000);
 
+#ifdef SERVER
 void send(const String &s) {
   if (globalClient != NULL) {
     globalClient->text(s);
@@ -96,6 +104,8 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     globalClient = NULL;
   } 
 }
+
+#endif
 
 void handle_data(AsyncWebServerRequest *request) {
   String jx, jy;
@@ -134,11 +144,65 @@ void handle_data(AsyncWebServerRequest *request) {
   EKOX(request_number);
 }
 
+void IRAM_ATTR TimerHandler()
+{
+  static bool toggle0 = 0;
+  digitalWrite(D7, toggle0);
+  toggle0 = 1 - toggle0;
+  //auto v = signal.data(float(micros()) / 1000) * 4095;
+  auto v = toggle0 * 4095;
+  dac.setVoltage(v, false);  
+  //dac.setValue(v);
+}
+
+
+
+ESP8266Timer ITimer;
+
+
+void scanI2C() {
+  static bool done(false);
+  if (!done) {
+    // scan I2C devices
+    byte error, address;
+    int nDevices;
+    Serial.println("Scanning...");
+    nDevices = 0;
+    for(address = 1; address < 127; address++ ) {
+      Wire.beginTransmission(address);
+      error = Wire.endTransmission();
+      if (error == 0) {
+        Serial.print("I2C device found at address 0x");
+        if (address<16) {
+          Serial.print("0");
+        }
+        Serial.println(address,HEX);
+        nDevices++;
+      }
+      else if (error==4) {
+        Serial.print("Unknow error at address 0x");
+        if (address<16) {
+          Serial.print("0");
+        }
+        Serial.println(address,HEX);
+      }    
+    }
+    if (nDevices == 0) {
+      Serial.println("No I2C devices found\n");
+    }
+    else {
+      Serial.println("done\n");
+    }
+    delay(5000);
+    done = true;
+  }
+}
+
 void setup() {
   
   pinMode(A0,INPUT);
 
-  dac.begin(0x62);
+  //dac.begin(0x62);
   
   Serial.begin(115200); //Begin Serial at 115200 Baud
   EKOT("starting");
@@ -146,6 +210,7 @@ void setup() {
   delay(10);
   EKO();
 
+#ifdef SERVER
   //////////////////////////////////////
   WiFi.begin(ssid, password);  //Connect to the WiFi network
   
@@ -195,24 +260,49 @@ void setup() {
   // Start the server
   server.begin(); //Start the server
   EKOT("setup");
+  EKOT("Server listening");
+#endif
 
+
+  
   //pinMode(2, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
   //digitalWrite(2, HIGH);  
 
   // INPUT ANALOG
   pinMode(A0,INPUT);
 
-  dac.setVoltage(4095, true);
-  EKOT("Server listening");
+  //dac.setVoltage(4095, true);
 
 
+  /*
   for (float t_ms = 0; t_ms < 1000; t_ms++) {
     auto ss = String("t ") + t_ms + "signal " + signal.data(t_ms);
     EKOX(ss); 
   }
+  */
+  EKOX(String(SAMPLING_PERIOD_SEC, 4));
+  EKOX(SIGNAL_PERIOD_SEC);
 
-  EKOX(String(SAMPLING_PERIOD, 4));
-  EKOX(SIGNAL_PERIOD);
+  pinMode(D7,OUTPUT);
+
+  scanI2C();    
+  
+  // T = 10ms
+  if (ITimer.attachInterruptInterval(SAMPLING_PERIOD_SEC * 1000000, TimerHandler)) {
+    Serial.print(F("Starting  ITimer0 OK, millis() = "));
+    Serial.println(millis());
+  }
+  else
+    Serial.println(F("Can't set ITimer0. Select another Timer, freq. or timer"));
+
+  Wire.begin(D2, D1);
+  
+  dac.begin();
+  //dac.setValue(2000);
+  dac.setVoltage(2000, false);
+  //EKOX(dac.isConnected());
+
+
   
 }
 
@@ -223,49 +313,28 @@ long last = 0;
 auto last_sample = micros();
 
 auto stop = false;
+
+
+
+
 void loop() {
+  delay(1);
 
- 
+
+  scanI2C();    
+  
+  return; 
+
+  
   if (false) {
-    // scan I2C devices
-    byte error, address;
-    int nDevices;
-    Serial.println("Scanning...");
-    nDevices = 0;
-    for(address = 1; address < 127; address++ ) {
-      Wire.beginTransmission(address);
-      error = Wire.endTransmission();
-      if (error == 0) {
-        Serial.print("I2C device found at address 0x");
-        if (address<16) {
-          Serial.print("0");
-        }
-        Serial.println(address,HEX);
-        nDevices++;
-      }
-      else if (error==4) {
-        Serial.print("Unknow error at address 0x");
-        if (address<16) {
-          Serial.print("0");
-        }
-        Serial.println(address,HEX);
-      }    
-    }
-    if (nDevices == 0) {
-      Serial.println("No I2C devices found\n");
-    }
-    else {
-      Serial.println("done\n");
-    }
-    delay(5000);          
+    scanI2C();
   }
-
   
   count += 1;
   auto now = millis();
   auto _micros = micros();
 
-  if (_micros > last_sample + SAMPLING_PERIOD) {
+  if (_micros > last_sample + SAMPLING_PERIOD_SEC * 1000000) {
     last_sample = _micros;
     /*
     if (sss++ < 100) {
@@ -273,7 +342,7 @@ void loop() {
       EKOX(signal.data(now));
     }
     */
-    dac.setVoltage(signal.data(float(_micros) / 1000) * 4095, true);
+    //dac.setVoltage(signal.data(float(_micros) / 1000) * 4095, true);
     /*
     if (buffer.size() >= BUFFER_SIZE) {
       if (!stop) {
@@ -290,11 +359,13 @@ void loop() {
     */
   }
 
+#ifdef SERVER
   if (now > last + 100) {
     last = now;
     int a0 = analogRead(A0);
     String json = S + "{ \"value\" : " + a0 +  "}" ;
     send(json);
   }
+#endif
   
 }
