@@ -1,7 +1,7 @@
 
 $(warning $(CURDIR))
 
-SKETCH?=sketch_mar11a
+SKETCH?=garage
 PORT ?= 9999
 DEF= --build-property build.extra_flags=-DPORT=$(PORT) --build-property compiler.cpp.extra_flags=-DIPADDRESS=$(IPADDRESS)
 
@@ -38,7 +38,8 @@ upload :
 lib :
 #	arduino-cli lib search HC_SR04
 #	arduino-cli lib install FTDebouncer
-#	arduino-cli lib install ESP8266TimerInterrupt
+	arduino-cli lib uninstall ESP8266TimerInterrupt
+	arduino-cli lib uninstall ESP8266TimerInterrupt
 #	arduino-cli lib uninstall MCP4725
 #	arduino-cli lib search MCP4725
 	arduino-cli lib install "Adafruit MCP4725"

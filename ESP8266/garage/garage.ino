@@ -3,9 +3,9 @@
 
 
 #ifdef SERVER
-#include "ESPAsyncWebServer.h"
-//#include <ESP8266WiFi.h>
-//#include <ESP8266WebServer.h>
+//#include "ESPAsyncWebServer.h"
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #endif
 
 //#define OTA 1
@@ -60,9 +60,10 @@ OneWire  ds(8);  // on pin 10 (a 4.7K resistor is necessary)
 #endif
 
 #ifdef SERVER 
-//ESP8266WebServer server(80);
-AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
+ESP8266WebServer server(80);
+//AsyncWebServer server(80);
+
+//AsyncWebSocket ws("/ws");
 
 #include "code.h"
 String jscode((const char*)bin2c_code_js);
@@ -73,7 +74,7 @@ String page((const char*)bin2c_page_html);
 #endif
 
 #ifdef SERVER
-AsyncWebSocketClient * globalClient(NULL);
+//AsyncWebSocketClient * globalClient(NULL);
 #endif
 
 // chez nous
@@ -108,13 +109,17 @@ bool porte_ouverte() {
 void send(const String &s) {
 
 #ifdef SERVER
+  /*
   if (globalClient != NULL) {
     globalClient->text(s);
   }
+  */
 #endif
 }
 
 #ifdef SERVER
+
+/*
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   EKOX(type);
   if(type == WS_EVT_CONNECT){
@@ -128,6 +133,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     globalClient = NULL;
   } 
 }
+*/
 #endif
 
 int use_linky = 0;
@@ -140,12 +146,15 @@ void swap() {
   Serial.swap();
   swapped = !swapped;
   EKOX(swapped);
+
 }
 
 void setup() {
   
   pinMode(A0,INPUT);
   pinMode(D4,INPUT);  
+  pinMode(D7,INPUT);
+  pinMode(D8,INPUT);  
 
   Serial.begin(115200); //Begin Serial at 115200 Baud
   EKOT("starting");
@@ -209,33 +218,34 @@ void setup() {
 #ifdef SERVER
   page.replace("JSCODE", jscode);
 
+  /*
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
-  
+  */
 
   // Print the IP address
   //Serial.println(WiFi.localIP());
-  server.on("/main96713", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/main96713", HTTP_GET, [](){
       EKO();
       start = count;
       EKOT("handle_index_main");
       //Print Hello at opening homepage
       String message("count =");
       message += String(count);
-      request->send(200, "text/html", message.c_str());
+      server.send(200, "text/html", message.c_str());
       int v = ledv ? LOW : HIGH;
       ledv = !ledv;
-      digitalWrite(2, LOW);   // Turn the LED on (Note that LOW is the voltage level
+      //digitalWrite(2, LOW);   // Turn the LED on (Note that LOW is the voltage level
       // but actually the LED is on; this is because 
       // it is acive low on the ESP-01)
       digitalWrite(PINOUT, HIGH); 
       delay(2000);
-      digitalWrite(2, HIGH);   // Turn the LED on (Note that LOW is the voltage level
+      //digitalWrite(2, HIGH);   // Turn the LED on (Note that LOW is the voltage level
       digitalWrite(PINOUT, LOW); 
       EKOT("end");
     });
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/", HTTP_GET, [](){
       
       EKOT("index");
       int a0 = analogRead(A0);
@@ -249,30 +259,30 @@ void setup() {
       npage.replace("WURL", WURL);
       npage.replace("PORTE", porte);
       
-      request->send(505, "text/html", npage.c_str());
+      server.send(505, "text/html", npage.c_str());
       EKOT("end");
     });
 
-  server.on("/swap", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/swap", HTTP_GET, []() {
     EKO();
     swap();
     String json = "{ \"swap\" : \"ok\" }";
-      request->send(200, "text/json", json);
+      server.send(200, "text/json", json);
   });
   
-  server.on("/statut_porte", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/statut_porte", HTTP_GET, []() {
       String message = "POST form was:\n";
       //for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
       //Serial.println(message);
       String stat(porte_ouverte() ? "ouverte" : "fermée");
       String json = "{ \"porte\" : \"" + stat + "\" }";
       //Serial.println(json);
-      request->send(200, "text/json", json);
+      server.send(200, "text/json", json);
 
       if (swapped) {
         EKOT("dragunai");
-        //String c =  Serial.readString();
-        //EKOT(c);
+        String c =  Serial.readString();
+        EKOT(c);
       }
       
       
