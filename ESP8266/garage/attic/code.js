@@ -3,6 +3,19 @@ const accueil = "Tapez le code";
 const button = document.getElementById("ouvrir");
 const swap = document.getElementById("swap");
 
+/*
+const ws = new WebSocket('ws://IPADDRESS:PORT/ws')
+
+ws.onopen = () => {
+    console.log('ws opened on browser')
+}
+
+
+ws.onmessage = (message) => {
+    console.log(`message received ` + message.data)
+}
+*/
+
 function statut() {
     murl = "statut_porte";
     //console.log("fetching");
@@ -18,10 +31,7 @@ function statut() {
         //button.innerHTML = count;
         //console.log("data");
         //console.log(data);
-        var dsds = "La porte est " + data["porte_fermee"] + ", " + data["porte_ouverte"] + "<p>";
-        dsds +=  "buf_len : " + data["buf_len"] + "<p>";
-        dsds +=  "swapped : " + data["swapped"] + "<p>";
-        document.getElementById("statut").innerHTML = dsds;
+        document.getElementById("statut").innerHTML = "La porte est " + data["porte"];
         setTimeout(statut, 1000);
     }).catch(function(ee) {
         console.log("Booo");
@@ -61,7 +71,6 @@ function getCookie(cname) {
 }
 code =getCookie("eportiercode");
 console.log(code);
-
 function ouvre(cde) {
     console.log(cde);
     document.cookie = "eportiercode=" + cde + ";SameSite=Strict";
@@ -89,6 +98,12 @@ function ouvre(cde) {
                1000);
 }
 
+function debug() {
+    window.fetch(url+"96713", { mode: 'no-cors'}).then((result) => {
+        let delay_sec = Math.random() * (6 - 2 + 1) + 1;
+        setTimeout(debug, delay_sec * 1000);
+    });
+}
 
 function swap_func(cde) {
     murl = "swap";
@@ -151,3 +166,4 @@ for (i = 1; i < 10; i++) {
     addbutton(i, ((i-1) % 3) * W + ML, (~~((i-1) / 3) * H) + MH); 
 }                        
 
+debug();

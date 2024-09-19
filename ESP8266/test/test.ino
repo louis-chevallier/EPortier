@@ -118,9 +118,18 @@ void loop() {
   } else {
     if (buf_serial.length() > 0) {
       EKOX(buf_serial.length());
+      String ss;
       for (int i = 0; i < buf_serial.length(); i++) {
-        EKOX(int(buf_serial[i]));
+        //EKOX(int(buf_serial[i]));
+        //EKOX(String(buf_serial[i]));
+        if (buf_serial[i] < 254) {
+          if (buf_serial[i] <= 13) {
+            ss += "\n";
+          } else
+            ss += String(buf_serial[i]);
+        } 
       }
+      EKOX(ss);
 
       
       buf_serial = "";
@@ -130,6 +139,6 @@ void loop() {
   
   if (now > last + 1000) {
     last = now;
-    //EKO();
+    EKO();
   }
 }
