@@ -45,4 +45,5 @@ lib :
 	arduino-cli lib install "Adafruit MCP4725"
 
 
-
+doc :
+	pandoc readme.md --filter=mermaid-filter  -o readme.pdf 

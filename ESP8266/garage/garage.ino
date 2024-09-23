@@ -72,6 +72,11 @@ void swap() {
   delay(500);  
   //Serial.begin(115200); //Begin Serial at 115200 Baud
   swapped = !swapped;
+  if (swapped) {
+    begin(1200, SERIAL_7E1);
+  } else {
+    Serial.begin(115200, SERIAL_8N1); //Begin Serial at 115200 Baud
+  }
   EKOX(swapped);
 }
 
@@ -94,7 +99,7 @@ void setup() {
   pinMode(PORTE_OUVERTE,INPUT);
   pinMode(PORTE_FERMEE,INPUT);  
 
-  Serial.begin(115200); //Begin Serial at 115200 Baud
+  Serial.begin(115200, SERIAL_8N1); //Begin Serial at 115200 Baud
   EKOT("starting");
   delay(500);
 
