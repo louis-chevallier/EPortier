@@ -1,13 +1,13 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
+//#include <ESP8266WiFi.h>
+//#include <ESP8266WebServer.h>
 
+
+#include "ESPAsyncWebServer.h"
+#include "microTuple.h"
 
 String S;
 
 long seko = millis();
-#define EKOT(x) Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + String(x) + "."); seko=millis()
-#define EKOX(x) Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + #x + "=" + String(x) + "."); seko=millis()
-#define EKO()   Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms]"); seko=millis()
 
 /* pinout
    GPIO ==  numero dans le code
@@ -36,7 +36,12 @@ solutions :
  
  */
 
-ESP8266WebServer server(80);
+
+//ESP8266WebServer server(80);
+
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+AsyncWebSocketClient * globalClient(NULL);;
 
 
 #include "code.h"
@@ -67,18 +72,34 @@ String buf_serial;
 bool swapped(false);
 
 void swap() {
-  delay(500);
+  //delay(500);
+  noInterrupts();
   Serial.swap();
-  delay(500);  
+  interrupts();
+  //delay(500);  
   //Serial.begin(115200); //Begin Serial at 115200 Baud
   swapped = !swapped;
+  /*
   if (swapped) {
-    begin(1200, SERIAL_7E1);
+    Serial.begin(1200, SERIAL_7E1);
   } else {
     Serial.begin(115200, SERIAL_8N1); //Begin Serial at 115200 Baud
   }
-  EKOX(swapped);
+  */
 }
+
+void println(const String &ss) {
+  if (swapped) {
+    Serial.println(ss);
+  } else {
+    Serial.println(ss);
+  }
+}
+
+#define EKOT(x) println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + String(x) + "."); seko=millis()
+#define EKOX(x) println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + #x + "=" + String(x) + "."); seko=millis()
+#define EKO()   println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms]"); seko=millis()
+
 
 #define G(x) (S + "\"" + String(x) + "\"")
 
@@ -92,6 +113,89 @@ bool porte_fermee() {
   // true : contact ouvert  
   int d = digitalRead(PORTE_FERMEE);
   return d;
+}
+
+MicroTuple<String, String> split(const String &mess, const String &sep = "?") {
+  auto index = mess.indexOf(sep);
+  return MicroTuple<String, String>(mess.substring(0, index), mess.substring(index+1));
+} 
+
+
+void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+  //EKOX(type);
+  if(type == WS_EVT_CONNECT){
+    EKOT("connect");
+    EKOT("Websocket client connection received");
+    globalClient = client;
+ 
+  } else if(type == WS_EVT_DISCONNECT){
+    EKOT("disconnect");
+    EKOT("Websocket client connection finished");
+    globalClient = NULL;
+  } else if(type == WS_EVT_DATA){
+    //EKOX(len);
+    AwsFrameInfo * info = (AwsFrameInfo*)arg;
+    String msg = "";
+    if(info->final && info->index == 0 && info->len == len){
+      //the whole message is in a single frame and we got all of it's data
+      //Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
+      if(info->opcode == WS_TEXT){
+        for(size_t i=0; i < info->len; i++) {
+          msg += (char) data[i];
+        }
+      } else {
+        char buff[3];
+        for(size_t i=0; i < info->len; i++) {
+          sprintf(buff, "%02x ", (uint8_t) data[i]);
+          msg += buff ;
+        }
+      }
+      //EKOX(msg.c_str());
+      auto t = split(msg);
+      EKOX(t.get<0>());
+      EKOX(t.get<1>());
+      
+
+      /*
+        if(info->opcode == WS_TEXT)
+        client->text("I got your text message");
+        else
+        client->binary("I got your binary message");
+      */
+
+    } else {
+      EKO();
+      //message is comprised of multiple frames or the frame is split into multiple packets
+      if(info->index == 0){
+        if(info->num == 0)
+          Serial.printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+        Serial.printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+      }
+      Serial.printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
+      if(info->opcode == WS_TEXT){
+        for(size_t i=0; i < len; i++) {
+          msg += (char) data[i];
+        }
+      } else {
+        char buff[3];
+        for(size_t i=0; i < len; i++) {
+          sprintf(buff, "%02x ", (uint8_t) data[i]);
+          msg += buff ;
+        }
+      }
+      Serial.printf("%s\n",msg.c_str());
+      if((info->index + len) == info->len){
+        Serial.printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+        if(info->final){
+          Serial.printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+          if(info->message_opcode == WS_TEXT)
+            client->text("I got your text message");
+          else
+            client->binary("I got your binary message");
+        }
+      }
+    }
+  }
 }
 
 void setup() {
@@ -117,21 +221,21 @@ void setup() {
 
   page.replace("JSCODE", jscode);
 
-  /*
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
-  */
+  EKO();
+
 
   // Print the IP address
   //Serial.println(WiFi.localIP());
-  server.on("/main96713", HTTP_GET, [](){
+  server.on("/main96713", HTTP_GET, [](AsyncWebServerRequest *request){
       EKO();
       start = count;
       EKOT("handle_index_main");
       //Print Hello at opening homepage
       String message("count =");
       message += String(count);
-      server.send(200, "text/html", message.c_str());
+      request->send(200, "text/html", message.c_str());
       int v = ledv ? LOW : HIGH;
       ledv = !ledv;
       digitalWrite(PORTE, HIGH); 
@@ -140,7 +244,7 @@ void setup() {
       EKOT("end");
     });
 
-  server.on("/", HTTP_GET, [](){
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
       
       EKOT("index");
       int a0 = analogRead(PORTE_OUVERTE);
@@ -157,20 +261,22 @@ void setup() {
       npage.replace("WURL", WURL);
       npage.replace("PORTE", porte);
       
-      server.send(505, "text/html", npage.c_str());
+      request->send(505, "text/html", npage.c_str());
       EKOT("end");
     });
 
-  server.on("/swap", HTTP_GET, []() {
+  server.on("/swap", HTTP_GET, [](AsyncWebServerRequest *request) {
     EKO();
     swap();
+    EKOX(swapped);
+    
     String npage("{");
     npage += S + G("status") + " : " + G("ok");
     npage += " }";
-    server.send(200, "text/json", npage.c_str());
+    request->send(200, "text/json", npage.c_str());
   });
   
-  server.on("/statut_porte", HTTP_GET, []() {
+  server.on("/statut_porte", HTTP_GET, [](AsyncWebServerRequest *request) {
     String message = "POST form was:\n";
     //for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
     //Serial.println(message);
@@ -183,7 +289,7 @@ void setup() {
     json += S + "\"buf_len\" : \"" + buf_serial.length() + "\"";
     json += "}";
     //EKOX(json);
-    server.send(200, "text/json", json);
+    request->send(200, "text/json", json);
     
       
       
@@ -203,12 +309,28 @@ void setup() {
 
 long last = 0;
 void loop() {
-  server.handleClient();
+  //server.handleClient();
   auto now = millis();
+  if(globalClient != NULL && globalClient->status() == WS_CONNECTED){
+    /*
+      EKO();
+        auto r = random(0,100); 
+        if (r == 1) {
+        String randomNumber = String(random(0,100));
+        globalClient->text(randomNumber);
+        }
+      */
+    }
+    delay(4);    
+  
   if (swapped) {
     if (Serial.available()) {
       char c = Serial.read();
       buf_serial += String(c);
+      if(globalClient != NULL && globalClient->status() == WS_CONNECTED){
+        globalClient->text(String(c));
+      }
+
     }
   } else {
     if (buf_serial.length() > 0) {
@@ -227,8 +349,6 @@ void loop() {
       EKOT("start");
       EKOX(ss);
       EKOT("end");
-      
-
       
       buf_serial = "";
     }

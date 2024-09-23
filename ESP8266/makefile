@@ -38,11 +38,11 @@ upload :
 lib :
 #	arduino-cli lib search HC_SR04
 #	arduino-cli lib install FTDebouncer
-	arduino-cli lib uninstall ESP8266TimerInterrupt
-	arduino-cli lib uninstall ESP8266TimerInterrupt
+#	arduino-cli lib uninstall ESP8266TimerInterrupt
 #	arduino-cli lib uninstall MCP4725
 #	arduino-cli lib search MCP4725
 	arduino-cli lib install "Adafruit MCP4725"
+	arduino-cli lib install ESPAsyncWebServer
 
 
 doc :

@@ -2,6 +2,18 @@ count = "a";
 const accueil = "Tapez le code";
 const button = document.getElementById("ouvrir");
 const swap = document.getElementById("swap");
+const eko = document.getElementById("eko");
+
+const ws = new WebSocket('ws://192.168.1.95/ws')
+ws.onopen = () => {
+    console.log('ws opened on browser')
+    ws.send('hello world')
+}
+
+ws.onmessage = (message) => {
+    console.log(`message received ` + message.data)
+    eko.innerHTML += message.data;
+}
 
 function statut() {
     murl = "statut_porte";

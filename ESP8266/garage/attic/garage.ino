@@ -167,13 +167,13 @@ void setup() {
       EKOT("end");
     });
 
-  server.on("/swap", HTTP_GET, []() {
+  server.on("/swap", HTTP_GET, [](AsyncWebServerRequest *request) {
     EKO();
     swap();
     String npage("{");
     npage += S + G("status") + " : " + G("ok");
     npage += " }";
-    server.send(200, "text/json", npage.c_str());
+    request->send(200, "text/json", npage.c_str());
   });
   
   server.on("/statut_porte", HTTP_GET, []() {
