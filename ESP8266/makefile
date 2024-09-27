@@ -43,6 +43,7 @@ lib :
 #	arduino-cli lib search MCP4725
 	arduino-cli lib install "Adafruit MCP4725"
 	arduino-cli lib install ESPAsyncWebServer
+	arduino-cli lib install TaskScheduler
 
 
 doc :

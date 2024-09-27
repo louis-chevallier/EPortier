@@ -1,6 +1,22 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include "microTuple.h"
 
+typedef std::function<void(void)> MyFunc;
+
+typedef MicroTuple<int, MyFunc> IF_1;
+typedef MicroTuple<int, float> IF_2;
+
+void fff() {
+}
+
+
+IF_2 ddd(1, 3.2);
+IF_1 ddd1(1, fff);
+
+
+void onremove(IF_1 &ff) {
+}
 
 ESP8266WebServer server(80);
 

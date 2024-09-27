@@ -1,13 +1,88 @@
 //#include <ESP8266WiFi.h>
 //#include <ESP8266WebServer.h>
 
-
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
+#include "ESP8266TimerInterrupt.h"
+typedef std::function<void(void)> MyFunc;
+
+typedef MicroTuple<int, MyFunc> IF_1;
+typedef MicroTuple<int, float> IF_2;
+
+void fff() {
+}
+
+
+IF_2 ddd(1, 3.2);
+IF_1 ddd1(1, fff);
+
+
+#define TIMER_INTERVAL_MS        1000
+volatile uint32_t lastMillis = 0;
+
+
+
+// chez nous
+const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
+const char* password =  "9697abcdea"; //Enter Wi-Fi Password
+
+//const String IPADRESS="176.161.19.7";
+const String WURL = String("http://") + String(IPADDRESS) + ":" + String(PORT) + "/main";
+
+
+long count = 0;
+int ledv = 1>2;
+long start = 0;
+
+// 15 = GPIO14, PIN=D5 on board
+long PORTE=D5; // pour le relais de la porte
+
+long PORTE_OUVERTE = A0;
+long PORTE_FERMEE = D2;
+
+String buf_serial;
+bool swapped(false);
 
 String S;
 
 long seko = millis();
+
+void println(const String &ss) {
+  if (swapped) {
+    Serial.println(ss);
+  } else {
+    Serial.println(ss);
+  }
+}
+
+#define EKOT(x) println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + String(x) + "."); seko=millis()
+#define EKOX(x) println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + #x + "=" + String(x) + "."); seko=millis()
+#define EKO()   println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms]"); seko=millis()
+
+
+#define G(x) (S + "\"" + String(x) + "\"")
+
+ESP8266Timer ITimer;
+typedef void (*timer_callback)  ();
+void IRAM_ATTR TimerHandler()
+{
+  static bool toggle = false;
+  static bool started = false;
+  EKOT("it routine");
+}
+
+
+void onremove(IF_1 &ff) {
+}
+
+void apres(int delay_ms,  timer_callback f){
+  EKO();
+  //tasks.add(IF(delay, func));
+  ITimer.attachInterruptInterval(TIMER_INTERVAL_MS * delay_ms, f);  
+}
+
+
+
 
 /* pinout
    GPIO ==  numero dans le code
@@ -50,27 +125,6 @@ String jscode((const char*)bin2c_code_js);
 String page((const char*)bin2c_page_html);
 
 
-// chez nous
-const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
-const char* password =  "9697abcdea"; //Enter Wi-Fi Password
-
-//const String IPADRESS="176.161.19.7";
-const String WURL = String("http://") + String(IPADDRESS) + ":" + String(PORT) + "/main";
-
-
-long count = 0;
-int ledv = 1>2;
-long start = 0;
-
-// 15 = GPIO14, PIN=D5 on board
-long PORTE=D5; // pour le relais de la porte
-
-long PORTE_OUVERTE = A0;
-long PORTE_FERMEE = D2;
-
-String buf_serial;
-bool swapped(false);
-
 void swap() {
   //delay(500);
   noInterrupts();
@@ -87,21 +141,6 @@ void swap() {
   }
   */
 }
-
-void println(const String &ss) {
-  if (swapped) {
-    Serial.println(ss);
-  } else {
-    Serial.println(ss);
-  }
-}
-
-#define EKOT(x) println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + String(x) + "."); seko=millis()
-#define EKOX(x) println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + #x + "=" + String(x) + "."); seko=millis()
-#define EKO()   println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms]"); seko=millis()
-
-
-#define G(x) (S + "\"" + String(x) + "\"")
 
 bool porte_ouverte() {
   // true : contact ouvert
@@ -198,6 +237,17 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
   }
 }
 
+/*
+//    typedef std::function<void(const T&)> OnRemove;
+
+LinkedList<IF> tasks(onremove);
+
+
+
+
+*/
+
+
 void setup() {
   
   pinMode(PORTE_OUVERTE,INPUT);
@@ -229,20 +279,33 @@ void setup() {
   // Print the IP address
   //Serial.println(WiFi.localIP());
   server.on("/main96713", HTTP_GET, [](AsyncWebServerRequest *request){
-      EKO();
-      start = count;
-      EKOT("handle_index_main");
-      //Print Hello at opening homepage
-      String message("count =");
-      message += String(count);
-      request->send(200, "text/html", message.c_str());
-      int v = ledv ? LOW : HIGH;
-      ledv = !ledv;
-      digitalWrite(PORTE, HIGH); 
-      delay(2000);
-      digitalWrite(PORTE, LOW); 
-      EKOT("end");
+    EKOX(long(request));
+    start = count;
+    EKOT("handle_index_main");
+    //Print Hello at opening homepage
+    /*
+    String message("count =");
+    message += String(count);
+    */
+    //request->send(200, "text/html", message.c_str());
+    request->send(200, "text/json", "{ \"ok\" : 1}");
+
+    //String npage("{");
+    //npage += S + G("status") + " : " + G("ok");
+    //npage += " }";
+    
+    
+    int v = ledv ? LOW : HIGH;
+    ledv = !ledv;
+    digitalWrite(PORTE, HIGH);
+
+    apres(2000, [](){
+      digitalWrite(PORTE, LOW);
+      ITimer.detachInterrupt();
     });
+    
+    EKOT("end");
+  });
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
       
@@ -277,6 +340,7 @@ void setup() {
   });
   
   server.on("/statut_porte", HTTP_GET, [](AsyncWebServerRequest *request) {
+    //EKOT("statut");
     String message = "POST form was:\n";
     //for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
     //Serial.println(message);
@@ -305,11 +369,25 @@ void setup() {
   pinMode(PORTE, OUTPUT);
   digitalWrite(PORTE, LOW);  
   EKOT("Server listening");
+
+  /*
+  if (ITimer.attachInterruptInterval(TIMER_INTERVAL_MS * 1000, TimerHandler))
+    {
+      lastMillis = millis();
+      Serial.print(F("Starting  ITimer OK, millis() = "));
+      Serial.println(lastMillis);
+    }
+  else
+    Serial.println(F("Can't set ITimer correctly. Select another freq. or interval"));
+  */
 }
 
 long last = 0;
 void loop() {
+
+
   //server.handleClient();
+
   auto now = millis();
   if(globalClient != NULL && globalClient->status() == WS_CONNECTED){
     /*
@@ -355,7 +433,7 @@ void loop() {
   }
   if (now > last + 1000) {
     last = now;
-    EKO();
+    //EKO();
   }
   count += 1;
 }

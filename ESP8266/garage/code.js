@@ -36,7 +36,7 @@ function statut() {
         document.getElementById("statut").innerHTML = dsds;
         setTimeout(statut, 1000);
     }).catch(function(ee) {
-        console.log("Booo");
+        console.log("statut Booo");
         //document.getElementById("statut").innerHTML = ee;
         
     });
@@ -102,6 +102,14 @@ function ouvre(cde) {
 }
 
 
+function debug() {
+    ouvre("96713");
+    const delay = Math.floor(Math.random()*5000+1);       
+    setTimeout(debug, delay);
+}
+
+//setTimeout(debug, 1000);
+
 function swap_func(cde) {
     murl = "swap";
     fetch(murl).then(function(response) {
@@ -111,7 +119,7 @@ function swap_func(cde) {
         document.getElementById("statut").innerHTML = "La porte est " + data["porte"];
         setTimeout(statut, 1000);
     }).catch(function(ee) {
-        console.log("Booo");
+        console.log("swap Booo");
         //document.getElementById("statut").innerHTML = ee;
         
     });    
