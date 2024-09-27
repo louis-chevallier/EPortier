@@ -123,8 +123,8 @@ function swap_func(cde) {
 button.addEventListener('click', function() { ouvre(code); });
 swap.addEventListener('click', function() { swap_func(); });
 reset();
-buttons = [];
-clicked = [];
+var buttons = [];
+var clicked = [];
 function addbutton(txt, x, y) {
     // Create a button element
     const nbutton = document.createElement('button');
@@ -156,10 +156,10 @@ function addbutton(txt, x, y) {
     buttons.push(nbutton);
     document.body.appendChild(nbutton);
 };
-W=30*4;
-H=75*2;
-ML=  100;
-MH = 230;
+const W=30*4;
+const H=75*2;
+const ML=  100;
+const MH = 230;
 //console.log("create buttons");
 for (i = 1; i < 10; i++) {
     console.log(i);
