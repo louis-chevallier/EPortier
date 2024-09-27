@@ -5,7 +5,6 @@ SKETCH?=garage
 PORT ?= 9999
 DEF= --build-property build.extra_flags=-DPORT=$(PORT) --build-property compiler.cpp.extra_flags=-DIPADDRESS=$(IPADDRESS)
 
-
 # install RemoteDebug2
 
 x : start
@@ -21,8 +20,6 @@ run :
 #	arduino-cli compile --fqbn arduino:samd:mkr1000 MyFirstSketch
 
 start1 : compile upload
-
-
 
 
 compile :
@@ -43,7 +40,8 @@ lib :
 #	arduino-cli lib search MCP4725
 	arduino-cli lib install "Adafruit MCP4725"
 	arduino-cli lib install ESPAsyncWebServer
-	arduino-cli lib install TaskScheduler
+#	arduino-cli lib install TaskScheduler#
+	arduino-cli lib install ESP8266TimerInterrupt
 
 
 doc :

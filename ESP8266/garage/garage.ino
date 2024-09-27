@@ -4,6 +4,9 @@
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
 #include "ESP8266TimerInterrupt.h"
+
+#include "tasks.h"
+
 typedef std::function<void(void)> MyFunc;
 
 typedef MicroTuple<int, MyFunc> IF_1;
@@ -17,8 +20,6 @@ IF_2 ddd(1, 3.2);
 IF_1 ddd1(1, fff);
 
 
-#define TIMER_INTERVAL_MS        1000
-volatile uint32_t lastMillis = 0;
 
 
 
@@ -61,25 +62,6 @@ void println(const String &ss) {
 
 
 #define G(x) (S + "\"" + String(x) + "\"")
-
-ESP8266Timer ITimer;
-typedef void (*timer_callback)  ();
-void IRAM_ATTR TimerHandler()
-{
-  static bool toggle = false;
-  static bool started = false;
-  EKOT("it routine");
-}
-
-
-void onremove(IF_1 &ff) {
-}
-
-void apres(int delay_ms,  timer_callback f){
-  EKO();
-  //tasks.add(IF(delay, func));
-  ITimer.attachInterruptInterval(TIMER_INTERVAL_MS * delay_ms, f);  
-}
 
 
 
@@ -299,9 +281,10 @@ void setup() {
     ledv = !ledv;
     digitalWrite(PORTE, HIGH);
 
-    apres(2000, [](){
+    
+    
+    tasks::apres(2000, [](){
       digitalWrite(PORTE, LOW);
-      ITimer.detachInterrupt();
     });
     
     EKOT("end");
