@@ -4,7 +4,7 @@
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
 #include "ESP8266TimerInterrupt.h"
-
+#include "util.h"
 #include "tasks.h"
 
 typedef std::function<void(void)> MyFunc;
@@ -18,8 +18,6 @@ void fff() {
 
 IF_2 ddd(1, 3.2);
 IF_1 ddd1(1, fff);
-
-
 
 
 
@@ -43,22 +41,6 @@ long PORTE_FERMEE = D2;
 
 String buf_serial;
 bool swapped(false);
-
-String S;
-
-long seko = millis();
-
-void println(const String &ss) {
-  if (swapped) {
-    Serial.println(ss);
-  } else {
-    Serial.println(ss);
-  }
-}
-
-#define EKOT(x) println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + String(x) + "."); seko=millis()
-#define EKOX(x) println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + #x + "=" + String(x) + "."); seko=millis()
-#define EKO()   println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms]"); seko=millis()
 
 
 #define G(x) (S + "\"" + String(x) + "\"")
@@ -281,14 +263,16 @@ void setup() {
     ledv = !ledv;
     digitalWrite(PORTE, HIGH);
 
+
     
-    
-    tasks::apres(2000, [](){
+    tasks::apres(2 * tasks::SEC_MIC, [](){
       digitalWrite(PORTE, LOW);
     });
     
     EKOT("end");
   });
+
+
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
       
@@ -353,6 +337,9 @@ void setup() {
   digitalWrite(PORTE, LOW);  
   EKOT("Server listening");
 
+  delay(1000);      
+  tasks::test();      
+  EKO();
   /*
   if (ITimer.attachInterruptInterval(TIMER_INTERVAL_MS * 1000, TimerHandler))
     {
