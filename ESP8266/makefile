@@ -3,7 +3,8 @@ $(warning $(CURDIR))
 
 SKETCH?=garage
 PORT ?= 9999
-DEF= --build-property build.extra_flags=-DPORT=$(PORT) --build-property compiler.cpp.extra_flags=-DIPADDRESS=$(IPADDRESS)
+# --build-property build.extra_flags=-DNOEKO=1
+DEF=--build-property build.extra_flags=-DPORT=$(PORT) --build-property compiler.cpp.extra_flags="-DIPADDRESS=$(IPADDRESS) -DNOEKO=0"  $(OPTIONS)
 
 # install RemoteDebug2
 
@@ -23,9 +24,10 @@ start1 : compile upload
 
 
 compile :
-	cd ..; arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2 $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/..
+	cd ..; arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:mmu=4816H,xtal=160 $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/..
 
 #--library $(CURDIR)
+
 
 upload :
 	-arduino-cli core list

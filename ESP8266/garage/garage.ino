@@ -265,7 +265,7 @@ void setup() {
 
 
     
-    tasks::apres(2 * tasks::SEC_MIC, [](){
+    tasks::apres(2 * tasks::SEC_MS, [](){
       digitalWrite(PORTE, LOW);
     });
     
@@ -350,6 +350,14 @@ void setup() {
   else
     Serial.println(F("Can't set ITimer correctly. Select another freq. or interval"));
   */
+
+  EKO();
+  float s = 3;
+  for (int ii = 0 ; ii < 1000 * 10 * 4; ii++) {
+    s += sqrt(abs(s));
+  }
+  EKO();
+  
 }
 
 long last = 0;
