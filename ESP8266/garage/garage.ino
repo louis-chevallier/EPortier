@@ -289,11 +289,13 @@ void setup() {
     
     int v = ledv ? LOW : HIGH;
     ledv = !ledv;
+    EKOT("high");    
     digitalWrite(PORTE, HIGH);
 
 
     
-    tasks::apres(2 * tasks::SEC_MS, [](){
+    tasks::apres(2 * tasks::SEC_MC, [](){
+      EKOT("low");
       digitalWrite(PORTE, LOW);
     });
     
@@ -375,9 +377,10 @@ void setup() {
   pinMode(PORTE, OUTPUT);
   digitalWrite(PORTE, LOW);  
   EKOT("Server listening");
-
-  delay(1000);      
-  //tasks::test();      
+  
+  delay(1000);
+  EKO();
+  tasks::test();      
   EKO();
   /*
   if (ITimer.attachInterruptInterval(TIMER_INTERVAL_MS * 1000, TimerHandler))
