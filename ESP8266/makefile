@@ -24,7 +24,7 @@ start1 : compile upload
 
 
 compile :
-	cd ..; arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:mmu=4816H,xtal=160 $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/..
+	cd ..; arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:mmu=4816H,xtal=160,exception=enabled $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/..
 
 #--library $(CURDIR)
 
@@ -44,7 +44,11 @@ lib :
 	arduino-cli lib install ESPAsyncWebServer
 #	arduino-cli lib install TaskScheduler#
 	arduino-cli lib install ESP8266TimerInterrupt
+	arduino-cli lib install SimpleFTPServer
 
 
 doc :
 	pandoc readme.md --filter=mermaid-filter  -o readme.pdf 
+
+up_file :
+	esptool -cd nodemcu -cb 460800 -cp  /dev/ttyUSB0 -ca 0x300000 -cf $(SPIFFS_IMG)

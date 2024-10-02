@@ -17,7 +17,7 @@ ws.onmessage = (message) => {
 
 function statut() {
     murl = "statut_porte";
-    //console.log("fetching");
+    console.log("fetching");
     count = count + "a";
     //document.getElementById("statut").innerHTML = "fetching";
     fetch(murl).then(function(response) {
@@ -40,6 +40,9 @@ function statut() {
         //document.getElementById("statut").innerHTML = ee;
         
     });
+
+    ws.send("ws message");
+    
 }
 const myTimeout = setTimeout(statut, 1000);
 

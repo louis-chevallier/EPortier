@@ -4,6 +4,9 @@
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
 #include "ESP8266TimerInterrupt.h"
+#include <FS.h>
+#include "LittleFS.h"
+
 #include "util.h"
 #include "tasks.h"
 
@@ -19,8 +22,7 @@ void fff() {
 IF_2 ddd(1, 3.2);
 IF_1 ddd1(1, fff);
 
-
-
+ 
 // chez nous
 const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
 const char* password =  "9697abcdea"; //Enter Wi-Fi Password
@@ -206,14 +208,12 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 
 LinkedList<IF> tasks(onremove);
 
-
-
-
 */
 
 
 void setup() {
-  
+
+
   pinMode(PORTE_OUVERTE,INPUT);
   pinMode(PORTE_FERMEE,INPUT);  
 
@@ -226,7 +226,7 @@ void setup() {
   delay(100);
   while (WiFi.status() != WL_CONNECTED) {  //Wait for connection
       delay(500);
-      EKOT("Waiting to connect...");
+      Serial.print(".");
   }
 
   String ipaddr = WiFi.localIP().toString(); 
@@ -239,6 +239,34 @@ void setup() {
   server.addHandler(&ws);
   EKO();
 
+  server.on("/create_file", HTTP_GET, [](AsyncWebServerRequest *request){  
+    File file = LittleFS.open("test.txt", "a");
+    assert(file != 0);
+    String t("TEST");
+    file.print("TEST");
+    file.close();
+    
+    String npage = String("{") + G("status") + " : " + G("ok") +  " }";
+    request->send(200, "text/json", npage.c_str());    
+  });
+  server.on("/read_file", HTTP_GET, [](AsyncWebServerRequest *request){
+    File file = LittleFS.open("test.txt", "r");
+    assert(file != 0);    
+    EKOX(file);
+    String s;
+    while (file.available()) {
+      auto c = file.read();
+      s += String((char) c);
+    }
+    EKOX(s);
+    file.close();
+    String npage = String("{");
+    npage += G("status") + " : " + G("ok") +  ",";
+    npage += G("val") + " : " + G(s) +  "}";
+    request->send(200, "text/json", npage.c_str()); 
+  });    
+
+  
 
   // Print the IP address
   //Serial.println(WiFi.localIP());
@@ -290,6 +318,8 @@ void setup() {
       npage.replace("IPADDRESS", String(IPADDRESS));
       npage.replace("WURL", WURL);
       npage.replace("PORTE", porte);
+
+      //EKOT(npage);
       
       request->send(505, "text/html", npage.c_str());
       EKOT("end");
@@ -325,6 +355,15 @@ void setup() {
       
       
   });
+
+
+  // Initialize SPIFFS
+  if(!LittleFS.begin()){
+    EKOT("An Error has occurred while mounting SPIFFS");
+  } else {
+    EKOT("SPIFFS ok");
+  }
+  
   
   // Start the server
   server.begin(); //Start the server
@@ -338,7 +377,7 @@ void setup() {
   EKOT("Server listening");
 
   delay(1000);      
-  tasks::test();      
+  //tasks::test();      
   EKO();
   /*
   if (ITimer.attachInterruptInterval(TIMER_INTERVAL_MS * 1000, TimerHandler))
@@ -362,7 +401,6 @@ void setup() {
 
 long last = 0;
 void loop() {
-
 
   //server.handleClient();
 
