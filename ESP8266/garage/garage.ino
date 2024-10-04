@@ -1,11 +1,14 @@
 //#include <ESP8266WiFi.h>
 //#include <ESP8266WebServer.h>
 
+// à include avant asyncweb, sinon, ca crash
+#include <FS.h>
+//#include "LittleFS.h"
+
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
 #include "ESP8266TimerInterrupt.h"
-#include <FS.h>
-#include "LittleFS.h"
+
 
 #include "util.h"
 #include "tasks.h"
@@ -219,7 +222,7 @@ void setup() {
 
   Serial.begin(115200, SERIAL_8N1); //Begin Serial at 115200 Baud
   EKOT("starting");
-  delay(500);
+  delay(6000);
 
   //////////////////////////////////////
   WiFi.begin(ssid, password);  //Connect to the WiFi network
@@ -232,24 +235,41 @@ void setup() {
   String ipaddr = WiFi.localIP().toString(); 
   EKOX(ipaddr);  //Print the local IP
   
+  /*
+  // Initialize SPIFFS
+  if(!LittleFS.begin()){
+    EKOT("An Error has occurred while mounting SPIFFS");
+  } else {
+    EKOT("SPIFFS ok");
+  }
+  */
 
-  page.replace("JSCODE", jscode);
-
+  int spiffs = SPIFFS.begin();
+  //EKOX(spiffs);
+  
+  page.replace("PORT", String(PORT));
+  page.replace("IPADDRESS", String(IPADDRESS));
+  page.replace("WURL", WURL);
+  
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
   EKO();
 
-  server.on("/create_file", HTTP_GET, [](AsyncWebServerRequest *request){  
+  server.on("/create_file", HTTP_GET, [](AsyncWebServerRequest *request){
+    /*
     File file = LittleFS.open("test.txt", "a");
     assert(file != 0);
     String t("TEST");
     file.print("TEST");
     file.close();
-    
+    */
     String npage = String("{") + G("status") + " : " + G("ok") +  " }";
     request->send(200, "text/json", npage.c_str());    
   });
   server.on("/read_file", HTTP_GET, [](AsyncWebServerRequest *request){
+
+    String dd;
+    /*
     File file = LittleFS.open("test.txt", "r");
     assert(file != 0);    
     EKOX(file);
@@ -258,15 +278,18 @@ void setup() {
       auto c = file.read();
       s += String((char) c);
     }
+    dd = G("val") + " : " + G(s) + " ,";    
     EKOX(s);
     file.close();
+    */
     String npage = String("{");
     npage += G("status") + " : " + G("ok") +  ",";
-    npage += G("val") + " : " + G(s) +  "}";
+    npage += dd;
+    npage += G("foo") + " : " + G("ok");
+    npage += "}";
     request->send(200, "text/json", npage.c_str()); 
   });    
 
-  
 
   // Print the IP address
   //Serial.println(WiFi.localIP());
@@ -306,6 +329,13 @@ void setup() {
 
 
 
+  server.on("/code.js", HTTP_GET, [](AsyncWebServerRequest *request){
+      String npage(jscode);
+      EKOT(npage);
+      request->send(200, "plain/text", npage.c_str());
+      EKOT("end");
+  });
+    
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
       
       EKOT("index");
@@ -318,14 +348,11 @@ void setup() {
       porte += String(porte_fermee() ? "fermee" : "_");
       
       String npage(page);
-      npage.replace("PORT", String(PORT));
-      npage.replace("IPADDRESS", String(IPADDRESS));
-      npage.replace("WURL", WURL);
       npage.replace("PORTE", porte);
 
       //EKOT(npage);
       
-      request->send(505, "text/html", npage.c_str());
+      request->send(200, "text/html", npage.c_str());
       EKOT("end");
     });
 
@@ -352,7 +379,7 @@ void setup() {
     json += S + "\"porte_fermee\" : \"" + statF + "\" , ";
     json += S + "\"swapped\" : \"" + swapped + "\" , ";
     json += S + "\"buf_len\" : \"" + buf_serial.length() + "\"";
-    json += "}";
+    //json += "}";
     EKOX(json);
     request->send(200, "text/json", json);
     
@@ -361,17 +388,12 @@ void setup() {
   });
 
 
-  // Initialize SPIFFS
-  if(!LittleFS.begin()){
-    EKOT("An Error has occurred while mounting SPIFFS");
-  } else {
-    EKOT("SPIFFS ok");
-  }
-  
   
   // Start the server
   server.begin(); //Start the server
+  delay(1000);
 
+  /*
   pinMode(PORTE_OUVERTE,INPUT);
   pinMode(PORTE_FERMEE,INPUT);
   pinMode(PORTE, OUTPUT);
@@ -382,22 +404,13 @@ void setup() {
   EKO();
   //tasks::test();      
   EKO();
-  /*
-  if (ITimer.attachInterruptInterval(TIMER_INTERVAL_MS * 1000, TimerHandler))
-    {
-      lastMillis = millis();
-      Serial.print(F("Starting  ITimer OK, millis() = "));
-      Serial.println(lastMillis);
-    }
-  else
-    Serial.println(F("Can't set ITimer correctly. Select another freq. or interval"));
-  */
 
   EKO();
   float s = 3;
   for (int ii = 0 ; ii < 1000 * 10 * 4; ii++) {
     s += sqrt(abs(s));
   }
+  */
   EKO();
   
 }
