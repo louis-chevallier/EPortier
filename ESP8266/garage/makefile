@@ -8,7 +8,10 @@ env :
 
 
 
-garage : env compile upload
+garage : env compile upload check monitor
+
+check :
+	wget -q http://192.168.1.181/ ; wc  index.html
 
 include ../makefile
 

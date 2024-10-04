@@ -37,6 +37,8 @@ compile :
 upload :
 	-arduino-cli core list
 	cd ..; arduino-cli upload -p /dev/ttyUSB0 --fqbn esp8266:esp8266:nodemcuv2  $(SKETCH)
+
+monitor :
 	plink /dev/ttyUSB0 -serial -sercfg 115200,8,n,1,N
 
 lib :
