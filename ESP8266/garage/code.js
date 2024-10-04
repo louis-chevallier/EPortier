@@ -4,6 +4,7 @@ const button = document.getElementById("ouvrir");
 const swap = document.getElementById("swap");
 const eko = document.getElementById("eko");
 
+/*
 const ws = new WebSocket('ws://192.168.1.95/ws')
 ws.onopen = () => {
     console.log('ws opened on browser')
@@ -14,34 +15,33 @@ ws.onmessage = (message) => {
     console.log(`message received ` + message.data)
     eko.innerHTML += message.data;
 }
-
+*/
 function statut() {
     murl = "statut_porte";
-    console.log("fetching");
+    //console.log("fetching");
     count = count + "a";
     //document.getElementById("statut").innerHTML = "fetching";
     fetch(murl).then(function(response) {
-        //console.log("reponse");
         d = response.json();
-        //console.log(d);
+        console.log('reponse statut ', d);
         //console.log(d["porte"]);
         return d;
     }).then(function(data) {
         //button.innerHTML = count;
         //console.log("data");
-        //console.log(data);
+        console.log('data statut ', data);
         var dsds = "La porte est " + data["porte_fermee"] + ", " + data["porte_ouverte"] + "<p>";
         dsds +=  "buf_len : " + data["buf_len"] + "<p>";
         dsds +=  "swapped : " + data["swapped"] + "<p>";
         document.getElementById("statut").innerHTML = dsds;
         setTimeout(statut, 1000);
     }).catch(function(ee) {
-        console.log("statut Booo");
+        console.log("statut statut failed");
         //document.getElementById("statut").innerHTML = ee;
         
     });
 
-    ws.send("ws message");
+    //ws.send("ws message");
     
 }
 const myTimeout = setTimeout(statut, 1000);
@@ -78,20 +78,25 @@ code =getCookie("eportiercode");
 console.log(code);
 
 function ouvre(cde) {
-    console.log(cde);
+    console.log("cde= ", cde);
     document.cookie = "eportiercode=" + cde + ";SameSite=Strict";
     cookies = document.cookies;
-    console.log(cookies);
+    console.log("cookies ", cookies);
     cookies = document.cookie;
-    console.log(cookies);
+    console.log("cookies2 ", cookies);
     button.style.fontSize="30px";
     button.innerHTML = "le verrou va s'ouvrir ...";
     setTimeout(() => {
         button.disabled = true;
-        console.log(url+code)
-        window.fetch(url+cde, { mode: 'no-cors'}).then((result) => {
-            console.log(result);
-            if (result.ok) {                                
+        console.log("url+cde ", url+code)
+        fetch(url+cde, { mode: 'no-cors'}).then((result) => {
+            console.log("result ouvre ", result);
+            //console.log("result ", result.json());
+            d = result.json();
+            return d;
+        }).then(function(result) {
+            console.log("then ", result);
+            if (result.status == "ok") {                                
                 button.innerHTML = "Système contacté,<br>déverrouillage pendant 2 secondes ...";
             } else {
                 button.innerHTML = "Système contacté .. bad luck!";
@@ -137,7 +142,7 @@ function addbutton(txt, x, y) {
     // Create a button element
     const nbutton = document.createElement('button');
     nbutton.innerText = txt;
-    console.log(nbutton);
+    //console.log(nbutton);
     nbutton.style.position = "absolute";
     nbutton.style.left = x + 'px';
     nbutton.style.top = y + 'px';
@@ -170,7 +175,7 @@ ML=  100;
 MH = 230;
 //console.log("create buttons");
 for (i = 1; i < 10; i++) {
-    console.log(i);
+    //console.log(i);
     addbutton(i, ((i-1) % 3) * W + ML, (~~((i-1) / 3) * H) + MH); 
 }                        
 

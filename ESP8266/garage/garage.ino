@@ -46,8 +46,8 @@ bool swapped(false);
 
 
 #define G(x) (S + "\"" + String(x) + "\"")
-
-
+#define P(f,v) G(f) + " : " + G(v)
+#define Acc(x) S + "{ " + x + " }"
 
 
 /* pinout
@@ -157,8 +157,8 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
       }
       //EKOX(msg.c_str());
       auto t = split(msg);
-      EKOX(t.get<0>());
-      EKOX(t.get<1>());
+      //EKOX(t.get<0>());
+      //EKOX(t.get<1>());
       
 
       /*
@@ -280,7 +280,6 @@ void setup() {
     message += String(count);
     */
     //request->send(200, "text/html", message.c_str());
-    request->send(200, "text/json", "{ \"ok\" : 1}");
 
     //String npage("{");
     //npage += S + G("status") + " : " + G("ok");
@@ -298,6 +297,9 @@ void setup() {
       EKOT("low");
       digitalWrite(PORTE, LOW);
     });
+    auto ans = Acc(P("status", "ok"));
+    EKOX(ans);
+    request->send(200, "text/json", ans);
     
     EKOT("end");
   });
@@ -351,7 +353,7 @@ void setup() {
     json += S + "\"swapped\" : \"" + swapped + "\" , ";
     json += S + "\"buf_len\" : \"" + buf_serial.length() + "\"";
     json += "}";
-    //EKOX(json);
+    EKOX(json);
     request->send(200, "text/json", json);
     
       
@@ -369,8 +371,6 @@ void setup() {
   
   // Start the server
   server.begin(); //Start the server
-  EKOT("setup");
-
 
   pinMode(PORTE_OUVERTE,INPUT);
   pinMode(PORTE_FERMEE,INPUT);
@@ -380,7 +380,7 @@ void setup() {
   
   delay(1000);
   EKO();
-  tasks::test();      
+  //tasks::test();      
   EKO();
   /*
   if (ITimer.attachInterruptInterval(TIMER_INTERVAL_MS * 1000, TimerHandler))
@@ -408,7 +408,7 @@ void loop() {
   //server.handleClient();
 
   auto now = millis();
-  if(globalClient != NULL && globalClient->status() == WS_CONNECTED){
+  if (globalClient != NULL && globalClient->status() == WS_CONNECTED) {
     /*
       EKO();
         auto r = random(0,100); 

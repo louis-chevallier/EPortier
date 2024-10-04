@@ -3,6 +3,11 @@ $(warning $(CURDIR))
 
 SKETCH?=garage
 PORT ?= 9999
+#160
+FREQ?=80
+MMU?=3232
+#4816H
+
 # --build-property build.extra_flags=-DNOEKO=1
 DEF=--build-property build.extra_flags=-DPORT=$(PORT) --build-property compiler.cpp.extra_flags="-DIPADDRESS=$(IPADDRESS) -DNOEKO=0"  $(OPTIONS)
 
@@ -24,7 +29,7 @@ start1 : compile upload
 
 
 compile :
-	cd ..; arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:mmu=4816H,xtal=160,exception=enabled $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/..
+	cd ..; arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:mmu=$(MMU),xtal=$(FREQ),exception=enabled $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/..
 
 #--library $(CURDIR)
 
