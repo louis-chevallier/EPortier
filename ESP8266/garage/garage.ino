@@ -88,11 +88,19 @@ AsyncWebSocket ws("/ws");
 AsyncWebSocketClient * globalClient(NULL);;
 
 
+#define UPLOAD_FILE 1
+#if UPLOAD_FILE == 1
+
+#include "favicon.h"
+const unsigned char *favicon = bin2c_favicon_ico;
+int favicon_length = sizeof(bin2c_favicon_ico) / sizeof(char);
+
 #include "code.h"
 String jscode((const char*)bin2c_code_js);
 #include "page.h"
 String page((const char*)bin2c_page_html);
 
+#endif
 
 void swap() {
   //delay(500);
@@ -237,6 +245,13 @@ void create_file(const String &fn, const String &data, const String &mode = "w")
   file.close();
 }
 
+void create_file(const String &fn, const char unsigned *data, int length, const String &mode = "w") {
+  File file = LittleFS.open(fn, "w");
+  assert(file != 0);
+  file.write(data, length);
+  file.close();
+}
+
 void setup() {
 
 
@@ -263,6 +278,11 @@ void setup() {
     EKOT("An Error has occurred while mounting SPIFFS");
   } else {
     EKOT("SPIFFS ok");
+
+    create_file("favicon.ico", favicon, favicon_length);
+    create_file("code.js", jscode);
+    create_file("page.html", page);
+    
     listAllFilesInDir("/");
   }
   
@@ -339,9 +359,9 @@ void setup() {
       EKOT("low");
       digitalWrite(PORTE, LOW);
     });
-    auto ans = Acc(P("status", "ok"));
-    EKOX(ans);
-    request->send(200, "text/json", ans);
+    auto json = Acc(P("status", "ok"));
+    EKOX(json);
+    request->send(200, "text/json", json);
     
     EKOT("end");
   });
@@ -352,6 +372,11 @@ void setup() {
       String npage(jscode);
       //EKOT(npage);
       request->send(200, "text/javascript", npage.c_str());
+      EKOT("end");
+  });
+
+  server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send(LittleFS, "/favicon.ico", "image/x-icon");
       EKOT("end");
   });
     
@@ -394,16 +419,13 @@ void setup() {
     //Serial.println(message);
     String statO(porte_ouverte() ? "ouverte" : "_");
     String statF(porte_fermee() ? "fermee" : "_");
-    String json = "{";
-    json += S + "\"porte_ouverte\" : \"" + statO + "\" , ";
-    json += S + "\"porte_fermee\" : \"" + statF + "\" , ";
-    json += S + "\"swapped\" : \"" + swapped + "\" , ";
-    json += S + "\"buf_len\" : \"" + buf_serial.length() + "\"";
-    json += "}";
-    EKOX(json);
+    String json = Acc(P("porte_ouverte", statO) + ", " +
+                      P("porte_fermee", statF) + ", " +               
+                      P("swapped", swapped) + ", " +
+                      P("buf_len", buf_serial.length()));
+    
     request->send(200, "text/json", json);
-    EKOX(long(globalClient));
-      
+    //EKOX(long(globalClient));
       
   });
 
@@ -421,7 +443,7 @@ void setup() {
   
   delay(1000);
   EKO();
-  tasks::test();      
+  //tasks::test();      
   EKO();
 
   EKO();

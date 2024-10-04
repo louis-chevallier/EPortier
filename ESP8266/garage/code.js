@@ -21,9 +21,9 @@ function statut() {
     count = count + "a";
     //document.getElementById("statut").innerHTML = "fetching";
     fetch(murl).then(function(response) {
-        console.log('reponse statut 1 ', response);        
+        //console.log('reponse statut 1 ', response);        
         d = response.json();
-        console.log('reponse statut ', d);
+        //console.log('reponse statut ', d);
         //console.log(d["porte"]);
         return d;
     }).then(function(data) {

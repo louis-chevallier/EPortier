@@ -5,6 +5,7 @@ start :
 env :
 	bin2c --ultra -H code.h code.js
 	bin2c --ultra -H page.h page.html
+	bin2c --ultra -H favicon.h favicon.ico
 
 
 
