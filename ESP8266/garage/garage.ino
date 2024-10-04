@@ -3,7 +3,7 @@
 
 // à include avant asyncweb, sinon, ca crash
 #include <FS.h>
-//#include "LittleFS.h"
+#include "LittleFS.h"
 
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
@@ -212,7 +212,30 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 LinkedList<IF> tasks(onremove);
 
 */
+void listAllFilesInDir(String dir_path)
+{
+	Dir dir = LittleFS.openDir(dir_path);
+	while(dir.next()) {
+		if (dir.isFile()) {
+                  // print file names
+                  EKOT(dir_path + dir.fileName());
+		}
+		if (dir.isDirectory()) {
+			// print directory names
+                  EKOT(dir_path + dir.fileName() + "/");
+                  // recursive file listing inside new directory
+                  listAllFilesInDir(dir_path + dir.fileName() + "/");
+		}
+	}
+}
 
+
+void create_file(const String &fn, const String &data, const String &mode = "w") {
+  File file = LittleFS.open(fn, "w");
+  assert(file != 0);
+  file.print(data);
+  file.close();
+}
 
 void setup() {
 
@@ -235,41 +258,37 @@ void setup() {
   String ipaddr = WiFi.localIP().toString(); 
   EKOX(ipaddr);  //Print the local IP
   
-  /*
   // Initialize SPIFFS
   if(!LittleFS.begin()){
     EKOT("An Error has occurred while mounting SPIFFS");
   } else {
     EKOT("SPIFFS ok");
+    listAllFilesInDir("/");
   }
-  */
-
-  int spiffs = SPIFFS.begin();
-  //EKOX(spiffs);
   
-  page.replace("PORT", String(PORT));
-  page.replace("IPADDRESS", String(IPADDRESS));
-  page.replace("WURL", WURL);
+  jscode.replace("PORT", String(PORT));
+  jscode.replace("IPADDRESS", String(IPADDRESS));
+  jscode.replace("WURL", WURL);
   
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
   EKO();
 
   server.on("/create_file", HTTP_GET, [](AsyncWebServerRequest *request){
-    /*
-    File file = LittleFS.open("test.txt", "a");
-    assert(file != 0);
-    String t("TEST");
-    file.print("TEST");
-    file.close();
-    */
-    String npage = String("{") + G("status") + " : " + G("ok") +  " }";
-    request->send(200, "text/json", npage.c_str());    
+    create_file("test.txt", "test");
+    create_file("code.js", jscode);
+    String npage(page);
+    npage.replace("WURL", WURL);
+    create_file("page.html", npage);
+    
+
+    String nnpage = String("{") + G("status") + " : " + G("ok") +  " }";
+    request->send(200, "text/json", nnpage.c_str());    
   });
   server.on("/read_file", HTTP_GET, [](AsyncWebServerRequest *request){
 
     String dd;
-    /*
+
     File file = LittleFS.open("test.txt", "r");
     assert(file != 0);    
     EKOX(file);
@@ -281,7 +300,7 @@ void setup() {
     dd = G("val") + " : " + G(s) + " ,";    
     EKOX(s);
     file.close();
-    */
+
     String npage = String("{");
     npage += G("status") + " : " + G("ok") +  ",";
     npage += dd;
@@ -331,8 +350,8 @@ void setup() {
 
   server.on("/code.js", HTTP_GET, [](AsyncWebServerRequest *request){
       String npage(jscode);
-      EKOT(npage);
-      request->send(200, "plain/text", npage.c_str());
+      //EKOT(npage);
+      request->send(200, "text/javascript", npage.c_str());
       EKOT("end");
   });
     
@@ -348,6 +367,7 @@ void setup() {
       porte += String(porte_fermee() ? "fermee" : "_");
       
       String npage(page);
+      npage.replace("WURL", WURL);
       npage.replace("PORTE", porte);
 
       //EKOT(npage);
@@ -379,10 +399,10 @@ void setup() {
     json += S + "\"porte_fermee\" : \"" + statF + "\" , ";
     json += S + "\"swapped\" : \"" + swapped + "\" , ";
     json += S + "\"buf_len\" : \"" + buf_serial.length() + "\"";
-    //json += "}";
+    json += "}";
     EKOX(json);
     request->send(200, "text/json", json);
-    
+    EKOX(long(globalClient));
       
       
   });
@@ -393,7 +413,6 @@ void setup() {
   server.begin(); //Start the server
   delay(1000);
 
-  /*
   pinMode(PORTE_OUVERTE,INPUT);
   pinMode(PORTE_FERMEE,INPUT);
   pinMode(PORTE, OUTPUT);
@@ -402,16 +421,16 @@ void setup() {
   
   delay(1000);
   EKO();
-  //tasks::test();      
+  tasks::test();      
   EKO();
 
   EKO();
   float s = 3;
-  for (int ii = 0 ; ii < 1000 * 10 * 4; ii++) {
+  for (int ii = 0 ; ii < 1000 * 10 * 8; ii++) {
     s += sqrt(abs(s));
   }
-  */
   EKO();
+
   
 }
 

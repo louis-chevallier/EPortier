@@ -4,7 +4,6 @@ const button = document.getElementById("ouvrir");
 const swap = document.getElementById("swap");
 const eko = document.getElementById("eko");
 
-/*
 const ws = new WebSocket('ws://192.168.1.95/ws')
 ws.onopen = () => {
     console.log('ws opened on browser')
@@ -15,13 +14,14 @@ ws.onmessage = (message) => {
     console.log(`message received ` + message.data)
     eko.innerHTML += message.data;
 }
-*/
+
 function statut() {
     murl = "statut_porte";
     //console.log("fetching");
     count = count + "a";
     //document.getElementById("statut").innerHTML = "fetching";
     fetch(murl).then(function(response) {
+        console.log('reponse statut 1 ', response);        
         d = response.json();
         console.log('reponse statut ', d);
         //console.log(d["porte"]);
@@ -29,7 +29,7 @@ function statut() {
     }).then(function(data) {
         //button.innerHTML = count;
         //console.log("data");
-        console.log('data statut ', data);
+        //console.log('data statut ', data);
         var dsds = "La porte est " + data["porte_fermee"] + ", " + data["porte_ouverte"] + "<p>";
         dsds +=  "buf_len : " + data["buf_len"] + "<p>";
         dsds +=  "swapped : " + data["swapped"] + "<p>";
@@ -89,20 +89,21 @@ function ouvre(cde) {
     setTimeout(() => {
         button.disabled = true;
         console.log("url+cde ", url+code)
-        fetch(url+cde, { mode: 'no-cors'}).then((result) => {
+        fetch(url+cde, { mode: 'no-cors'}).then(function(result)  {
             console.log("result ouvre ", result);
-            //console.log("result ", result.json());
+            console.log("result ", result.json());
             d = result.json();
             return d;
-        }).then(function(result) {
-            console.log("then ", result);
-            if (result.status == "ok") {                                
+        }).then(function(data) {
+            console.log("then ", data);
+            if (data.status == "ok") {                                
                 button.innerHTML = "Système contacté,<br>déverrouillage pendant 2 secondes ...";
             } else {
                 button.innerHTML = "Système contacté .. bad luck!";
             }
             setTimeout(reset, 2000);
         }).catch((e) => {
+            console.log(e);
             button.innerHTML = "Pas moyen de contacter le système!.. fetching " + url + cde;
             setTimeout(reset, 2000);
         })}, 

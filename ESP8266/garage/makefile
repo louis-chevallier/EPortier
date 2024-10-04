@@ -8,10 +8,13 @@ env :
 
 
 
-garage : env compile upload check monitor
+garage : env compile upload  monitor
 
 check :
 	wget -q http://192.168.1.181/ ; wc  index.html
+
+FREQ?=160
+MMU?=4816H
 
 include ../makefile
 
