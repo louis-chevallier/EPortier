@@ -1,6 +1,7 @@
 
 $(warning $(CURDIR))
 
+WSURL?="ws://192.168.1.95/ws"
 SKETCH?=garage
 PORT ?= 9999
 #160
@@ -40,6 +41,9 @@ upload :
 
 monitor :
 	plink /dev/ttyUSB0 -serial -sercfg 115200,8,n,1,N
+
+monitor_ws :
+	cd ..; python ws.py --url $(WSURL)
 
 lib :
 #	arduino-cli lib search HC_SR04

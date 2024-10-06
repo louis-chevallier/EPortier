@@ -1,37 +1,55 @@
-count = "a";
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <title>Ouverture du garage</title>
+    <style>
+      .bb {
+          font-size: 20px;
+      }
+    </style>
+  </head>
+  <body class="bb">
+    <div id="statut"> La porte est ??? </div>
+    <div id="eko"> ... </div>
+    <div>
+      <button class="bb", id="ouvrir">Ouvrir</button>
+      <button class="bb", id="swap">Swap</button>    
+      
+    </div>
+    <script>
+      count = "a";
 const accueil = "Tapez le code";
 const button = document.getElementById("ouvrir");
 const swap = document.getElementById("swap");
 const eko = document.getElementById("eko");
-const buttons_div = document.getElementById("buttons");
 
-if (false) {
-    const ws = new WebSocket('ws://192.168.1.95/ws')
-    ws.onopen = () => {
-        console.log('ws opened on browser')
-        ws.send('hello world')
-    }
-    
-    ws.onmessage = (message) => {
-        console.log(`message received ` + message.data)
-        eko.innerHTML += message.data + '<br>';
-    }
+/*
+const ws = new WebSocket('ws://192.168.1.95/ws')
+ws.onopen = () => {
+    console.log('ws opened on browser')
+    ws.send('hello world')
 }
+
+ws.onmessage = (message) => {
+    console.log(`message received ` + message.data)
+    eko.innerHTML += message.data;
+}
+*/
 function statut() {
     murl = "statut_porte";
     //console.log("fetching");
     count = count + "a";
     //document.getElementById("statut").innerHTML = "fetching";
     fetch(murl).then(function(response) {
-        //console.log('reponse statut 1 ', response);        
         d = response.json();
-        //console.log('reponse statut ', d);
+        console.log('reponse statut ', d);
         //console.log(d["porte"]);
         return d;
     }).then(function(data) {
         //button.innerHTML = count;
         //console.log("data");
-        //console.log('data statut ', data);
+        console.log('data statut ', data);
         var dsds = "La porte est " + data["porte_fermee"] + ", " + data["porte_ouverte"] + "<p>";
         dsds +=  "buf_len : " + data["buf_len"] + "<p>";
         dsds +=  "swapped : " + data["swapped"] + "<p>";
@@ -58,7 +76,7 @@ reset = function(){
 //const url = "http://78.207.134.29:8083/main";
 //const url = "http://78.207.134.29:8083/main";
 //const url = "http://78.207.134.29:8083/main";
-const url = "WURL";
+const url = "http://176.188.228.22:8080/main";
 //const url = "http://192.168.1.95/main";
 
 function getCookie(cname) {
@@ -91,21 +109,20 @@ function ouvre(cde) {
     setTimeout(() => {
         button.disabled = true;
         console.log("url+cde ", url+code)
-        fetch(url+cde, { mode: 'no-cors'}).then(function(result)  {
+        fetch(url+cde, { mode: 'no-cors'}).then((result) => {
             console.log("result ouvre ", result);
-            console.log("result ", result.json());
+            //console.log("result ", result.json());
             d = result.json();
             return d;
-        }).then(function(data) {
-            console.log("then ", data);
-            if (data.status == "ok") {                                
+        }).then(function(result) {
+            console.log("then ", result);
+            if (result.status == "ok") {                                
                 button.innerHTML = "Système contacté,<br>déverrouillage pendant 2 secondes ...";
             } else {
                 button.innerHTML = "Système contacté .. bad luck!";
             }
             setTimeout(reset, 2000);
         }).catch((e) => {
-            console.log(e);
             button.innerHTML = "Pas moyen de contacter le système!.. fetching " + url + cde;
             setTimeout(reset, 2000);
         })}, 
@@ -170,7 +187,7 @@ function addbutton(txt, x, y) {
         }
     });
     buttons.push(nbutton);
-    buttons_div.appendChild(nbutton);
+    document.body.appendChild(nbutton);
 };
 W=30*4;
 H=75*2;
@@ -182,3 +199,7 @@ for (i = 1; i < 10; i++) {
     addbutton(i, ((i-1) % 3) * W + ML, (~~((i-1) / 3) * H) + MH); 
 }                        
 
+
+    </script>
+  </body>
+</html>

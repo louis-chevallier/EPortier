@@ -87,6 +87,18 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 AsyncWebSocketClient * globalClient(NULL);;
 
+struct EKOPrinter1 : EKOPrinter {
+  virtual void println(const String &ss) {
+    if (globalClient != NULL) {
+      globalClient->text(ss);
+    } else {
+      //EKOPrinter::println(ss);
+    }
+  }
+};
+
+
+
 
 #define UPLOAD_FILE 1
 #if UPLOAD_FILE == 1
@@ -94,6 +106,12 @@ AsyncWebSocketClient * globalClient(NULL);;
 #include "favicon.h"
 const unsigned char *favicon = bin2c_favicon_ico;
 int favicon_length = sizeof(bin2c_favicon_ico) / sizeof(char);
+
+
+/* pour héberger les pages html et js
+ * pourait plutôt être mise sur des fichier du file system de l'ESP8266 ( mais demande un méchanisme de upload)
+ * autre solution : mettre ces pages sur autre serveur
+ */
 
 #include "code.h"
 String jscode((const char*)bin2c_code_js);
@@ -254,6 +272,7 @@ void create_file(const String &fn, const char unsigned *data, int length, const 
 
 void setup() {
 
+  eko_printer = new EKOPrinter1();
 
   pinMode(PORTE_OUVERTE,INPUT);
   pinMode(PORTE_FERMEE,INPUT);  
