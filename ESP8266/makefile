@@ -8,10 +8,13 @@ PORT ?= 9999
 FREQ?=80
 MMU?=3232
 #4816H
-
+DATE=$(shell date -r $(SKETCH).ino | sed s,' ','_',g)
+$(warning date $(DATE))
 # --build-property build.extra_flags=-DNOEKO=1
-DEF=--build-property build.extra_flags=-DPORT=$(PORT) --build-property compiler.cpp.extra_flags="-DIPADDRESS=$(IPADDRESS) -DNOEKO=0"  $(OPTIONS)
+DEF=--build-property build.extra_flags=-DPORT=$(PORT) --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DIPADDRESS=$(IPADDRESS) -DNOEKO=0"  $(OPTIONS)
 
+SOURCES=$(wildcard $(CURDIR)/*.ino $(CURDIR)/*.html $(CURDIR)/*.js $(CURDIR)/makefile)
+$(warning $(SOURCES))
 # install RemoteDebug2
 
 x : start
@@ -29,15 +32,18 @@ run :
 start1 : compile upload
 
 
-compile :
-	cd ..; arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:mmu=$(MMU),xtal=$(FREQ),exception=enabled $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/..
+#- v
+compile : $(CURDIR)/builds/$(SKETCH).ino.bin
+
+%.bin : $(CURDIR)/$(SKETCH).ino $(SOURCES)
+	cd ..; arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:mmu=$(MMU),xtal=$(FREQ),exception=enabled $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
 
 #--library $(CURDIR)
 
-
+# --log -v
 upload :
 	-arduino-cli core list
-	cd ..; arduino-cli upload -p /dev/ttyUSB0 --fqbn esp8266:esp8266:nodemcuv2  $(SKETCH)
+	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p /dev/ttyUSB0 --fqbn esp8266:esp8266:nodemcuv2  $(SKETCH)
 
 monitor :
 	plink /dev/ttyUSB0 -serial -sercfg 115200,8,n,1,N

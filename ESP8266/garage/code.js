@@ -19,22 +19,25 @@ if (false) {
 }
 function statut() {
     murl = "statut_porte";
-    //console.log("fetching");
+    //console.log("statut fetching");
     count = count + "a";
     //document.getElementById("statut").innerHTML = "fetching";
+    //console.log("url 1", murl);
     fetch(murl).then(function(response) {
         //console.log('reponse statut 1 ', response);        
         d = response.json();
         //console.log('reponse statut ', d);
         //console.log(d["porte"]);
+        //console.log("result 1", d);
         return d;
     }).then(function(data) {
+        //console.log("then 1 ", data);
         //button.innerHTML = count;
         //console.log("data");
         //console.log('data statut ', data);
-        var dsds = "La porte est " + data["porte_fermee"] + ", " + data["porte_ouverte"] + "<p>";
-        dsds +=  "buf_len : " + data["buf_len"] + "<p>";
-        dsds +=  "swapped : " + data["swapped"] + "<p>";
+        var dsds = "La porte est " + data["porte_fermee"] + ", " + data["porte_ouverte"] + "<br>";
+        //dsds +=  "buf_len : " + data["buf_len"] + "<p>";
+        //dsds +=  "swapped : " + data["swapped"] + "<p>";
         document.getElementById("statut").innerHTML = dsds;
         setTimeout(statut, 1000);
     }).catch(function(ee) {
@@ -80,24 +83,25 @@ code =getCookie("eportiercode");
 console.log(code);
 
 function ouvre(cde) {
-    console.log("cde= ", cde);
+    //console.log("cde= ", cde);
     document.cookie = "eportiercode=" + cde + ";SameSite=Strict";
     cookies = document.cookies;
-    console.log("cookies ", cookies);
+    //console.log("cookies ", cookies);
     cookies = document.cookie;
-    console.log("cookies2 ", cookies);
+    //console.log("cookies2 ", cookies);
     button.style.fontSize="30px";
     button.innerHTML = "le verrou va s'ouvrir ...";
+    const murl = "main" + cde;
     setTimeout(() => {
         button.disabled = true;
-        console.log("url+cde ", url+code)
-        fetch(url+cde, { mode: 'no-cors'}).then(function(result)  {
-            console.log("result ouvre ", result);
-            console.log("result ", result.json());
+        //console.log("url+cde ", murl)
+        fetch(murl).then(function(result)  {
+            //console.log("result ouvre ", result);
             d = result.json();
+            //console.log("result ", d);
             return d;
         }).then(function(data) {
-            console.log("then ", data);
+            //console.log("then ", data);
             if (data.status == "ok") {                                
                 button.innerHTML = "Système contacté,<br>déverrouillage pendant 2 secondes ...";
             } else {
@@ -106,12 +110,11 @@ function ouvre(cde) {
             setTimeout(reset, 2000);
         }).catch((e) => {
             console.log(e);
-            button.innerHTML = "Pas moyen de contacter le système!.. fetching " + url + cde;
+            button.innerHTML = "Pas moyen de contacter le système!.. fetching " + url + "/main" + cde;
             setTimeout(reset, 2000);
         })}, 
                1000);
 }
-
 
 function debug() {
     ouvre("96713");

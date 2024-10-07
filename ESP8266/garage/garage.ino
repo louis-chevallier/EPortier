@@ -305,6 +305,7 @@ void setup() {
     listAllFilesInDir("/");
   }
   
+  jscode.replace("RANDOM", String(random(255)));
   jscode.replace("PORT", String(PORT));
   jscode.replace("IPADDRESS", String(IPADDRESS));
   jscode.replace("WURL", WURL);
@@ -370,11 +371,10 @@ void setup() {
     EKOT("end");
   });
 
-
-
   server.on("/code.js", HTTP_GET, [](AsyncWebServerRequest *request){
       String npage(jscode);
-      //EKOT(npage);
+      EKO();
+      EKOX(npage.length());
       request->send(200, "text/javascript", npage.c_str());
       EKOT("end");
   });
@@ -396,6 +396,7 @@ void setup() {
       porte += String(porte_fermee() ? "fermee" : "_");
       
       String npage(page);
+      npage.replace("DATE", String(DATE));
       npage.replace("WURL", WURL);
       npage.replace("PORTE", porte);
 
