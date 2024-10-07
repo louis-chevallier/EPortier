@@ -31,7 +31,7 @@ const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
 const char* password =  "9697abcdea"; //Enter Wi-Fi Password
 
 //const String IPADRESS="176.161.19.7";
-const String WURL = String("http://") + String(IPADDRESS) + ":" + String(PORT) + "/main";
+const String WURL = String("http://") + String(IPADDRESS) + ":" + String(PORT);
 
 
 long count = 0;
@@ -158,9 +158,9 @@ MicroTuple<String, String> split(const String &mess, const String &sep = "?") {
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   //EKOX(type);
   if(type == WS_EVT_CONNECT){
+    globalClient = client;
     EKOT("connect");
     EKOT("Websocket client connection received");
-    globalClient = client;
  
   } else if(type == WS_EVT_DISCONNECT){
     EKOT("disconnect");
@@ -355,25 +355,10 @@ void setup() {
     EKOX(long(request));
     start = count;
     EKOT("handle_index_main");
-    //Print Hello at opening homepage
-    /*
-    String message("count =");
-    message += String(count);
-    */
-    //request->send(200, "text/html", message.c_str());
-
-    //String npage("{");
-    //npage += S + G("status") + " : " + G("ok");
-    //npage += " }";
-    
-    
     int v = ledv ? LOW : HIGH;
     ledv = !ledv;
     EKOT("high");    
     digitalWrite(PORTE, HIGH);
-
-
-    
     tasks::apres(2 * tasks::SEC_MC, [](){
       EKOT("low");
       digitalWrite(PORTE, LOW);
