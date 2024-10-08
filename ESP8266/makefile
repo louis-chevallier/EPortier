@@ -13,8 +13,8 @@ $(warning date $(DATE))
 # --build-property build.extra_flags=-DNOEKO=1
 DEF=--build-property build.extra_flags=-DPORT=$(PORT) --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DIPADDRESS=$(IPADDRESS) -DNOEKO=0"  $(OPTIONS)
 
-SOURCES=$(wildcard $(CURDIR)/*.ino $(CURDIR)/*.html $(CURDIR)/*.js $(CURDIR)/makefile)
-$(warning $(SOURCES))
+SOURCES=$(wildcard $(CURDIR)/*.ino $(CURDIR)/*.html $(CURDIR)/*.js $(CURDIR)/makefile makefile)
+#$(warning $(SOURCES))
 # install RemoteDebug2
 
 x : start
