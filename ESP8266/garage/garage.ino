@@ -64,8 +64,8 @@ bool swapped(false);
    D4		GPIO02	pulled up	OK	                HIGH at boot, connected to on-board LED, boot fails if pulled LOW       IN1 B in3
    D5		GPIO14	OK	        OK	                SPI (SCLK)                                                              ENB
    D6		GPIO12	OK	        OK	                SPI (MISO)                                                              HCA
-   D7		GPIO13	OK	        OK	                SPI (MOSI)                                                              ENA
-   D8		GPIO15	pulled to GND	OK	                SPI (CS), Boot fails if pulled HIGH                                     HCC
+   D7		GPIO13	OK	        OK	                SPI (MOSI) RX0                                                          ENA
+   D8		GPIO15	pulled to GND	OK	                SPI (CS), Boot fails if pulled HIGH, TX0                                 HCC
    RX		GPIO03	OK	        RX pin	                HIGH at boot                                                            Trigger                
    TX		GPIO01	TX pin	        OK	                HIGH at boot, debug output at boot, boot fails if pulled LOW            
    A0		ADC0	Analog Input	X	
@@ -76,7 +76,7 @@ bool swapped(false);
 RX/TX (1,3) sont connectée à l'usb, donc pas possible d'utiliser Serial pour le debug et pour un autre communication a la fois
 solutions : 
   OTA pour changer le code à la volée
-  utiliser serial swap pour diriger Serial sur les pins 15/13 ( = D8/D7)
+  utiliser serial swap pour diriger Serial sur les pins 15/13 ( = D8 /D7)
  
  */
 
@@ -406,6 +406,7 @@ void setup() {
       EKOT("end");
     });
 
+  /*
   server.on("/swap", HTTP_GET, [](AsyncWebServerRequest *request) {
     EKO();
     swap();
@@ -416,7 +417,7 @@ void setup() {
     npage += " }";
     request->send(200, "text/json", npage.c_str());
   });
-  
+  */
   server.on("/statut_porte", HTTP_GET, [](AsyncWebServerRequest *request) {
     //EKOT("statut");
     String message = "POST form was:\n";
@@ -425,10 +426,7 @@ void setup() {
     String statO(porte_ouverte() ? "ouverte" : "_");
     String statF(porte_fermee() ? "fermee" : "_");
     String json = Acc(P("porte_ouverte", statO) + ", " +
-                      P("porte_fermee", statF) + ", " +               
-                      P("swapped", swapped) + ", " +
-                      P("buf_len", buf_serial.length()));
-    
+                      P("porte_fermee", statF));    
     request->send(200, "text/json", json);
     //EKOX(long(globalClient));
       
@@ -458,6 +456,9 @@ void setup() {
   }
   EKO();
 
+  // bascule le port serie rx/tx sur D7/D8
+  Serial.swap();  
+  Serial.begin(1200, SERIAL_7E1); // config du compteur linky
   
 }
 
@@ -476,37 +477,14 @@ void loop() {
         globalClient->text(randomNumber);
         }
       */
-    }
-    delay(4);    
+  }
+  delay(4);    
   
-  if (swapped) {
-    if (Serial.available()) {
-      char c = Serial.read();
-      buf_serial += String(c);
-      if(globalClient != NULL && globalClient->status() == WS_CONNECTED){
-        globalClient->text(String(c));
-      }
-
-    }
-  } else {
-    if (buf_serial.length() > 0) {
-      EKOX(buf_serial.length());
-      String ss(">>>>");
-      for (int i = 0; i < buf_serial.length(); i++) {
-        //EKOX(int(buf_serial[i]));
-        //EKOX(String(buf_serial[i]));
-        if (buf_serial[i] < 254) {
-          if (buf_serial[i] <= 13) {
-            ss += "\n >>>>";
-          } else
-            ss += String(buf_serial[i]);
-        } 
-      }
-      EKOT("start");
-      EKOX(ss);
-      EKOT("end");
-      
-      buf_serial = "";
+  if (Serial.available()) {
+    char c = Serial.read();
+    buf_serial += String(c);
+    if(globalClient != NULL && globalClient->status() == WS_CONNECTED){
+      globalClient->text(String(c));
     }
   }
   if (now > last + 1000) {
