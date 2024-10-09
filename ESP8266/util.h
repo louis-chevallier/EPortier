@@ -1,6 +1,7 @@
 #ifndef UTIL_INCLUDED
 #define UTIL_INCLUDED
 
+#include "microTuple.h"
 
 String S;
 
@@ -23,4 +24,17 @@ void println(const String &ss) { eko_printer->println(ss); }
 #define EKOX(x) println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + #x + "=" + String(x) + "."); seko=millis()
 #define EKO()   println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms]"); seko=millis()
 #endif
+
+
+
+#define G(x) (S + "\"" + String(x) + "\"")
+#define P(f,v) G(f) + " : " + G(v)
+#define Acc(x) S + "{ " + x + " }"
+
+
+MicroTuple<String, String> split(const String &mess, const String &sep = "?") {
+  auto index = mess.indexOf(sep);
+  return MicroTuple<String, String>(mess.substring(0, index), mess.substring(index+1));
+} 
+
 #endif

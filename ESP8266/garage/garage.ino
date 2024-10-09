@@ -27,7 +27,8 @@ IF_1 ddd1(1, fff);
 
  
 // chez nous
-const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
+//const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
+const char* ssid = "Tenda-2.4G-ext"; //Enter Wi-Fi SSID
 const char* password =  "9697abcdea"; //Enter Wi-Fi Password
 
 //const String IPADRESS="176.161.19.7";
@@ -148,11 +149,6 @@ bool porte_fermee() {
   int d = digitalRead(PORTE_FERMEE);
   return d;
 }
-
-MicroTuple<String, String> split(const String &mess, const String &sep = "?") {
-  auto index = mess.indexOf(sep);
-  return MicroTuple<String, String>(mess.substring(0, index), mess.substring(index+1));
-} 
 
 
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
@@ -459,6 +455,7 @@ void setup() {
   // bascule le port serie rx/tx sur D7/D8
   Serial.swap();  
   Serial.begin(1200, SERIAL_7E1); // config du compteur linky
+
   
 }
 
@@ -471,12 +468,12 @@ void loop() {
   if (globalClient != NULL && globalClient->status() == WS_CONNECTED) {
     /*
       EKO();
-        auto r = random(0,100); 
-        if (r == 1) {
-        String randomNumber = String(random(0,100));
-        globalClient->text(randomNumber);
-        }
-      */
+      auto r = random(0,100); 
+      if (r == 1) {
+      String randomNumber = String(random(0,100));
+      globalClient->text(randomNumber);
+      }
+    */
   }
   delay(4);    
   
@@ -486,6 +483,28 @@ void loop() {
     if(globalClient != NULL && globalClient->status() == WS_CONNECTED){
       globalClient->text(String(c));
     }
+  } else {
+  /*
+    if (buf_serial.length() > 0) {
+      EKOX(buf_serial.length());
+      String ss(">>>>");
+      for (int i = 0; i < buf_serial.length(); i++) {
+        //EKOX(int(buf_serial[i]));
+        //EKOX(String(buf_serial[i]));
+        if (buf_serial[i] < 254) {
+          if (buf_serial[i] <= 13) {
+            ss += "\n >>>>";
+          } else
+            ss += String(buf_serial[i]);
+        } 
+      }
+      EKOT("start");
+      EKOX(ss);
+      EKOT("end");
+      
+      buf_serial = "";
+    }
+    */
   }
   if (now > last + 1000) {
     last = now;

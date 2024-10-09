@@ -1,3 +1,6 @@
+// à include avant asyncweb, sinon, ca crash
+#include <FS.h>
+#include "LittleFS.h"
 
 #include "ESPAsyncWebServer.h"
 #include <Adafruit_MCP4725.h>
@@ -5,19 +8,17 @@
 #include "Wire.h"
 #include <vector>
 #include <algorithm>
-
 #include "ESP8266TimerInterrupt.h"
+
+
+#include "util.h"
+#include "tasks.h"
+
 
 //MCP4725 dac; //(0x62);
 Adafruit_MCP4725 dac; //(0x62);
 
 
-String S;
-
-long seko = millis();
-#define EKOT(x) Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + String(x) + "."); seko=millis()
-#define EKOX(x) Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms] " + #x + "=" + String(x) + "."); seko=millis()
-#define EKO()   Serial.println(S + __FILE__ + ":" + String(__LINE__) + ": [" + String(millis()-seko) + "ms]"); seko=millis()
 
 /* pinout
 
@@ -37,7 +38,6 @@ long seko = millis();
 */
 
 
-#ifdef SERVER
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 AsyncWebSocketClient * globalClient(NULL);
@@ -68,7 +68,6 @@ long start = 0;
 #define TXD2 27
 #define LED 19
 
-#include "segment.hpp"
 
 auto BUFFER_SIZE=1000;
 std::vector<float> buffer;
