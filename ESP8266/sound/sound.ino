@@ -8,6 +8,7 @@
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
 #include "ESP8266TimerInterrupt.h"
+#include "ADS1X15.h"
 #include "websocket.h"
 
 #include "util.h"
@@ -23,12 +24,17 @@ const char* password =  "9697abcdea"; //Enter Wi-Fi Password
 const String WURL = String("http://") + String(IPADDRESS) + ":" + String(PORT);
 
 
+
+ADS1114 ADS_1(0x49);
+
 long count = 0;
 int ledv = 1>2;
 long start = 0;
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
+
+const int analogInPin = A0; 
 
 struct EKOPrinter1 : EKOPrinter {
   virtual void println(const String &ss) {
@@ -90,9 +96,20 @@ void create_file(const String &fn, const char unsigned *data, int length, const 
   file.close();
 }
 
+
+File file(NULL);
+long starting_ms = millis();
+long bufs = 0;
+long last = 0;
+long l = 0;
+const long K = 1024;
+const int BUF_SIZE= 4 * K;
+typedef int T;
+T buf[BUF_SIZE];
+
 void setup() {
 
-  eko_printer = new EKOPrinter1();
+  //eko_printer = new EKOPrinter1();
   Serial.begin(115200);
   EKOT("starting");
   delay(6000);
@@ -163,15 +180,28 @@ void setup() {
   EKOT("Server listening");
   delay(1000);
   EKO();
+
+  file = LittleFS.open("/sound.bin", "w");
+  assert(file != 0);
+
+  for (int b = 0; b < 4; b++) {
+    for(int i=0; i < BUF_SIZE ; i++) {
+      int sensorValue = analogRead(analogInPin);
+      buf[i] = sensorValue;
+    }
+    file.write((unsigned char*)buf, l * sizeof(T));
+    EKO();
+  }
+  file.close();
+  EKO();
+
+  
   
 }
-
-long last = 0;
 void loop() {
   auto now = millis();
   delay(4);    
   if (now > last + 1000) {
     last = now;
   }
-  count += 1;
 }

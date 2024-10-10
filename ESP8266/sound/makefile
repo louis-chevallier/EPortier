@@ -1,7 +1,9 @@
 SKETCH=sound
 
-
 start :
+	python spice.py
+
+start1 :
 	OPTIONS= DEFS= PORT=8080 IPADDRESS="\\\"176.188.228.22\\\"" make garage
 
 env :
@@ -10,12 +12,12 @@ env :
 	bin2c --ultra -H favicon.h favicon.ico
 
 
-garage : env compile upload  monitor_ws
+garage : env compile upload  monitor
 
 check :
 	wget -q http://192.168.1.181/ ; wc  index.html
 
-FREQ?=160
+FREQ?=80
 MMU?=4816H
 #WSURL="ws://192.168.1.95/ws"
 WSURL="ws://192.168.1.181/ws"

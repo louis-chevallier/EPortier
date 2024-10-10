@@ -25,8 +25,10 @@ run :
 	arduino-cli board listall mkr
 	arduino-cli core search esp8266
 	arduino-cli core search NodeMCU
+	arduino-cli core search ESP32
 	arduino-cli core install esp8266:esp8266
-	arduino-cli core install asp8266
+	arduino-cli core install esp32:esp32
+#	arduino-cli core install asp8266
 #	arduino-cli compile --fqbn arduino:samd:mkr1000 MyFirstSketch
 
 start1 : compile upload
@@ -61,7 +63,8 @@ lib :
 	arduino-cli lib install ESPAsyncWebServer
 #	arduino-cli lib install TaskScheduler#
 	arduino-cli lib install ESP8266TimerInterrupt
-	arduino-cli lib install SimpleFTPServer
+#	arduino-cli lib install SimpleFTPServer
+	arduino-cli lib install ADS1X15
 
 
 doc :
