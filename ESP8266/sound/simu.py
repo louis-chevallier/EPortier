@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
@@ -11,10 +13,11 @@ from PySpice.Spice.BasicElement import *
 from PySpice.Spice.HighLevelElement import *
 from PySpice.Spice.Simulation import *
 #from OperationalAmplifier import BasicOperationalAmplifier
-
 from scipy.io import wavfile
 from utillc import *
-
+import pydot
+from PIL import Image
+from io import BytesIO
 
 
 samplerate, data = wavfile.read('/mnt/NUC/download/dahlia.wav')
@@ -67,6 +70,17 @@ def el() :
 circuit.include('ada4084.cir')
 circuit.include('ad8606.cir')
 
+
+def allpass(circuit, a) :
+    out, n1, n2, n3, n4, n5 = node(), node(), node(), node(), node(), node()
+    R1 = circuit.R(el(), a,     n1,       		1@u_kΩ)    
+    R2 = circuit.R(el(), n1,    out,       		1@u_kΩ)    
+    R3 = circuit.R(el(), n2,    circuit.gnd,      	1@u_kΩ)
+    
+    C1 = circuit.C(el(), a,     n2,      		1.@u_uF)    
+    X1 = circuit.X(551 + el(), 'AD8606', n2, n1, '+5V','-5V', out)
+
+
 EKO()
 def bessel(circuit, a) :
     #https://www.changpuak.ch/electronics/Bessel_Lowpass_active_24dB.php    
@@ -105,25 +119,91 @@ if False :
 circuit.V(111, '+5V', circuit.gnd, 'dc 5' )
 circuit.V(222, '-5V', circuit.gnd, 'dc -5' )
 
-if False :
+
+
+# Function to draw the circuit
+def draw_circuit1(circuit):
+    with schemdraw.Drawing() as d:
+
+        for node in circuit.nodes :
+            dots[node.name] = elm.Dot()
+            d += dots[node.name]
+        
+        for element in circuit.elements:
+            EKOX(element.name)
+            EKOX(element)
+            #EKOX(dir(element))
+            EKOX(element._pins)
+            EKOX(element.pins)
+            EKOX(element.node_names)
+            EKOX(element.nodes)
+
+            diag = create(element)
+            h[element.name] = diag
+            d += diag
+        for element in circuit.elements:
+            d = h[element.name]
+            for n in neighbours(element) :
+                connect(element, n)
+        d.draw()
+    return
+
+def draw_circuit(circuit):
+    graph = pydot.Dot("my_graph", graph_type="graph", bgcolor="yellow")
+
+    for element in circuit.elements:
+        #EKOX(dir(element))
+        EKOX(element.name)
+        EKOX(element.nodes)
+        for n in element.nodes :
+            sh = {
+                "C" : "circle",
+                "R" : "rectangle",
+                "X" : "triangle",
+                "S" : "circle"
+                }
+            EKOX(n.name)
+            name = n.name
+            #name = n.name.replace("+", "plus")
+            EKOX(name)
+            graph.add_node(pydot.Node(name))#, shape=sh[name[0]]))                                    
+        
+        for n in element.nodes :
+            #EKOX(dir(n))
+            EKOX(n.name)
+            EKOX(n.pins)
+            for p in n.pins :
+                #EKOX(dir(p))
+                EKOX(p.element.name)
+                if p.element.name != element.name :
+                    graph.add_edge(pydot.Edge(p.element.name,
+                                              element.name))
+                
+    Image.open(BytesIO(graph.create_png())).show()
+    
+
+
+if True :
     o1 = bessel(circuit, 'A'); 
     o2 = bessel(circuit, o1)
     out = bessel(circuit, o2)
 
-out = RC(circuit)
+#out = RC(circuit)
+#out = allpass(circuit, 'A')
 
-EKO();
+EKOT("load wav");
 #print(circuit)
 circuit.PieceWiseLinearVoltageSource('1', 'A', circuit.gnd, values = values)
+#draw_circuit(circuit)
 
 simulator = circuit.simulator()
 
-K=10
+K=20
 
 EKOX(1./samplerate/K)
 step = (1./samplerate/K)
-analysis = simulator.transient(step_time=step@u_s,
-                               end_time=duration@u_s)
+EKOT("simulation ..")
+analysis = simulator.transient(step_time=step@u_s,  end_time=duration@u_s)
 EKOT("transient done")
 #EKOX(dir(analysis))
 #EKOX(dir(circuit))
@@ -137,6 +217,11 @@ def interpolate(s) :
     tt = np.linspace(0, duration, n)
     return np.interp(t, tt, s)
 
+plt.plot(np.asarray(analysis.nodes['a']))
+
+EKOX(np.asarray(analysis[out]).shape)
+plt.plot(np.asarray(analysis[out]))
+plt.show()
 
 in_, out = interpolate(np.asarray(analysis.nodes['a'])), interpolate(np.asarray(analysis[out]))
 EKOX(np.var(in_))
@@ -167,6 +252,8 @@ EKOX(scipy.__version__)
 EKOX(scipy.signal.find_peaks(aaa))
 delay = np.abs(np.argmin(aaa) - DD) * sample_width
 EKOX(delay)
+
+
 
 plt.plot(np.asarray(aaa)); plt.show()
 

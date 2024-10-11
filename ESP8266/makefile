@@ -42,10 +42,12 @@ compile : $(CURDIR)/builds/$(SKETCH).ino.bin
 
 #--library $(CURDIR)
 
+CORE?=esp8266:esp8266:nodemcuv2
+
 # --log -v
 upload :
 	-arduino-cli core list
-	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p /dev/ttyUSB0 --fqbn esp8266:esp8266:nodemcuv2  $(SKETCH)
+	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p /dev/ttyUSB0 --fqbn $(CORE)  $(SKETCH)
 
 monitor :
 	plink /dev/ttyUSB0 -serial -sercfg 115200,8,n,1,N
