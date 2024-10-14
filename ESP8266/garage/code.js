@@ -6,7 +6,7 @@ const eko = document.getElementById("eko");
 const buttons_div = document.getElementById("buttons");
 
 if (false) {
-    const ws = new WebSocket('ws://192.168.1.95/ws')
+    const ws = new WebSocket('ws://192.168.1.115/ws')
     ws.onopen = () => {
         console.log('ws opened on browser')
         ws.send('hello world')
@@ -52,7 +52,7 @@ function statut() {
 const myTimeout = setTimeout(statut, 1000);
 
 cookies = document.cookies;
-console.log(cookies);
+console.log('cookies ', cookies);
 reset = function(){
     button.style.fontSize="100px";
     button.innerHTML = accueil;
@@ -80,10 +80,10 @@ function getCookie(cname) {
     return "";
 }
 code =getCookie("eportiercode");
-console.log(code);
+console.log('code from cookie ', code);
 
 function ouvre(cde) {
-    //console.log("cde= ", cde);
+    console.log("cde= ", cde);
     document.cookie = "eportiercode=" + cde + ";SameSite=Strict";
     cookies = document.cookies;
     //console.log("cookies ", cookies);
@@ -94,9 +94,9 @@ function ouvre(cde) {
     const murl = "main" + cde;
     setTimeout(() => {
         button.disabled = true;
-        //console.log("url+cde ", murl)
+        console.log("url+cde ", murl)
         fetch(murl).then(function(result)  {
-            //console.log("result ouvre ", result);
+            console.log("result ouvre ", result);
             d = result.json();
             //console.log("result ", d);
             return d;

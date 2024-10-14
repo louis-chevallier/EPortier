@@ -1,6 +1,8 @@
 
 $(warning $(CURDIR))
 
+
+CPORT?= /dev/ttyUSB0
 WSURL?="ws://192.168.1.95/ws"
 SKETCH?=garage
 PORT ?= 9999
@@ -8,6 +10,7 @@ PORT ?= 9999
 FREQ?=80
 MMU?=3232
 #4816H
+CORE?=esp8266:esp8266:nodemcuv2
 DATE=$(shell date -r $(SKETCH).ino | sed s,' ','_',g)
 $(warning date $(DATE))
 # --build-property build.extra_flags=-DNOEKO=1
@@ -28,6 +31,7 @@ run :
 	arduino-cli core search ESP32
 	arduino-cli core install esp8266:esp8266
 	arduino-cli core install esp32:esp32
+	arduino-cli core install arduino:avr
 #	arduino-cli core install asp8266
 #	arduino-cli compile --fqbn arduino:samd:mkr1000 MyFirstSketch
 
@@ -38,19 +42,21 @@ start1 : compile upload
 compile : $(CURDIR)/builds/$(SKETCH).ino.bin
 
 %.bin : $(CURDIR)/$(SKETCH).ino $(SOURCES)
-	cd ..; arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:mmu=$(MMU),xtal=$(FREQ),exception=enabled $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
+	cd ..; arduino-cli compile --fqbn $(CORE) $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
+
+#	cd ..; arduino-cli compile --fqbn $(CORE):mmu=$(MMU),xtal=$(FREQ),exception=enabled $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
 
 #--library $(CURDIR)
 
-CORE?=esp8266:esp8266:nodemcuv2
+
 
 # --log -v
 upload :
 	-arduino-cli core list
-	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p /dev/ttyUSB0 --fqbn $(CORE)  $(SKETCH)
+	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p $(CPORT) --fqbn $(CORE)  $(SKETCH)
 
 monitor :
-	plink /dev/ttyUSB0 -serial -sercfg 115200,8,n,1,N
+	plink $(CPORT) -serial -sercfg 115200,8,n,1,N
 
 monitor_ws :
 	cd ..; python ws.py --url $(WSURL)
@@ -73,4 +79,4 @@ doc :
 	pandoc readme.md --filter=mermaid-filter  -o readme.pdf 
 
 up_file :
-	esptool -cd nodemcu -cb 460800 -cp  /dev/ttyUSB0 -ca 0x300000 -cf $(SPIFFS_IMG)
+	esptool -cd nodemcu -cb 460800 -cp  $(CPORT) -ca 0x300000 -cf $(SPIFFS_IMG)

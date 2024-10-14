@@ -27,8 +27,8 @@ IF_1 ddd1(1, fff);
 
  
 // chez nous
-//const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
-const char* ssid = "Tenda-2.4G-ext"; //Enter Wi-Fi SSID
+const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
+//const char* ssid = "Tenda-2.4G-ext"; //Enter Wi-Fi SSID
 const char* password =  "9697abcdea"; //Enter Wi-Fi Password
 
 //const String IPADRESS="176.161.19.7";
@@ -40,14 +40,17 @@ int ledv = 1>2;
 long start = 0;
 
 // 15 = GPIO14, PIN=D5 on board
-long PORTE=D5; // pour le relais de la porte
+long PORTE=D1; 			// digital out pour le relais de la porte
 
-long PORTE_OUVERTE = A0;
-long PORTE_FERMEE = D2;
+long PORTE_OUVERTE = D5; 	// digital in with internal pullup
+long PORTE_FERMEE = D6;  	// digital in with internal pullup
+
+long SERIAL_RX = D7; 		// used with (swapped) Serial
 
 String buf_serial;
 bool swapped(false);
 
+long load_page_num = 0;
 
 #define G(x) (S + "\"" + String(x) + "\"")
 #define P(f,v) G(f) + " : " + G(v)
@@ -77,9 +80,10 @@ bool swapped(false);
 RX/TX (1,3) sont connectée à l'usb, donc pas possible d'utiliser Serial pour le debug et pour un autre communication a la fois
 solutions : 
   OTA pour changer le code à la volée
-  utiliser serial swap pour diriger Serial sur les pins 15/13 ( = D8 /D7)
+  utiliser serial swap pour diriger Serial sur les pins 13/15 (RX/TX  = D7 / D8)
  
  */
+
 
 
 //ESP8266WebServer server(80);
@@ -97,6 +101,37 @@ struct EKOPrinter1 : EKOPrinter {
     }
   }
 };
+
+// linky
+int IdxDataRawLinky = 0;
+int IdxBufferLinky = 0;
+
+const int DATA_LINKY = 1000;
+const int BUFFER_LINKY = 30;
+char DataRawLinky[DATA_LINKY];
+char BufferLinky[BUFFER_LINKY];
+//Internal Timers
+unsigned long previousWifiMillis;
+unsigned long previousWatchdogMillis;
+unsigned long previousHistoryMillis;
+
+bool LFon = false;
+
+float Iinst = 0;  //I instantané
+float Imoy = 0;   // I moyen sur 5mn
+float Papp = 0;   //PVA instantané
+float PappM = 0;  //PVA moyen sur 5mn
+float tabI[600];
+float tabP[600];
+int IdxStock = 0;
+long HCHC = 0;
+long HCHP = 0;
+long HCHC_last = 0;
+long HCHP_last = 0;
+int tabHC[600];
+int tabHP[600];
+int PWHP = 0;
+int PWHC = 0;
 
 
 
@@ -123,25 +158,28 @@ String page((const char*)bin2c_page_html);
 
 void swap() {
   //delay(500);
+  
   noInterrupts();
   Serial.swap();
   interrupts();
   //delay(500);  
   //Serial.begin(115200); //Begin Serial at 115200 Baud
   swapped = !swapped;
-  /*
+
   if (swapped) {
+    // bascule le port serie rx/tx sur D7/D8    
+    // linky
     Serial.begin(1200, SERIAL_7E1);
   } else {
     Serial.begin(115200, SERIAL_8N1); //Begin Serial at 115200 Baud
   }
-  */
+
 }
 
 bool porte_ouverte() {
   // true : contact ouvert
-  int a0 = analogRead(PORTE_OUVERTE);
-  return a0 < 500;
+  int d = digitalRead(PORTE_OUVERTE);
+  return d;
 }
 
 bool porte_fermee() {
@@ -270,6 +308,7 @@ void setup() {
 
   eko_printer = new EKOPrinter1();
 
+  pinMode(SERIAL_RX,INPUT);
   pinMode(PORTE_OUVERTE,INPUT);
   pinMode(PORTE_FERMEE,INPUT);  
 
@@ -284,7 +323,7 @@ void setup() {
       delay(500);
       Serial.print(".");
   }
-
+  
   String ipaddr = WiFi.localIP().toString(); 
   EKOX(ipaddr);  //Print the local IP
   
@@ -366,43 +405,45 @@ void setup() {
     
     EKOT("end");
   });
-
+  
   server.on("/code.js", HTTP_GET, [](AsyncWebServerRequest *request){
-      String npage(jscode);
-      EKO();
-      EKOX(npage.length());
-      request->send(200, "text/javascript", npage.c_str());
-      EKOT("end");
+    EKOT("js");
+    String npage(jscode);
+    EKO();
+    EKOX(npage.length());
+    request->send(200, "text/javascript", npage);
+    EKOT("end");
   });
 
   server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->send(LittleFS, "/favicon.ico", "image/x-icon");
-      EKOT("end");
+    EKOT("icon");
+    request->send(LittleFS, "/favicon.ico", "image/x-icon");
+    EKOT("end");
   });
     
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      
-      EKOT("index");
-      int a0 = analogRead(PORTE_OUVERTE);
-      EKOX(a0);
-      EKOX(digitalRead(PORTE_FERMEE));
-      String porte;
-      porte += String(porte_ouverte() ? "ouverte" : "_");
-      porte += " ";
-      porte += String(porte_fermee() ? "fermee" : "_");
-      
-      String npage(page);
-      npage.replace("DATE", String(DATE));
-      npage.replace("WURL", WURL);
-      npage.replace("PORTE", porte);
+    EKOT("index");
+    int a0 = digitalRead(PORTE_OUVERTE);
+    EKOX(a0);
+    EKOX(digitalRead(PORTE_FERMEE));
+    String porte;
+    porte += String(porte_ouverte() ? "ouverte" : "_");
+    porte += " ";
+    porte += String(porte_fermee() ? "fermee" : "_");
+    
+    String npage(page);
+    npage.replace("DATE", String(DATE));
+    npage.replace("WURL", WURL);
+    npage.replace("PORTE", porte);
+    npage.replace("LOADNUM", String(load_page_num));
+    load_page_num += 1;    
+    //EKOT(npage);
+    
+    request->send(200, "text/html", npage.c_str());
+    EKOT("end");
+  });
 
-      //EKOT(npage);
-      
-      request->send(200, "text/html", npage.c_str());
-      EKOT("end");
-    });
-
-  /*
+  
   server.on("/swap", HTTP_GET, [](AsyncWebServerRequest *request) {
     EKO();
     swap();
@@ -413,7 +454,7 @@ void setup() {
     npage += " }";
     request->send(200, "text/json", npage.c_str());
   });
-  */
+  
   server.on("/statut_porte", HTTP_GET, [](AsyncWebServerRequest *request) {
     //EKOT("statut");
     String message = "POST form was:\n";
@@ -428,7 +469,15 @@ void setup() {
       
   });
 
-
+  server.on("/data_linky", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String json = Acc(P("papp", String(Papp)) + ", " +
+                      P("pappm", String(PappM)) + ", " +                      
+                      P("Iinst", String(Iinst)) + ", " +                     
+                      P("Imoy", String(Imoy)) + ", " +                   
+                      P("pwhp", String(PWHP)) + ", " +                     
+                      P("pwhc", String(PWHC)));
+    request->send(200, "text/json", json);
+  });
   
   // Start the server
   server.begin(); //Start the server
@@ -452,12 +501,96 @@ void setup() {
   }
   EKO();
 
-  // bascule le port serie rx/tx sur D7/D8
-  Serial.swap();  
-  Serial.begin(1200, SERIAL_7E1); // config du compteur linky
-
-  
+  if (true)  {
+    swap();
+  }
+  EKO();
+  //Timers
+  previousWifiMillis = millis();
+  previousWatchdogMillis = millis();
+  previousHistoryMillis = millis();  
 }
+
+
+
+// LINKY
+//********
+void LectureLinky() {  //Lecture port série du LINKY
+  if (Serial.available() > 0) {
+    int V = Serial.read();
+    if (V == 2) {  //STX (Start Text)
+      for (int i = 0; i < 5; i++) {
+        DataRawLinky[IdxDataRawLinky] = '-';
+        IdxDataRawLinky = (IdxDataRawLinky + 1) % DATA_LINKY;
+      }
+      digitalWrite(LED_BUILTIN, LOW);
+    }
+    if (V == 3) {  //ETX (End Text)
+      digitalWrite(LED_BUILTIN, HIGH);
+      //Reset du Watchdog . Il faut des messages du Linky
+      if (millis() - previousWatchdogMillis > 3000) {
+        //esp_task_wdt_reset();
+        previousWatchdogMillis = millis();
+      }
+    }
+    if (V > 9) {  //Autre que ETX et STX
+      switch (V) {
+        case 10:  // Line Feed. Debut Groupe
+          LFon = true;
+          IdxBufferLinky = 0;
+          break;
+        case 13:       // Fin Groupe
+          if (LFon) {  //Debut groupe OK
+            LFon = false;
+            int nb_blanc = 0;
+            String code = "";
+            String val = "";
+            for (int i = 0; i < IdxBufferLinky; i++) {
+              if (BufferLinky[i] == ' ') {
+                nb_blanc++;
+              }
+              if (nb_blanc == 0) {
+                code += BufferLinky[i];
+              }
+              if (nb_blanc == 1) {
+                val += BufferLinky[i];
+              }
+              if (nb_blanc < 2) {  //On ne prend pas le check somme, uniquement 2 premier champs
+                DataRawLinky[IdxDataRawLinky] = BufferLinky[i];
+                IdxDataRawLinky = (IdxDataRawLinky + 1) % 1000;
+              }
+            }
+            DataRawLinky[IdxDataRawLinky] = char(13);
+            IdxDataRawLinky = (IdxDataRawLinky + 1) % 1000;
+            if (code.indexOf("IINST") == 0) {
+              Iinst = val.toFloat();
+              if (Imoy == 0) { Imoy = Iinst; }
+              Imoy = (Iinst + 149 * Imoy) / 150;  //moyenne courant efficace 5 dernieres minutes environ
+            }
+            if (code.indexOf("PAPP") == 0) {
+              Papp = val.toFloat();
+              if (PappM == 0) { PappM = Papp; }
+              PappM = (Papp + 149 * PappM) / 150;  //moyenne puissance apparente 5 dernieres minutes environ
+            }
+            if (code.indexOf("HCHP") == 0 || code.indexOf("BASE") == 0) {
+              HCHP = val.toInt();
+            }
+            if (code.indexOf("HCHC") == 0) {
+              HCHC = val.toInt();
+            }
+          }
+          break;
+        default:
+          BufferLinky[IdxBufferLinky] = char(V);
+          IdxBufferLinky = (IdxBufferLinky + 1) % 30;
+          break;
+      }
+      EKOX(char(V));
+      //Debug.print(char(V));
+    }
+  }
+}
+
 
 long last = 0;
 void loop() {
@@ -476,39 +609,17 @@ void loop() {
     */
   }
   delay(4);    
-  
-  if (Serial.available()) {
-    char c = Serial.read();
-    buf_serial += String(c);
-    if(globalClient != NULL && globalClient->status() == WS_CONNECTED){
-      globalClient->text(String(c));
-    }
-  } else {
-  /*
-    if (buf_serial.length() > 0) {
-      EKOX(buf_serial.length());
-      String ss(">>>>");
-      for (int i = 0; i < buf_serial.length(); i++) {
-        //EKOX(int(buf_serial[i]));
-        //EKOX(String(buf_serial[i]));
-        if (buf_serial[i] < 254) {
-          if (buf_serial[i] <= 13) {
-            ss += "\n >>>>";
-          } else
-            ss += String(buf_serial[i]);
-        } 
-      }
-      EKOT("start");
-      EKOX(ss);
-      EKOT("end");
-      
-      buf_serial = "";
-    }
-    */
+
+  if (swapped) {
+    LectureLinky();
   }
   if (now > last + 1000) {
+    EKOX(Serial.available());
     last = now;
     //EKO();
+    //String ipaddr = WiFi.localIP().toString(); 
+    //EKOX(ipaddr);  //Print the local IP
+    
   }
   count += 1;
 }
