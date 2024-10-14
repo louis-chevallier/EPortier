@@ -159,9 +159,9 @@ String page((const char*)bin2c_page_html);
 void swap() {
   //delay(500);
   
-  noInterrupts();
+  //noInterrupts();
   Serial.swap();
-  interrupts();
+  //interrupts();
   //delay(500);  
   //Serial.begin(115200); //Begin Serial at 115200 Baud
   swapped = !swapped;
