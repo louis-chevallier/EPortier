@@ -46,6 +46,7 @@ long PORTE_OUVERTE = D5; 	// digital in with internal pullup
 long PORTE_FERMEE = D6;  	// digital in with internal pullup
 
 long SERIAL_RX = D7; 		// used with (swapped) Serial
+long SERIAL_TX = D7; 		// used with (swapped) Serial
 
 String buf_serial;
 bool swapped(false);
@@ -159,20 +160,22 @@ String page((const char*)bin2c_page_html);
 void swap() {
   //delay(500);
   
-  //noInterrupts();
-  Serial.swap();
+
+
   //interrupts();
   //delay(500);  
   //Serial.begin(115200); //Begin Serial at 115200 Baud
   swapped = !swapped;
-
+  delay(1000);
   if (swapped) {
     // bascule le port serie rx/tx sur D7/D8    
     // linky
     Serial.begin(1200, SERIAL_7E1);
+    pinMode(SERIAL_TX, OUTPUT);
   } else {
     Serial.begin(115200, SERIAL_8N1); //Begin Serial at 115200 Baud
   }
+  Serial.swap();
 
 }
 
@@ -512,7 +515,6 @@ void setup() {
 }
 
 
-
 // LINKY
 //********
 void LectureLinky() {  //Lecture port série du LINKY
@@ -566,17 +568,21 @@ void LectureLinky() {  //Lecture port série du LINKY
               Iinst = val.toFloat();
               if (Imoy == 0) { Imoy = Iinst; }
               Imoy = (Iinst + 149 * Imoy) / 150;  //moyenne courant efficace 5 dernieres minutes environ
+              EKOX(Imoy);
             }
             if (code.indexOf("PAPP") == 0) {
               Papp = val.toFloat();
               if (PappM == 0) { PappM = Papp; }
               PappM = (Papp + 149 * PappM) / 150;  //moyenne puissance apparente 5 dernieres minutes environ
+              EKOX(PappM);
             }
             if (code.indexOf("HCHP") == 0 || code.indexOf("BASE") == 0) {
               HCHP = val.toInt();
+              EKOX(HCHP);
             }
             if (code.indexOf("HCHC") == 0) {
               HCHC = val.toInt();
+              EKOX(HCHC);
             }
           }
           break;
@@ -614,7 +620,7 @@ void loop() {
     LectureLinky();
   }
   if (now > last + 1000) {
-    EKOX(Serial.available());
+    //EKOX(Serial.available());
     last = now;
     //EKO();
     //String ipaddr = WiFi.localIP().toString(); 
