@@ -1,9 +1,0 @@
-{
-  "additionalFiles": "",
-  "compiler.optimization_flags": "",
-  "customBuildProperties": "build.extra_flags=-DPORT=8080,compiler.cpp.extra_flags=-DDATE=\"Tue_Oct_15_06:06:19_PM_CEST_2024\" -DIPADDRESS=\"176.188.228.22\" -DNOEKO=0,build.warn_data_percentage=75",
-  "fqbn": "esp8266:esp8266:nodemcuv2",
-  "hardwareFolders": "/home/louis/.arduino15/packages",
-  "otherLibrariesFolders": "/home/louis/Arduino/libraries",
-  "sketchLocation": "/home/louis/dev/git/EPortier/ESP8266/rxtx"
-}
