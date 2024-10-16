@@ -182,13 +182,13 @@ void swap() {
 bool porte_ouverte() {
   // true : contact ouvert
   int d = digitalRead(PORTE_OUVERTE);
-  return d;
+  return !d;
 }
 
 bool porte_fermee() {
   // true : contact ouvert  
   int d = digitalRead(PORTE_FERMEE);
-  return d;
+  return !d;
 }
 
 
@@ -570,25 +570,25 @@ void LectureLinky() {  //Lecture port série du LINKY
             IdxDataRawLinky = (IdxDataRawLinky + 1) % 1000;
             if (code.indexOf("IINST") == 0) {
               Iinst = val.toFloat();
-              EKOX(Iinst);
+              //EKOX(Iinst);
               if (Imoy == 0) { Imoy = Iinst; }
               Imoy = float(Iinst + 149 * Imoy) / 150;  //moyenne courant efficace 5 dernieres minutes environ
               
-              EKOX(Imoy);
+              //EKOX(Imoy);
             }
             if (code.indexOf("PAPP") == 0) {
               Papp = val.toFloat();
               if (PappM == 0) { PappM = Papp; }
               PappM = (Papp + 149 * PappM) / 150;  //moyenne puissance apparente 5 dernieres minutes environ
-              EKOX(PappM);
+              //EKOX(PappM);
             }
             if (code.indexOf("HCHP") == 0 || code.indexOf("BASE") == 0) {
               HCHP = val.toInt();
-              EKOX(HCHP);
+              //EKOX(HCHP);
             }
             if (code.indexOf("HCHC") == 0) {
               HCHC = val.toInt();
-              EKOX(HCHC);
+              //EKOX(HCHC);
             }
           }
           break;
