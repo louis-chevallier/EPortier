@@ -8,7 +8,7 @@
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
 #include "ESP8266TimerInterrupt.h"
-
+#include <ArduinoOTA.h> 
 
 #include "util.h"
 #include "tasks.h"
@@ -347,7 +347,9 @@ void setup() {
   jscode.replace("PORT", String(PORT));
   jscode.replace("IPADDRESS", String(IPADDRESS));
   jscode.replace("WURL", WURL);
-  
+
+  ArduinoOTA.begin(); //initOTA();
+
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
   EKO();
@@ -439,6 +441,8 @@ void setup() {
     npage.replace("WURL", WURL);
     npage.replace("PORTE", porte);
     npage.replace("LOADNUM", String(load_page_num));
+    //npage.replace("MESSAGE", "Compilation date : " + String(DATE) + ", loaded " + String(load_page_num) + " times.");    
+    npage.replace("MESSAGE", "");
     load_page_num += 1;    
     //EKOT(npage);
     
@@ -463,8 +467,8 @@ void setup() {
     String message = "POST form was:\n";
     //for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
     //Serial.println(message);
-    String statO(porte_ouverte() ? "ouverte" : "_");
-    String statF(porte_fermee() ? "fermee" : "_");
+    String statO = S + (porte_ouverte() ? "" : "pas") + " ouverte";
+    String statF = S + (porte_fermee() ? "" : "pas") + " fermée";
     String json = Acc(P("porte_ouverte", statO) + ", " +
                       P("porte_fermee", statF));    
     request->send(200, "text/json", json);
@@ -603,6 +607,7 @@ void LectureLinky() {  //Lecture port série du LINKY
 long last = 0;
 void loop() {
 
+  ArduinoOTA.handle();
   //server.handleClient();
 
   auto now = millis();

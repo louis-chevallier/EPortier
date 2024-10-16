@@ -1,6 +1,7 @@
 
 $(warning $(CURDIR))
 
+MIP?=192.168.1.95
 
 CPORT?= /dev/ttyUSB0
 WSURL?="ws://192.168.1.95/ws"
@@ -54,6 +55,10 @@ compile : $(CURDIR)/builds/$(SKETCH).ino.bin
 upload :
 	-arduino-cli core list
 	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p $(CPORT) --fqbn $(CORE)  $(SKETCH)
+
+ota :
+	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p $(CPORT) --fqbn $(CORE)  $(SKETCH)  --port $(MIP)
+#--protocol network
 
 monitor :
 	plink $(CPORT) -serial -sercfg 115200,8,n,1,N

@@ -1,7 +1,7 @@
 count = "a";
 const accueil = "Tapez le code";
 const button = document.getElementById("ouvrir");
-const swap = document.getElementById("swap");
+//const swap = document.getElementById("swap");
 const eko = document.getElementById("eko");
 const buttons_div = document.getElementById("buttons");
 
@@ -140,7 +140,7 @@ function swap_func(cde) {
 }
 
 button.addEventListener('click', function() { ouvre(code); });
-swap.addEventListener('click', function() { swap_func(); });
+//swap.addEventListener('click', function() { swap_func(); });
 reset();
 buttons = [];
 clicked = [];
