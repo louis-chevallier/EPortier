@@ -566,8 +566,10 @@ void LectureLinky() {  //Lecture port série du LINKY
             IdxDataRawLinky = (IdxDataRawLinky + 1) % 1000;
             if (code.indexOf("IINST") == 0) {
               Iinst = val.toFloat();
+              EKOX(Iinst);
               if (Imoy == 0) { Imoy = Iinst; }
-              Imoy = (Iinst + 149 * Imoy) / 150;  //moyenne courant efficace 5 dernieres minutes environ
+              Imoy = float(Iinst + 149 * Imoy) / 150;  //moyenne courant efficace 5 dernieres minutes environ
+              
               EKOX(Imoy);
             }
             if (code.indexOf("PAPP") == 0) {
@@ -591,7 +593,7 @@ void LectureLinky() {  //Lecture port série du LINKY
           IdxBufferLinky = (IdxBufferLinky + 1) % 30;
           break;
       }
-      EKOX(char(V));
+      //EKOX(char(V));
       //Debug.print(char(V));
     }
   }
