@@ -1,5 +1,9 @@
-SKETCH=signal
 
+#sainsmart board
+
+CORE=esp8266:esp8266:nodemcuv2
+SKETCH=signal
+CPORT=/dev/ttyACM0
 env :
 	bin2c --ultra -H code.h code.js
 	bin2c --ultra -H page.h page.html
@@ -7,7 +11,7 @@ env :
 signal : env compile upload monitor
 
 start :
-	PORT=8085 IPADDRESS="\\\"176.188.228.22\\\"" make signal
+	make signal
 
 startx :
 	c++ ttt/segment.cpp -o segment
