@@ -57,8 +57,9 @@ upload :
 	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p $(CPORT) --fqbn $(CORE)  $(SKETCH)
 
 ota :
-	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p $(CPORT) --fqbn $(CORE)  $(SKETCH)  --port $(MIP)
-#--protocol network
+	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds   -p $(CPORT)  --fqbn $(CORE) --port $(MIP)  $(SKETCH) 
+#--port $(MIP)
+
 
 monitor :
 	plink $(CPORT) -serial -sercfg 115200,8,n,1,N

@@ -18,6 +18,14 @@ typedef std::function<void(void)> MyFunc;
 typedef MicroTuple<int, MyFunc> IF_1;
 typedef MicroTuple<int, float> IF_2;
 
+/** TODO
+    - stocker dans un fichier la date des reboot
+    - verifier l'effet des connections au ws
+    - faire servir les fichiers html et js par le NUC
+*/
+
+
+
 void fff() {
 }
 
@@ -339,7 +347,19 @@ void setup() {
     create_file("favicon.ico", favicon, favicon_length);
     create_file("code.js", jscode);
     create_file("page.html", page);
-    
+
+    File file = LittleFS.open("log.txt", "r");
+    assert(file != 0);    
+    String s;
+    while (file.available()) {
+      auto c = file.read();
+      s += String((char) c);
+    }
+    file.close();
+    file = LittleFS.open("log.log", "w");
+    assert(file != 0);
+    file.print(s + "\n" + "1");
+    file.close();
     listAllFilesInDir("/");
   }
   
