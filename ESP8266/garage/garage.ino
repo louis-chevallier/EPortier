@@ -20,6 +20,7 @@ typedef MicroTuple<int, float> IF_2;
 
 /** TODO
     - stocker dans un fichier la date des reboot
+      fait
     - verifier l'effet des connections au ws
     - faire servir les fichiers html et js par le NUC
 */
@@ -354,8 +355,6 @@ void setup() {
     create_file("code.js", jscode);
     create_file("page.html", page);
   }
-
-
   
   jscode.replace("RANDOM", String(random(255)));
   jscode.replace("PORT", String(PORT));
@@ -455,6 +454,10 @@ void setup() {
     npage.replace("WURL", WURL);
     npage.replace("PORTE", porte);
     npage.replace("LOADNUM", String(load_page_num));
+
+    npage.replace("code.js", "http://192.168.1.40/www/EPortier/code.js")
+
+    
     //npage.replace("MESSAGE", "Compilation date : " + String(DATE) + ", loaded " + String(load_page_num) + " times.");    
     npage.replace("MESSAGE", "");
     load_page_num += 1;    
