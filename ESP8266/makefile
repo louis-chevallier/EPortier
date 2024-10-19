@@ -15,7 +15,7 @@ CORE?=esp8266:esp8266:nodemcuv2
 DATE=$(shell date -r $(SKETCH).ino | sed s,' ','_',g)
 $(warning date $(DATE))
 # --build-property build.extra_flags=-DNOEKO=1
-DEF=--build-property build.extra_flags=-DPORT=$(PORT) --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DIPADDRESS=$(IPADDRESS) -DNOEKO=0"  $(OPTIONS)
+DEF?=--build-property build.extra_flags=-DPORT=$(PORT) --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DIPADDRESS=$(IPADDRESS) -DNOEKO=0"  $(OPTIONS)
 
 SOURCES=$(wildcard $(CURDIR)/*.ino $(CURDIR)/*.html $(CURDIR)/*.js $(CURDIR)/makefile makefile)
 #$(warning $(SOURCES))
@@ -38,12 +38,13 @@ run :
 
 start1 : compile upload
 
-
+clean : 
+	cd ..; arduino-cli compile --clean  --build-path $(CURDIR)/builds --fqbn $(CORE) $(SKETCH)  --library $(CURDIR),$(CURDIR)/.. $(DEF) 	
 #- v
 compile : $(CURDIR)/builds/$(SKETCH).ino.bin
 
 %.bin : $(CURDIR)/$(SKETCH).ino $(SOURCES)
-	cd ..; arduino-cli compile --fqbn $(CORE) $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
+	arduino-cli compile --fqbn $(CORE) . $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
 
 #	cd ..; arduino-cli compile --fqbn $(CORE):mmu=$(MMU),xtal=$(FREQ),exception=enabled $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
 
@@ -81,6 +82,7 @@ lib :
 	arduino-cli lib install ADS1X15
 #	-arduino-cli lib uninstall DueTimer
 	-arduino-cli lib install NTPClient
+	arduino-cli board listall esp32
 
 
 doc :
