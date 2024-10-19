@@ -79,7 +79,8 @@ lib :
 	arduino-cli lib install ESP8266TimerInterrupt
 #	arduino-cli lib install SimpleFTPServer
 	arduino-cli lib install ADS1X15
-	-arduino-cli lib uninstall DueTimer
+#	-arduino-cli lib uninstall DueTimer
+	-arduino-cli lib install NTPClient
 
 
 doc :

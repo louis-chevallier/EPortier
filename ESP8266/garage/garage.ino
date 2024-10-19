@@ -4,7 +4,7 @@
 // à include avant asyncweb, sinon, ca crash
 #include <FS.h>
 #include "LittleFS.h"
-
+#include "NTPClient.h"
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
 #include "ESP8266TimerInterrupt.h"
@@ -24,6 +24,13 @@ typedef MicroTuple<int, float> IF_2;
     - faire servir les fichiers html et js par le NUC
 */
 
+const long utcOffsetInSeconds = 19800;
+
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
+// Define NTP Client to get time
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
 
 void fff() {
@@ -316,7 +323,6 @@ void create_file(const String &fn, const char unsigned *data, int length, const 
 }
 
 void setup() {
-
   eko_printer = new EKOPrinter1();
 
   pinMode(SERIAL_RX,INPUT);
@@ -347,21 +353,9 @@ void setup() {
     create_file("favicon.ico", favicon, favicon_length);
     create_file("code.js", jscode);
     create_file("page.html", page);
-
-    File file = LittleFS.open("log.txt", "r");
-    assert(file != 0);    
-    String s;
-    while (file.available()) {
-      auto c = file.read();
-      s += String((char) c);
-    }
-    file.close();
-    file = LittleFS.open("log.log", "w");
-    assert(file != 0);
-    file.print(s + "\n" + "1");
-    file.close();
-    listAllFilesInDir("/");
   }
+
+
   
   jscode.replace("RANDOM", String(random(255)));
   jscode.replace("PORT", String(PORT));
@@ -535,7 +529,30 @@ void setup() {
   //Timers
   previousWifiMillis = millis();
   previousWatchdogMillis = millis();
-  previousHistoryMillis = millis();  
+  previousHistoryMillis = millis();
+
+
+  {
+    File file = LittleFS.open("log.txt", "r");
+    assert(file != 0);    
+    String s;
+    while (file.available()) {
+      auto c = file.read();
+      s += String((char) c);
+    }
+    EKOX(s);
+    file.close();
+    /*
+    file = LittleFS.open("log.txt", "w");
+    assert(file != 0);
+    file.print(s + "\n" + "1");
+    file.close();
+    */
+    listAllFilesInDir("/");
+  }  
+
+  timeClient.begin();
+  
 }
 
 
@@ -623,14 +640,25 @@ void LectureLinky() {  //Lecture port série du LINKY
   }
 }
 
+auto startTime = millis();
+auto timeWritten = false;
 
 long last = 0;
 void loop() {
-
+  auto now = millis();
+  if ((now - startTime) > 10000 && !timeWritten ) {
+    timeClient.update();
+    EKOX(timeClient.getFormattedTime());
+    File file = LittleFS.open("log.txt", "aw");
+    assert(file != 0);
+    file.print(timeClient.getFormattedTime() + "\n");
+    file.close();
+    timeWritten = true;
+  }
   ArduinoOTA.handle();
   //server.handleClient();
 
-  auto now = millis();
+
   if (globalClient != NULL && globalClient->status() == WS_CONNECTED) {
     /*
       EKO();
