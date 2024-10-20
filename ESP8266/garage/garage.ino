@@ -455,7 +455,7 @@ void setup() {
     npage.replace("PORTE", porte);
     npage.replace("LOADNUM", String(load_page_num));
 
-    npage.replace("code.js", "http://192.168.1.40/www/EPortier/code.js")
+    //npage.replace("code.js", "http://192.168.1.40/www/EPortier/code.js");
 
     
     //npage.replace("MESSAGE", "Compilation date : " + String(DATE) + ", loaded " + String(load_page_num) + " times.");    
@@ -535,7 +535,7 @@ void setup() {
   previousHistoryMillis = millis();
 
 
-  {
+  if (false) {
     File file = LittleFS.open("log.txt", "r");
     assert(file != 0);    
     String s;
@@ -554,7 +554,7 @@ void setup() {
     listAllFilesInDir("/");
   }  
 
-  timeClient.begin();
+  //timeClient.begin();
   
 }
 
@@ -649,7 +649,12 @@ auto timeWritten = false;
 long last = 0;
 void loop() {
   auto now = millis();
-  if ((now - startTime) > 10000 && !timeWritten ) {
+
+
+  ArduinoOTA.handle();
+  //server.handleClient();
+
+  if (false && (now - startTime) > 10000 && !timeWritten ) {
     timeClient.update();
     EKOX(timeClient.getFormattedTime());
     File file = LittleFS.open("log.txt", "aw");
@@ -658,10 +663,6 @@ void loop() {
     file.close();
     timeWritten = true;
   }
-  ArduinoOTA.handle();
-  //server.handleClient();
-
-
   if (globalClient != NULL && globalClient->status() == WS_CONNECTED) {
     /*
       EKO();
