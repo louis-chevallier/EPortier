@@ -4,11 +4,13 @@
 // à include avant asyncweb, sinon, ca crash
 #include <FS.h>
 #include "LittleFS.h"
-#include "NTPClient.h"
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
 #include "ESP8266TimerInterrupt.h"
 #include <ArduinoOTA.h> 
+
+//#include "NTPClient.h"
+//#include "WiFiUdp.h"
 
 #include "util.h"
 #include "tasks.h"
@@ -22,17 +24,14 @@ typedef MicroTuple<int, float> IF_2;
     - stocker dans un fichier la date des reboot
       fait
     - verifier l'effet des connections au ws
-    - faire servir les fichiers html et js par le NUC
+    - faire servir les fichiers html et js par le NUC , en fait j'ai relenti le chargement de code.js ( code_boot.js)
 */
 
 const long utcOffsetInSeconds = 19800;
-
+const long SEC_MS = 1000;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
-// Define NTP Client to get time
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
-
+WiFiClient client;
 
 void fff() {
 }
@@ -105,11 +104,45 @@ solutions :
 
 //ESP8266WebServer server(80);
 
-AsyncWebServer server(80);
+
+
+
+struct ARequest {
+  using FS = fs::FS;
+  void send(int code, const String &s, const String &ss) {
+    auto p = (AsyncWebServerRequest*)this;
+    p->send(code, s, ss);
+  }
+  void send(FS &fs, const String &s, const String &ss) {
+    auto p = (AsyncWebServerRequest*)this;
+    p->send(fs, s, ss);
+  }
+};
+
+typedef void (*CB)(ARequest *);
+typedef void (*CB1)(AsyncWebServerRequest *request);
+
+
+struct AServer : AsyncWebServer {
+  AServer(int p) : AsyncWebServer(p) {}
+  void send2(int code, const String &t, const String &s) {
+    //req->send(code, t, s);
+  }
+  void on(const String &u, const WebRequestMethod &m, const CB &cb) {
+    AsyncWebServer::on(u.c_str(), m, (CB1&)cb);
+  }
+};
+
+//AsyncWebServer server(80);
+AServer server(80);
+#if WS==1
 AsyncWebSocket ws("/ws");
+#endif
+
 AsyncWebSocketClient * globalClient(NULL);;
 
-struct EKOPrinter1 : EKOPrinter {
+
+struct EKOPrinterWS : EKOPrinter {
   virtual void println(const String &ss) {
     if (globalClient != NULL) {
       globalClient->text(ss);
@@ -160,12 +193,15 @@ int PWHC = 0;
 const unsigned char *favicon = bin2c_favicon_ico;
 int favicon_length = sizeof(bin2c_favicon_ico) / sizeof(char);
 
+//NTPClient *timeClient(NULL);
 
 /* pour héberger les pages html et js
  * pourait plutôt être mise sur des fichier du file system de l'ESP8266 ( mais demande un méchanisme de upload)
  * autre solution : mettre ces pages sur autre serveur
  */
 
+#include "code_boot.h"
+String jscode_boot((const char*)bin2c_code_boot_js);
 #include "code.h"
 String jscode((const char*)bin2c_code_js);
 #include "page.h"
@@ -291,22 +327,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 LinkedList<IF> tasks(onremove);
 
 */
-void listAllFilesInDir(String dir_path)
-{
-	Dir dir = LittleFS.openDir(dir_path);
-	while(dir.next()) {
-		if (dir.isFile()) {
-                  // print file names
-                  EKOT(dir_path + dir.fileName());
-		}
-		if (dir.isDirectory()) {
-			// print directory names
-                  EKOT(dir_path + dir.fileName() + "/");
-                  // recursive file listing inside new directory
-                  listAllFilesInDir(dir_path + dir.fileName() + "/");
-		}
-	}
-}
+
 
 
 void create_file(const String &fn, const String &data, const String &mode = "w") {
@@ -324,26 +345,43 @@ void create_file(const String &fn, const char unsigned *data, int length, const 
 }
 
 void setup() {
-  eko_printer = new EKOPrinter1();
+
+  if (WS)
+    eko_printer = new EKOPrinterWS();
 
   pinMode(SERIAL_RX,INPUT);
   pinMode(PORTE_OUVERTE,INPUT);
   pinMode(PORTE_FERMEE,INPUT);  
 
   Serial.begin(115200, SERIAL_8N1); //Begin Serial at 115200 Baud
+  delay(500);
+  Serial.print("\n\n");
   EKOT("starting");
   delay(6000);
+
 
   //////////////////////////////////////
   WiFi.begin(ssid, password);  //Connect to the WiFi network
   delay(100);
-  while (WiFi.status() != WL_CONNECTED) {  //Wait for connection
-      delay(500);
-      Serial.print(".");
+  String aa = "|/-\\|/-\\";
+  for (int i = 0; ; i++) {
+    if (WiFi.status() == WL_CONNECTED) break;
+    delay(500);
+    //Serial.print("\u0008");    Serial.print(aa[i%aa.length()]);
+    Serial.print(".");
   }
+  EKOT(" wifi ok");
+
+  auto url = "www.google.com";
+  IPAddress remote_addr;  
+  EKOX(WiFi.hostByName(url, remote_addr));
+  auto connect_ = client.connect(url, 80);
+  EKOX(connect_);
+  
   
   String ipaddr = WiFi.localIP().toString(); 
   EKOX(ipaddr);  //Print the local IP
+
   
   // Initialize SPIFFS
   if(!LittleFS.begin()){
@@ -355,6 +393,7 @@ void setup() {
     create_file("code.js", jscode);
     create_file("page.html", page);
   }
+
   
   jscode.replace("RANDOM", String(random(255)));
   jscode.replace("PORT", String(PORT));
@@ -363,22 +402,32 @@ void setup() {
 
   ArduinoOTA.begin(); //initOTA();
 
+#if WS==1
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
   EKO();
+#endif
 
-  server.on("/create_file", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/create_file", HTTP_GET, [](ARequest *request){
     create_file("test.txt", "test");
     create_file("code.js", jscode);
     String npage(page);
     npage.replace("WURL", WURL);
     create_file("page.html", npage);
-    
-
     String nnpage = String("{") + G("status") + " : " + G("ok") +  " }";
     request->send(200, "text/json", nnpage.c_str());    
   });
-  server.on("/read_file", HTTP_GET, [](AsyncWebServerRequest *request){
+  
+  server.on("/create_file", HTTP_GET, [](ARequest *request){
+    create_file("test.txt", "test");
+    create_file("code.js", jscode);
+    String npage(page);
+    npage.replace("WURL", WURL);
+    create_file("page.html", npage);
+    String nnpage = String("{") + G("status") + " : " + G("ok") +  " }";
+    request->send(200, "text/json", nnpage.c_str());    
+  });
+  server.on("/read_file", HTTP_GET, [](ARequest *request){
 
     String dd;
 
@@ -405,7 +454,7 @@ void setup() {
 
   // Print the IP address
   //Serial.println(WiFi.localIP());
-  server.on("/main96713", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/main96713", HTTP_GET, [](ARequest *request){
     EKOX(long(request));
     start = count;
     EKOT("handle_index_main");
@@ -424,7 +473,7 @@ void setup() {
     EKOT("end");
   });
   
-  server.on("/code.js", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/code.js", HTTP_GET, [](ARequest *request){
     EKOT("js");
     String npage(jscode);
     EKO();
@@ -433,13 +482,22 @@ void setup() {
     EKOT("end");
   });
 
-  server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/code_boot.js", HTTP_GET, [](ARequest *request){
+    EKOT("code boot js");
+    String npage(jscode_boot);
+    EKO();
+    EKOX(npage.length());
+    request->send(200, "text/javascript", npage);
+    EKOT("end");
+  });
+
+  server.on("/favicon.ico", HTTP_GET, [](ARequest *request){
     EKOT("icon");
     request->send(LittleFS, "/favicon.ico", "image/x-icon");
     EKOT("end");
   });
     
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/", HTTP_GET, [](ARequest *request){
     EKOT("index");
     int a0 = digitalRead(PORTE_OUVERTE);
     EKOX(a0);
@@ -468,7 +526,7 @@ void setup() {
   });
 
   
-  server.on("/swap", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/swap", HTTP_GET, [](ARequest *request) {
     EKO();
     swap();
     EKOX(swapped);
@@ -479,7 +537,7 @@ void setup() {
     request->send(200, "text/json", npage.c_str());
   });
   
-  server.on("/statut_porte", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/statut_porte", HTTP_GET, [](ARequest *request) {
     //EKOT("statut");
     String message = "POST form was:\n";
     //for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
@@ -493,7 +551,7 @@ void setup() {
       
   });
 
-  server.on("/data_linky", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/data_linky", HTTP_GET, [](ARequest *request) {
     String json = Acc(P("papp", String(Papp)) + ", " +
                       P("pappm", String(PappM)) + ", " +                      
                       P("Iinst", String(Iinst)) + ", " +                     
@@ -502,10 +560,12 @@ void setup() {
                       P("pwhc", String(PWHC)));
     request->send(200, "text/json", json);
   });
-  
+
+  EKO();
   // Start the server
   server.begin(); //Start the server
   delay(1000);
+
 
   pinMode(PORTE_OUVERTE,INPUT);
   pinMode(PORTE_FERMEE,INPUT);
@@ -523,9 +583,10 @@ void setup() {
   for (int ii = 0 ; ii < 1000 * 10 * 8; ii++) {
     s += sqrt(abs(s));
   }
-  EKO();
+  EKOX(DOSWAP);
 
-  if (true)  {
+  if (DOSWAP)  {
+    EKO();
     swap();
   }
   EKO();
@@ -534,8 +595,25 @@ void setup() {
   previousWatchdogMillis = millis();
   previousHistoryMillis = millis();
 
+  delay(1000);
+  EKO();
+  if (false) {
+    File file = LittleFS.open("log.txt", "r");
+    if (file != 0) {
+      String s;
+      while (file.available()) {
+        auto c = file.read();
+        s += String((char) c);
+      }
+      EKOX(s);
+      file.close();
+    } else {
+      EKOT("pas trouvé");
+    }
+  }
 
   if (false) {
+    
     File file = LittleFS.open("log.txt", "r");
     assert(file != 0);    
     String s;
@@ -551,12 +629,45 @@ void setup() {
     file.print(s + "\n" + "1");
     file.close();
     */
-    listAllFilesInDir("/");
   }  
 
-  //timeClient.begin();
+  listAllFilesInDir("/");
   
+  EKO();
+
+  /*
+  // Define NTP Client to get time
+  WiFiUDP *ntpUDP = new WiFiUDP();
+
+  timeClient = new NTPClient(*ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
+  timeClient->begin();
+  */
+
+
+  if (false) {
+    
+    auto t = tasks::apres(tasks::SEC_MC * 2, [](){
+      {
+        EKO();
+        auto ss = read_file("log.txt");
+        File file = LittleFS.open("/log.txt", "w");
+        EKOX(file);
+        if (file != 0) {
+          file.print(ss + "une fois\n");
+          file.close();
+        }
+      }
+      
+      EKO();
+    });
+  }
+ 
+  
+  EKOT("c'est parti");
 }
+
+
+
 
 
 // LINKY
@@ -641,31 +752,76 @@ void LectureLinky() {  //Lecture port série du LINKY
       //Debug.print(char(V));
     }
   }
+ 
 }
 
-auto startTime = millis();
+long startTime = millis();
 auto timeWritten = false;
 
 long last = 0;
+
+void (*reset)(void) = 0;
+
+auto o0 = Once([]() {
+  EKO();
+  EKOX(read_file("/log.txt"));
+ }, 3000);
+
+auto o = Once([]() {
+  EKO();
+  EKOX(read_file("/log.txt"));
+ }, 3000);
+
+
+auto o1 = Once([]() {
+  {
+    EKO();
+    auto ss = read_file("log.txt");
+    File file = LittleFS.open("/log.txt", "w");
+    EKOX(file);
+    if (file != 0) {
+      EKO();
+      file.print(ss + "une fois\n");
+      EKO();
+      file.close();
+      EKO();
+    }
+    EKO();
+  }
+ }, 5000);
+
+
 void loop() {
-  auto now = millis();
-
-
   ArduinoOTA.handle();
+  long now = millis();
+
+  while (client.available()) {
+    char c = client.read();
+    Serial.write(c);
+    EKO();
+  }
+
+
+  
+  //o();
+  //o1();
+  o0();
+  
+  if (false && (now - startTime) > 10 * SEC_MS) {
+    EKOX(now - startTime);
+    EKOX(now);
+    EKOX(startTime);
+    EKOT("resetting");
+    delay(500);
+    //reset();
+  }
+
   //server.handleClient();
 
-  if (false && (now - startTime) > 10000 && !timeWritten ) {
-    timeClient.update();
-    EKOX(timeClient.getFormattedTime());
-    File file = LittleFS.open("log.txt", "aw");
-    assert(file != 0);
-    file.print(timeClient.getFormattedTime() + "\n");
-    file.close();
-    timeWritten = true;
-  }
   if (globalClient != NULL && globalClient->status() == WS_CONNECTED) {
-    /*
       EKO();
+      delay(500);
+    /*
       auto r = random(0,100); 
       if (r == 1) {
       String randomNumber = String(random(0,100));
@@ -676,15 +832,16 @@ void loop() {
   delay(4);    
 
   if (swapped) {
+    EKO(); delay(500);
     LectureLinky();
   }
-  if (now > last + 1000) {
-    //EKOX(Serial.available());
+  if (now > (last + 1000)) {
     last = now;
-    //EKO();
+    //EKOX(now);
     //String ipaddr = WiFi.localIP().toString(); 
     //EKOX(ipaddr);  //Print the local IP
     
   }
+  //EKO();
   count += 1;
 }

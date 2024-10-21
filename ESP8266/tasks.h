@@ -13,7 +13,9 @@ namespace tasks {
     task t; // callback
     int id;
     Task(task _t = NULL, long _date_mc=0, long _period_mc=0, int _id=0) :
-      date_mc(_date_mc), period_mc(_period_mc), t(_t), id(_id){} 
+      date_mc(_date_mc), period_mc(_period_mc), t(_t), id(_id){
+      //EKOX(id);
+    } 
   };
 
   typedef MicroTuple<int, task> IF;
@@ -65,7 +67,8 @@ namespace tasks {
     //EKOX(now);
     //EKOX(dump());    
     if (tasks.getSize() > 0) {
-      Task t(tasks.get(0));
+      //EKO();
+      const Task &t(tasks.get(0));
       long long ll = t.date_mc;
       long long left = ll - now*1000;
       //EKOX(ll);
@@ -74,7 +77,7 @@ namespace tasks {
       if (left < 1000)  {
         tasks.remove(0);
         int ___________________executing = t.id;
-        EKOX(___________________executing);
+        //EKOX(___________________executing);
         t.t();
         auto p = t.period_mc;
         //EKO();
@@ -93,26 +96,33 @@ namespace tasks {
           //assert(index(w) == ind);
           //EKO();
         }
+        //EKO();
         if (tasks.getSize() > 0) {
           restart();
         }
         //EKO();
       } else {
+        //EKO();
         restart();
       }
+      //EKO();
     } else {
+      //EKO();
       ITimer.detachInterrupt();
     }
   }
   
   void restart() {
+    //EKO();
     ITimer.detachInterrupt();
     if (tasks.getSize() > 0) {
-      ULL  now = millis();    
+      ULL  now = millis();
+      //EKO();
       auto dd = tasks.get(0).date_mc;
       long long ddd = dd - now * 1000;
       auto delay_mc = ddd > 0 ? ddd :  0;
       ITimer.attachInterruptInterval(delay_mc, TimerHandler);
+      //EKO();
     }
   }  
   int num(0);
@@ -125,9 +135,10 @@ namespace tasks {
   
 
   int apres(ULL delay_mc, task t, ULL period_mc = 0 ) {
-    ULL  now = millis();    
+    ULL  now = millis();
+    //EKO();
     auto date_mc = delay_mc + now * 1000;
-    
+    //EKO();
     Task nt(t, date_mc, period_mc, num);
     int ind = index(date_mc);
     //EKOX(ind);
@@ -149,7 +160,7 @@ namespace tasks {
   void test() {
 
     unsigned long long s;
-    EKOX(sizeof(s));
+    //EKOX(sizeof(s));
     
     auto t0 = tasks::apres(2 * SEC_MC, [](){
       EKO();
@@ -195,7 +206,7 @@ namespace tasks {
       1;
     };
     {
-      long ddd = 12;
+      long int ddd = 12;
       Task nt(t, ddd, 0,0);
       int ind = index(ddd);
       EKOX(ind);

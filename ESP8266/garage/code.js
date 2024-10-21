@@ -1,3 +1,6 @@
+
+
+
 count = "a";
 const accueil = "Tapez le code";
 const button = document.getElementById("ouvrir");
