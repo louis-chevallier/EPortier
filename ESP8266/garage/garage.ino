@@ -765,12 +765,12 @@ void (*reset)(void) = 0;
 auto o0 = Once([]() {
   EKO();
   EKOX(read_file("/log.txt"));
- }, 3000);
+ }, 10000);
 
 auto o = Once([]() {
   EKO();
   EKOX(read_file("/log.txt"));
- }, 3000);
+ }, 13000);
 
 
 auto o1 = Once([]() {
@@ -788,7 +788,7 @@ auto o1 = Once([]() {
     }
     EKO();
   }
- }, 5000);
+ }, 14000);
 
 
 void loop() {

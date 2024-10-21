@@ -42,6 +42,7 @@ template <typename F> struct Once {
   const F &f;
   const long start, delay_ms;
   Once(const F &_f, long _delay_ms = 0) : done(false), start(millis()), f(_f), delay_ms(_delay_ms) {
+    EKOX(start);
   }
   void operator()() {
     long nn = millis();
