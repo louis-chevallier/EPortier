@@ -1,6 +1,8 @@
 
-$(warning $(CURDIR))
+#$(warning $(CURDIR))
 
+SKETCH?=$(notdir $(CURDIR))
+#$(warning sketch = $(SKETCH))
 MIP?=192.168.1.95
 
 CPORT?= /dev/ttyUSB0
@@ -13,11 +15,11 @@ MMU?=3232
 #4816H
 CORE?=esp8266:esp8266:nodemcuv2
 DATE=$(shell date -r $(SKETCH).ino | sed s,' ','_',g)
-$(warning date $(DATE))
+#$(warning date $(DATE))
 # --build-property build.extra_flags=-DNOEKO=1
-DEF?=--build-property build.extra_flags=" -DPORT=$(PORT)" --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DIPADDRESS=$(IPADDRESS) -DNOEKO=0  $(OPTIONS)"
+DEF?=--build-property build.extra_flags=" -D__PORT=$(PORT)" --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DIPADDRESS=$(IPADDRESS) -DNOEKO=0  $(OPTIONS)"
 
-SOURCES=$(wildcard $(CURDIR)/*.ino $(CURDIR)/*.html $(CURDIR)/*.js $(CURDIR)/makefile makefile)
+SOURCES=$(wildcard $(CURDIR)/*.ino $(CURDIR)/*.h $(CURDIR)/*.hpp $(CURDIR)/*.html $(CURDIR)/*.js $(CURDIR)/makefile makefile)
 #$(warning $(SOURCES))
 # install RemoteDebug2
 
@@ -35,16 +37,20 @@ run :
 	arduino-cli core install arduino:avr
 #	arduino-cli core install asp8266
 #	arduino-cli compile --fqbn arduino:samd:mkr1000 MyFirstSketch
+	arduino-cli core install arduino:renesas_uno
 
 start1 : compile upload
 
 clean : 
 	cd ..; arduino-cli compile --clean  --build-path $(CURDIR)/builds --fqbn $(CORE) $(SKETCH)  --library $(CURDIR),$(CURDIR)/.. $(DEF) 	
 #- v
-compile : $(CURDIR)/builds/$(SKETCH).ino.bin
+
+#$(warning  $(CURDIR)/$(SKETCH).ino $(SOURCES))
 
 %.bin : $(CURDIR)/$(SKETCH).ino $(SOURCES)
 	arduino-cli compile --fqbn $(CORE) . $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
+
+compile : $(CURDIR)/builds/$(SKETCH).ino.bin
 
 #	cd ..; arduino-cli compile --fqbn $(CORE):mmu=$(MMU),xtal=$(FREQ),exception=enabled $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
 

@@ -662,7 +662,7 @@ void setup() {
     });
   }
  
-  
+  startTime = millis();  
   EKOT("c'est parti");
 }
 
