@@ -37,6 +37,7 @@ WiFiClient client;
 void fff() {
 }
 
+void (*reset)(void) = 0;
 
 IF_2 ddd(1, 3.2);
 IF_1 ddd1(1, fff);
@@ -207,6 +208,8 @@ String jscode_boot((const char*)bin2c_code_boot_js);
 String jscode((const char*)bin2c_code_js);
 #include "page.h"
 String page((const char*)bin2c_page_html);
+#include "gitinfo.h"
+String GITINFO = (const char*)bin2c_gitinfo_txt;
 
 #endif
 
@@ -373,11 +376,15 @@ void setup() {
   delay(100);
   String aa = "|/-\\|/-\\";
   for (int i = 0; ; i++) {
-    if (WiFi.status() == WL_CONNECTED) break;
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.print("\n");      
+      break;
+    }
     delay(500);
     //Serial.print("\u0008");    Serial.print(aa[i%aa.length()]);
     Serial.print(".");
   }
+  
   EKOT(" wifi ok");
 
   auto url = "www.google.com";
@@ -462,6 +469,15 @@ void setup() {
 
   // Print the IP address
   //Serial.println(WiFi.localIP());
+  server.on("/reset", HTTP_GET, [](ARequest *request){
+    reset();
+  });
+
+  server.on("/gitinfo", HTTP_GET, [](ARequest *request){
+    String npage(GITINFO);
+    request->send(200, "text/html", npage.c_str());
+  });
+    
   server.on("/main96713", HTTP_GET, [](ARequest *request){
     EKOX(long(request));
     start = count;
@@ -769,7 +785,7 @@ void LectureLinky() {  //Lecture port série du LINKY
 
 long last = 0;
 
-void (*reset)(void) = 0;
+
 
 auto o0 = Once([]() {
   EKO();
