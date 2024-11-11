@@ -37,7 +37,7 @@ MicroTuple<String, String> split(const String &mess, const String &sep = "?") {
 } 
 
 template <typename F> struct Once {
-  int done = 0;
+  bool done = false;
   const F &f;
   const long start, delay_ms;
   Once(const F &_f, long _delay_ms = 0) : done(false), start(millis()), f(_f), delay_ms(_delay_ms) {
@@ -45,10 +45,9 @@ template <typename F> struct Once {
   }
   void operator()() {
     long nn = millis();
-    EKOX(nn);
-    EKOX(start);
-    EKOX(nn - start);
-    if (!done && (nn - start) > delay_ms) {
+    auto c = !done && (nn - start) > delay_ms;
+    if (c) {
+      EKO();
       f();
       done = true;
     }
