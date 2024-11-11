@@ -213,6 +213,7 @@ String page((const char*)bin2c_page_html);
 
 long startTime = millis();
 
+auto timeWritten = false;
 
 void swap() {
   //delay(500);
@@ -351,6 +352,8 @@ void create_file(const String &fn, const char unsigned *data, int length, const 
 
 void setup() {
 
+  ArduinoOTA.begin(); //initOTA();
+  
   if (WS)
     eko_printer = new EKOPrinterWS();
 
@@ -405,7 +408,7 @@ void setup() {
   jscode.replace("IPADDRESS", String(IPADDRESS));
   jscode.replace("WURL", WURL);
 
-  ArduinoOTA.begin(); //initOTA();
+
 
 #if WS==1
   ws.onEvent(onWsEvent);
@@ -760,7 +763,9 @@ void LectureLinky() {  //Lecture port série du LINKY
  
 }
 
-auto timeWritten = false;
+
+
+
 
 long last = 0;
 
