@@ -13,6 +13,7 @@
 //#include "WiFiUdp.h"
 
 #include "util.h"
+#include "UtilFS.h"
 #include "tasks.h"
 
 typedef std::function<void(void)> MyFunc;
@@ -47,7 +48,7 @@ const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
 const char* password =  "9697abcdea"; //Enter Wi-Fi Password
 
 //const String IPADRESS="176.161.19.7";
-const String WURL = String("http://") + String(IPADDRESS) + ":" + String(PORT);
+const String WURL = String("http://") + String(IPADDRESS) + ":" + String(__PORT);
 
 
 long count = 0;
@@ -208,6 +209,10 @@ String jscode((const char*)bin2c_code_js);
 String page((const char*)bin2c_page_html);
 
 #endif
+
+
+long startTime = millis();
+
 
 void swap() {
   //delay(500);
@@ -396,7 +401,7 @@ void setup() {
 
   
   jscode.replace("RANDOM", String(random(255)));
-  jscode.replace("PORT", String(PORT));
+  jscode.replace("PORT", String(__PORT));
   jscode.replace("IPADDRESS", String(IPADDRESS));
   jscode.replace("WURL", WURL);
 
@@ -755,7 +760,6 @@ void LectureLinky() {  //Lecture port série du LINKY
  
 }
 
-long startTime = millis();
 auto timeWritten = false;
 
 long last = 0;

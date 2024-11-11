@@ -66,9 +66,9 @@ void loop()                            // Total loop()          - takes c. 667nS
 
   *PFS_P107PFS_BY = 0x05;              // Set D7 output high    - takes c.  83nS
   const long M = 4096;
-  auto v = loop_count;
+  auto v = loop_count*40;
   auto v0 = v%M;
-  auto v1 = max(v, M/2);
+  auto v1 = max(v, M/3);
   *DAC12_DADR0 = v1;
   
   *PFS_P107PFS_BY = 0x04;              // Set D7 output low     - takes c.  83nS
