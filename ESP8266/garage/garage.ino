@@ -7,7 +7,7 @@
 #include "ESPAsyncWebServer.h"
 #include "microTuple.h"
 #include "ESP8266TimerInterrupt.h"
-#include <ArduinoOTA.h> 
+//#include <ArduinoOTA.h> 
 
 //#include "NTPClient.h"
 //#include "WiFiUdp.h"
@@ -15,6 +15,12 @@
 #include "util.h"
 #include "UtilFS.h"
 #include "tasks.h"
+/*
+#include <Ethernet.h>
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; //physical mac address
+char serverName[] = "http://192.168.1.40/heure"; // zoomkat's test web page server
+EthernetClient client;
+*/
 
 typedef std::function<void(void)> MyFunc;
 
@@ -215,7 +221,6 @@ String GITINFO = (const char*)bin2c_gitinfo_txt;
 
 
 long startTime = millis();
-
 auto timeWritten = false;
 
 void swap() {
@@ -353,9 +358,38 @@ void create_file(const String &fn, const char unsigned *data, int length, const 
   file.close();
 }
 
-void setup() {
+void update_file(bool reboot = false, bool inc = false) {
+  {
+    String fn = "log.txt";
+    auto ss = split("");
+    {
+      File file = LittleFS.open(fn, "r");
+      if (file != 0) {
+        file.close();
+        ss = split(read_file("log.txt"), ",");
+      }
+    }
+    auto s0 = ss.get<0>();
+    auto s1 = ss.get<1>();
+    EKOX(s0);
+    EKOX(s1);
+    auto n = s0.toInt() + (reboot ? 1 : 0);
+    File file = LittleFS.open(fn, "w");
+    EKOX(file);
+    int a = inc ? 1 : 0;
+    if (file != 0) {
+      EKO();
+      file.print(String(n) + "," + String(s1.toInt() + a));
+      EKO();
+      file.close();
+      EKO();
+    }
+    EKO();
+    EKOX(read_file("log.txt"));
+  }
+}
 
-  ArduinoOTA.begin(); //initOTA();
+void setup() {
   
   if (WS)
     eko_printer = new EKOPrinterWS();
@@ -397,6 +431,8 @@ void setup() {
   String ipaddr = WiFi.localIP().toString(); 
   EKOX(ipaddr);  //Print the local IP
 
+  //ArduinoOTA.begin(); //initOTA();
+  
   
   // Initialize SPIFFS
   if(!LittleFS.begin()){
@@ -490,6 +526,7 @@ void setup() {
       EKOT("low");
       digitalWrite(PORTE, LOW);
     });
+    update_file(false, true);
     auto json = Acc(P("status", "ok"));
     EKOX(json);
     request->send(200, "text/json", json);
@@ -685,11 +722,19 @@ void setup() {
       EKO();
     });
   }
- 
+
+
+  update_file(true, false);
+  
   startTime = millis();  
   EKOT("c'est parti");
 }
+/*
+auto o1 = Once([]() {
+  update_file();
 
+ }, 4000);
+*/
 
 
 
@@ -778,46 +823,11 @@ void LectureLinky() {  //Lecture port série du LINKY
   }
  
 }
-
-
-
-
-
 long last = 0;
 
 
-
-auto o0 = Once([]() {
-  EKO();
-  EKOX(read_file("/log.txt"));
- }, 10000);
-
-auto o = Once([]() {
-  EKO();
-  EKOX(read_file("/log.txt"));
- }, 13000);
-
-
-auto o1 = Once([]() {
-  {
-    EKO();
-    auto ss = read_file("log.txt");
-    File file = LittleFS.open("/log.txt", "w");
-    EKOX(file);
-    if (file != 0) {
-      EKO();
-      file.print(ss + "une fois\n");
-      EKO();
-      file.close();
-      EKO();
-    }
-    EKO();
-  }
- }, 14000);
-
-
 void loop() {
-  ArduinoOTA.handle();
+  //ArduinoOTA.handle();
   long now = millis();
 
   while (client.available()) {
@@ -826,11 +836,7 @@ void loop() {
     EKO();
   }
 
-
-  
-  //o();
-  //o1();
-  o0();
+  //o0();
   
   if (false && (now - startTime) > 10 * SEC_MS) {
     EKOX(now - startTime);

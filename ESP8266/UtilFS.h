@@ -8,7 +8,7 @@ inline void listAllFilesInDir(const String &dir_path)
 	while(dir.next()) {
 		if (dir.isFile()) {
                   // print file names
-                  EKOT(dir_path + dir.fileName());
+                  //EKOT(dir_path + dir.fileName());
 		}
 		if (dir.isDirectory()) {
 			// print directory names

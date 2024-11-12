@@ -17,7 +17,7 @@ CORE=esp8266:esp8266:nodemcuv2
 
 start :
 #	OPTIONS= DEFS= PORT=$(PORT) IPADDRESS=$(IPADDRESS) make garage
-	OPTIONS= DEFS= PORT=8080 IPADDRESS="\\\"$(IPADDRESS1)\\\"" make garage1
+	OPTIONS= DEFS= PORT=8080 IPADDRESS="\\\"$(IPADDRESS1)\\\"" make garage
 
 env :
 	echo $(GITINFO) > gitinfo.txt
