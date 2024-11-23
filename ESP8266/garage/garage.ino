@@ -15,6 +15,42 @@
 #include "util.h"
 #include "UtilFS.h"
 #include "tasks.h"
+
+#include <DoubleLinkedList.hpp>
+
+enum {
+  SWAP
+};
+
+struct Message {
+  int c;
+  Message(int i=0) : c(i) {}
+};
+
+DoubleLinkedList<Message> messages;
+
+void push_message(const Message &m) {
+  noInterrupts();
+  messages.addAtIndex(messages.getSize(), (Message &)m);
+  interrupts();
+}
+
+Message take_message() {
+  noInterrupts();
+  auto m = messages.get(0);
+  messages.remove(0);
+  interrupts();
+  return m;
+}
+
+bool messages_available() {
+  noInterrupts();
+  auto b = messages.getSize() > 0;
+  interrupts();
+  return b;
+}
+
+
 /*
 #include <Ethernet.h>
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; //physical mac address
@@ -69,10 +105,10 @@ long PORTE_OUVERTE = D5; 	// digital in with internal pullup
 long PORTE_FERMEE = D6;  	// digital in with internal pullup
 
 long SERIAL_RX = D7; 		// used with (swapped) Serial
-long SERIAL_TX = D7; 		// used with (swapped) Serial
+long SERIAL_TX = D8; 		// used with (swapped) Serial
 
 String buf_serial;
-bool swapped(false);
+int swapped(false);
 
 long load_page_num = 0;
 
@@ -154,8 +190,9 @@ struct EKOPrinterWS : EKOPrinter {
   virtual void println(const String &ss) {
     if (globalClient != NULL) {
       globalClient->text(ss);
-    } else {
-      //EKOPrinter::println(ss);
+    }
+    {
+      EKOPrinter::println(ss);
     }
   }
 };
@@ -225,23 +262,14 @@ auto timeWritten = false;
 
 void swap() {
   //delay(500);
-  
-
-
   //interrupts();
   //delay(500);  
   //Serial.begin(115200); //Begin Serial at 115200 Baud
-  swapped = !swapped;
-  delay(1000);
-  if (swapped) {
-    // bascule le port serie rx/tx sur D7/D8    
-    // linky
-    Serial.begin(1200, SERIAL_7E1);
-    pinMode(SERIAL_TX, OUTPUT);
-  } else {
-    Serial.begin(115200, SERIAL_8N1); //Begin Serial at 115200 Baud
-  }
-  Serial.swap();
+
+  push_message(Message(SWAP));
+  //delay(500);
+  //Serial.swap();
+  //delay(500);
 
 }
 
@@ -394,7 +422,9 @@ void setup() {
   if (WS)
     eko_printer = new EKOPrinterWS();
 
+  pinMode(SERIAL_TX, OUTPUT);
   pinMode(SERIAL_RX,INPUT);
+  
   pinMode(PORTE_OUVERTE,INPUT);
   pinMode(PORTE_FERMEE,INPUT);  
 
@@ -559,6 +589,8 @@ void setup() {
   });
     
   server.on("/", HTTP_GET, [](ARequest *request){
+    noInterrupts();
+    
     EKOT("index");
     int a0 = digitalRead(PORTE_OUVERTE);
     EKOX(a0);
@@ -584,18 +616,23 @@ void setup() {
     
     request->send(200, "text/html", npage.c_str());
     EKOT("end");
+    interrupts();    
   });
 
   
   server.on("/swap", HTTP_GET, [](ARequest *request) {
-    EKO();
     swap();
+    String npage("{");
+    npage += S + G("status") + " : " + G("ok") + ",";
+    npage += S + G("swapped") + " : " + G(swapped);
+    npage += " }";
+    
+    noInterrupts();
+    EKOT("called swap");
     EKOX(swapped);
     
-    String npage("{");
-    npage += S + G("status") + " : " + G("ok");
-    npage += " }";
     request->send(200, "text/json", npage.c_str());
+    interrupts();
   });
   
   server.on("/statut_porte", HTTP_GET, [](ARequest *request) {
@@ -613,6 +650,8 @@ void setup() {
   });
 
   server.on("/data_linky", HTTP_GET, [](ARequest *request) {
+    EKOT("data linky");
+    noInterrupts();
     String json = Acc(P("papp", String(Papp)) + ", " +
                       P("pappm", String(PappM)) + ", " +                      
                       P("Iinst", String(Iinst)) + ", " +                     
@@ -620,6 +659,8 @@ void setup() {
                       P("pwhp", String(PWHP)) + ", " +                     
                       P("pwhc", String(PWHC)));
     request->send(200, "text/json", json);
+    interrupts();
+    EKOX(json);
   });
 
   EKO();
@@ -647,8 +688,8 @@ void setup() {
   EKOX(DOSWAP);
 
   if (DOSWAP)  {
-    EKO();
-    swap();
+    EKOT("send message to swap");
+    push_message(Message(SWAP));
   }
   EKO();
   //Timers
@@ -723,7 +764,8 @@ void setup() {
     });
   }
 
-
+  
+  
   update_file(true, false);
   
   startTime = millis();  
@@ -742,8 +784,9 @@ auto o1 = Once([]() {
 // LINKY
 //********
 void LectureLinky() {  //Lecture port série du LINKY
-  if (Serial.available() > 0) {
+  while (Serial.available() > 0) {
     int V = Serial.read();
+    //EKOX(V);
     if (V == 2) {  //STX (Start Text)
       for (int i = 0; i < 5; i++) {
         DataRawLinky[IdxDataRawLinky] = '-';
@@ -788,6 +831,7 @@ void LectureLinky() {  //Lecture port série du LINKY
             }
             DataRawLinky[IdxDataRawLinky] = char(13);
             IdxDataRawLinky = (IdxDataRawLinky + 1) % 1000;
+            //EKOX(code);
             if (code.indexOf("IINST") == 0) {
               Iinst = val.toFloat();
               //EKOX(Iinst);
@@ -829,13 +873,13 @@ long last = 0;
 void loop() {
   //ArduinoOTA.handle();
   long now = millis();
-
+  /*
   while (client.available()) {
     char c = client.read();
     Serial.write(c);
     EKO();
   }
-
+  */
   //o0();
   
   if (false && (now - startTime) > 10 * SEC_MS) {
@@ -850,8 +894,8 @@ void loop() {
   //server.handleClient();
 
   if (globalClient != NULL && globalClient->status() == WS_CONNECTED) {
-      EKO();
-      delay(500);
+    //EKO();
+    delay(500);
     /*
       auto r = random(0,100); 
       if (r == 1) {
@@ -861,9 +905,37 @@ void loop() {
     */
   }
   delay(4);    
+  
+  if (messages_available()) {
+    EKO();
+    auto m = take_message();
+    if (m.c == SWAP) {
+      EKO();
+      swapped = !swapped;
+      EKOX(swapped);
+      if (swapped) {
+        // bascule le port serie rx/tx sur D7/D8    
+        // linky
+        EKOT("swapping to 1200");
+        //delay(500);    
+        Serial.begin(1200, SERIAL_7E1);
+        //EKO();
+        EKOT("swapped to 1200")    ;
+      } else {
+        EKOT("swapping to 115200");    
+        Serial.begin(115200, SERIAL_8N1); //Begin Serial at 115200 Baud
+        EKO();
+      }
+        
+      Serial.swap();
+      EKO();
+    }
+  }
 
+  
   if (swapped) {
-    EKO(); delay(500);
+    //EKOX(swapped);
+    //delay(500);
     LectureLinky();
   }
   if (now > (last + 1000)) {

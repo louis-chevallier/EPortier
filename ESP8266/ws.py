@@ -26,11 +26,11 @@ ws_address = parser.parse_args().url
 if __name__ == "__main__":
     #websocket.enableTrace(True)
     ws = websocket.WebSocketApp(ws_address,
-                              on_open=on_open,
-                              on_message=on_message,
-                              on_error=on_error,
-                              on_close=on_close)
-
+                                on_open=on_open,
+                                on_message=on_message,
+                                on_error=on_error,
+                                on_close=on_close)
     ws.run_forever(dispatcher=rel, reconnect=5)  # Set dispatcher to automatic reconnection, 5 second reconnect delay if connection closed unexpectedly
     rel.signal(2, rel.abort)  # Keyboard Interrupt
     rel.dispatch()
+    
