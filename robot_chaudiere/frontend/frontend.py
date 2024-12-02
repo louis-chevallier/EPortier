@@ -187,7 +187,7 @@ if __name__ == "__main__":
     port = 8093
     if "PORT" in os.environ :
         port = int(os.environ["PORT"])
-    
+    EKOX(port)
     config = {
         "/": {
             "tools.staticdir.on": True,
@@ -196,9 +196,10 @@ if __name__ == "__main__":
             'tools.response_headers.headers': [('Content-Type', 'image/jpeg'), ('Access-Control-Allow-Origin', '*')],
         },
         'global' : {
-            'server.ssl_module' : 'builtin',
-            'server.ssl_certificate' : "cert.pem",
-            'server.ssl_private_key' : "privkey.pem",
+
+#            'server.ssl_module' : 'builtin',
+#            'server.ssl_certificate' : "cert.pem",
+#            'server.ssl_private_key' : "privkey.pem",
             
             'server.socket_host' : '0.0.0.0', #192.168.1.5', #'127.0.0.1',
             'server.socket_port' : port,

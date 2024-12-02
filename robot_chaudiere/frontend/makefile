@@ -6,7 +6,7 @@ export GITINFO=$(shell git log --pretty=format:"%h - %an, %ar : %s" -1)
 
 REPO=https://github.com/louis-chevallier/EPortier.git
 DEPLOY_DIR = /deploy
-WOD='$(shell fortune -s | sed -e 's/["]//g' | sed -e "s/[']//g")'
+WOD?='$(shell fortune -s | sed -e 's/["]//g' | sed -e "s/[']//g")'
 
 
 deploy :
