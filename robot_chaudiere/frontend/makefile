@@ -14,8 +14,10 @@ deploy :
 	-git push
 	cd $(DEPLOY_DIR); rm -fr EPortier; git clone $(REPO); cd EPortier/robot_chaudiere/frontend; make pem
 
-start :
+startx :
 	python pid.py
+
+start : run
 
 server  :
 #	mypy --install-types --ignore-missing-imports  frontend.py

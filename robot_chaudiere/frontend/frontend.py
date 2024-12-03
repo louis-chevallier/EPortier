@@ -12,8 +12,6 @@ import datetime
 
 utillc.default_opt["with_date"] = 1
 
-
-
 DATA_DIR="/deploy/data"
 
 class Task(object):
@@ -168,7 +166,7 @@ class HelloWorld(object):
     @cherrypy.expose
     def read(self, s=0) :
         s = int(s)
-        #EKOX(s)
+        EKOX(s)
         j = self.tasks[s]
         #EKOX(len(j.buffer))
         d = { 'buffer' : j.buffer, 'interval' : j.interval }
@@ -176,6 +174,7 @@ class HelloWorld(object):
         #EKOX(j.buffer)
         #cherrypy.response.headers["Access-Control-Allow-Origin"] = '*'
         #cherrypy.response.headers['Content-Type'] = 'application/json'
+        #EKOX(d)
         return json.dumps(d) 
             
 if __name__ == "__main__":
