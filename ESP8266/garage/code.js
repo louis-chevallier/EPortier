@@ -8,6 +8,13 @@ const button = document.getElementById("ouvrir");
 const eko = document.getElementById("eko");
 const buttons_div = document.getElementById("buttons");
 
+//const url = "http://78.207.134.29:8083/main";
+//const url = "http://78.207.134.29:8083/main";
+//const url = "http://78.207.134.29:8083/main";
+const url = "WURL";
+//const url = "http://192.168.1.95/main";
+
+
 if (false) {
     const ws = new WebSocket('ws://192.168.1.115/ws')
     ws.onopen = () => {
@@ -61,11 +68,6 @@ reset = function(){
     button.innerHTML = accueil;
     button.disabled = false;
 };
-//const url = "http://78.207.134.29:8083/main";
-//const url = "http://78.207.134.29:8083/main";
-//const url = "http://78.207.134.29:8083/main";
-const url = "WURL";
-//const url = "http://192.168.1.95/main";
 
 function getCookie(cname) {
     let name = cname + "=";
@@ -94,10 +96,10 @@ function ouvre(cde) {
     //console.log("cookies2 ", cookies);
     button.style.fontSize="30px";
     button.innerHTML = "le verrou va s'ouvrir ...";
-    const murl = "main" + cde;
     setTimeout(() => {
+        const murl = "main" + cde;        
         button.disabled = true;
-        console.log("url+cde ", murl)
+        console.log("murl ", murl)
         fetch(murl).then(function(result)  {
             console.log("result ouvre ", result);
             d = result.json();
@@ -113,7 +115,7 @@ function ouvre(cde) {
             setTimeout(reset, 2000);
         }).catch((e) => {
             console.log(e);
-            button.innerHTML = "Pas moyen de contacter le système!.. fetching " + url + "/main" + cde;
+            button.innerHTML = "Pas moyen de contacter le système!.. fetching " + murl;
             setTimeout(reset, 2000);
         })}, 
                1000);
