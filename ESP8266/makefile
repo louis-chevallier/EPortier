@@ -12,6 +12,7 @@ SHELL=bash
 export GITINFO=$(shell git log --pretty=format:"%h - %an, %ar : %s" -1)
 #WOD="$(shell fortune -s)"
 WOD='$(shell fortune -s | sed -e 's/["]//g' | sed -e "s/[']//g")'
+MODE?="\\\"normal\\\""" 
 
 
 CPORT?= /dev/ttyUSB0
@@ -26,7 +27,7 @@ CORE?=esp8266:esp8266:nodemcuv2
 DATE=$(shell date -r $(SKETCH).ino | sed s,' ','_',g)
 #$(warning date $(DATE))
 # --build-property build.extra_flags=-DNOEKO=1
-DEF?=--build-property build.extra_flags="-fexceptions -D__PORT=$(PORT)" --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DIPADDRESS=$(IPADDRESS) -DNOEKO=0  $(OPTIONS)"
+DEF?=--build-property build.extra_flags="-fexceptions -D__PORT=$(PORT)" --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DMODE=$(MODE) -DIPADDRESS=$(IPADDRESS) -DNOEKO=0  $(OPTIONS)"
 
 SOURCES=$(wildcard $(CURDIR)/*.ino $(CURDIR)/*.h $(CURDIR)/*.hpp $(CURDIR)/*.html $(CURDIR)/*.js $(CURDIR)/makefile makefile)
 #$(warning $(SOURCES))

@@ -290,7 +290,6 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
   //EKOX(type);
   if(type == WS_EVT_CONNECT){
     globalClient = client;
-    EKOT("connect");
     EKOT("Websocket client connection received");
  
   } else if(type == WS_EVT_DISCONNECT){
@@ -301,7 +300,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     //EKOX(len);
     AwsFrameInfo * info = (AwsFrameInfo*)arg;
     String msg = "";
-    if(info->final && info->index == 0 && info->len == len){
+    if(info->final && info->index == 0 && info->len == len) {
       //the whole message is in a single frame and we got all of it's data
       //Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
       if(info->opcode == WS_TEXT){
@@ -315,7 +314,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
           msg += buff ;
         }
       }
-      //EKOX(msg.c_str());
+      EKOX(msg.c_str());
       auto t = split(msg);
       //EKOX(t.get<0>());
       //EKOX(t.get<1>());
@@ -399,21 +398,21 @@ void update_file(bool reboot = false, bool inc = false) {
     }
     auto s0 = ss.get<0>();
     auto s1 = ss.get<1>();
-    EKOX(s0);
-    EKOX(s1);
+    //EKOX(s0);
+    //EKOX(s1);
     auto n = s0.toInt() + (reboot ? 1 : 0);
     File file = LittleFS.open(fn, "w");
-    EKOX(file);
+    //EKOX(file);
     int a = inc ? 1 : 0;
     if (file != 0) {
-      EKO();
+      //EKO();
       file.print(String(n) + "," + String(s1.toInt() + a));
-      EKO();
+      //EKO();
       file.close();
-      EKO();
+      //EKO();
     }
-    EKO();
-    EKOX(read_file("log.txt"));
+    //EKO();
+    //EKOX(read_file("log.txt"));
   }
 }
 
@@ -447,6 +446,21 @@ void setup() {
     delay(500);
     //Serial.print("\u0008");    Serial.print(aa[i%aa.length()]);
     Serial.print(".");
+    byte mac[6];
+    WiFi.macAddress(mac);
+    Serial.print("MAC: ");
+    Serial.print(mac[5], HEX);
+    Serial.print(":");
+    Serial.print(mac[4], HEX);
+    Serial.print(":");
+    Serial.print(mac[3], HEX);
+    Serial.print(":");
+    Serial.print(mac[2], HEX);
+    Serial.print(":");
+    Serial.print(mac[1], HEX);
+    Serial.print(":");
+    Serial.println(mac[0], HEX);
+    
   }
   
   EKOT(" wifi ok");
@@ -480,6 +494,7 @@ void setup() {
   jscode.replace("PORT", String(__PORT));
   jscode.replace("IPADDRESS", String(IPADDRESS));
   jscode.replace("WURL", WURL);
+  jscode.replace("MODE", String(MODE));
 
 
 
@@ -545,23 +560,23 @@ void setup() {
   });
     
   server.on("/main96713", HTTP_GET, [](ARequest *request){
-    EKOX(long(request));
+    //EKOX(long(request));
     start = count;
-    EKOT("handle_index_main");
+    //EKOT("handle_index_main");
     int v = ledv ? LOW : HIGH;
     ledv = !ledv;
-    EKOT("high");    
+    //EKOT("high");    
     digitalWrite(PORTE, HIGH);
     tasks::apres(2 * tasks::SEC_MC, [](){
-      EKOT("low");
+      //EKOT("low");
       digitalWrite(PORTE, LOW);
     });
     update_file(false, true);
     auto json = Acc(P("status", "ok"));
-    EKOX(json);
+    //EKOX(json);
     request->send(200, "text/json", json);
     
-    EKOT("end");
+    //EKOT("end");
   });
   
   server.on("/code.js", HTTP_GET, [](ARequest *request){
@@ -650,7 +665,7 @@ void setup() {
   });
 
   server.on("/data_linky", HTTP_GET, [](ARequest *request) {
-    EKOT("data linky");
+    //EKOT("data linky");
     noInterrupts();
     String json = Acc(P("papp", String(Papp)) + ", " +
                       P("pappm", String(PappM)) + ", " +                      
@@ -660,7 +675,7 @@ void setup() {
                       P("pwhc", String(PWHC)));
     request->send(200, "text/json", json);
     interrupts();
-    EKOX(json);
+    //EKOX(json);
   });
 
   EKO();

@@ -5,7 +5,7 @@ count = "a";
 const accueil = "Tapez le code";
 const button = document.getElementById("ouvrir");
 //const swap = document.getElementById("swap");
-const eko = document.getElementById("eko");
+const ekodiv = document.getElementById("eko");
 const buttons_div = document.getElementById("buttons");
 
 //const url = "http://78.207.134.29:8083/main";
@@ -14,9 +14,23 @@ const buttons_div = document.getElementById("buttons");
 const url = "WURL";
 //const url = "http://192.168.1.95/main";
 
+const mode = "MODE";
+const testing = mode == "testing";
 
-if (false) {
-    const ws = new WebSocket('ws://192.168.1.115/ws')
+const ws = new WebSocket('ws://' + "IPADDRESS" + ':' + "PORT" + '/ws')
+
+console.log("ws", ws);
+console.log("testing", testing);
+
+function eko(...txt) {
+    if (testing) {
+        ekodiv.innerHTML += txt.toString() + '<br>';
+        ws.send(txt.toString())
+    }
+    console.log(txt);
+}
+
+if (true) {
     ws.onopen = () => {
         console.log('ws opened on browser')
         ws.send('hello world')
@@ -24,9 +38,12 @@ if (false) {
     
     ws.onmessage = (message) => {
         console.log(`message received ` + message.data)
-        eko.innerHTML += message.data + '<br>';
+        if (testing) {
+            ekodiv.innerHTML += message.data + '<br>';
+        }
     }
 }
+
 function statut() {
     murl = "statut_porte";
     //console.log("statut fetching");
@@ -88,7 +105,7 @@ code =getCookie("eportiercode");
 console.log('code from cookie ', code);
 
 function ouvre(cde) {
-    console.log("cde= ", cde);
+    eko("cde= ", cde);
     document.cookie = "eportiercode=" + cde + ";SameSite=Strict";
     cookies = document.cookies;
     //console.log("cookies ", cookies);
@@ -99,9 +116,9 @@ function ouvre(cde) {
     setTimeout(() => {
         const murl = "main" + cde;        
         button.disabled = true;
-        console.log("murl ", murl)
+        eko("murl ", murl)
         fetch(murl).then(function(result)  {
-            console.log("result ouvre ", result);
+            eko("result ouvre ", result);
             d = result.json();
             //console.log("result ", d);
             return d;
@@ -114,8 +131,10 @@ function ouvre(cde) {
             }
             setTimeout(reset, 2000);
         }).catch((e) => {
-            console.log(e);
-            button.innerHTML = "Pas moyen de contacter le système!.. fetching " + murl;
+            eko("err", e);
+            let tt = "Pas moyen de contacter le système!.. fetching " + murl;
+            button.innerHTML = tt;
+            eko(tt);
             setTimeout(reset, 2000);
         })}, 
                1000);
@@ -188,5 +207,10 @@ MH = 230;
 for (i = 1; i < 10; i++) {
     //console.log(i);
     addbutton(i, ((i-1) % 3) * W + ML, (~~((i-1) / 3) * H) + MH); 
-}                        
+}
+
+
+ekodiv.style.position = "absolute";
+ekodiv.style.top = H*4 + 'px';
+ekodiv.style.fontSize = "20px";
 
