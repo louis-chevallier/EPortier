@@ -1,6 +1,4 @@
 
-
-
 count = "a";
 const accueil = "Tapez le code";
 const button = document.getElementById("ouvrir");
@@ -60,7 +58,7 @@ function statut() {
     }).then(function(data) {
         //console.log("then 1 ", data);
         //button.innerHTML = count;
-        //console.log("data");
+        //console.log(data);
         //console.log('data statut ', data);
         var dsds = "La porte est " + data["porte_fermee"] + ", " + data["porte_ouverte"] + "<br>";
         //dsds +=  "buf_len : " + data["buf_len"] + "<p>";
@@ -118,8 +116,8 @@ function ouvre(cde) {
         button.disabled = true;
         eko("murl ", murl)
         fetch(murl).then(function(result)  {
-            eko("result ouvre ", result);
             d = result.json();
+            eko("result ouvre ", d);
             //console.log("result ", d);
             return d;
         }).then(function(data) {
@@ -211,6 +209,6 @@ for (i = 1; i < 10; i++) {
 
 
 ekodiv.style.position = "absolute";
-ekodiv.style.top = H*4 + 'px';
+ekodiv.style.top = H*5 + 'px';
 ekodiv.style.fontSize = "20px";
 

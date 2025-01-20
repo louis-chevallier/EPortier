@@ -276,12 +276,14 @@ void swap() {
 bool porte_ouverte() {
   // true : contact ouvert
   int d = digitalRead(PORTE_OUVERTE);
+  //EKOX(d);
   return !d;
 }
 
 bool porte_fermee() {
   // true : contact ouvert  
   int d = digitalRead(PORTE_FERMEE);
+  //EKOX(d);
   return !d;
 }
 
@@ -658,7 +660,7 @@ void setup() {
     String statO = S + (porte_ouverte() ? "" : "pas") + " ouverte";
     String statF = S + (porte_fermee() ? "" : "pas") + " fermée";
     String json = Acc(P("porte_ouverte", statO) + ", " +
-                      P("porte_fermee", statF));    
+                      P("porte_fermee", statF));
     request->send(200, "text/json", json);
     //EKOX(long(globalClient));
       
@@ -701,8 +703,9 @@ void setup() {
     s += sqrt(abs(s));
   }
   EKOX(DOSWAP);
-
+  EKO();
   if (DOSWAP)  {
+    EKO();
     EKOT("send message to swap");
     push_message(Message(SWAP));
   }
@@ -747,7 +750,7 @@ void setup() {
     file.close();
     */
   }  
-
+  EKO();
   listAllFilesInDir("/");
   
   EKO();
@@ -941,7 +944,7 @@ void loop() {
         Serial.begin(115200, SERIAL_8N1); //Begin Serial at 115200 Baud
         EKO();
       }
-        
+      EKOT("SWAPPING");
       Serial.swap();
       EKO();
     }

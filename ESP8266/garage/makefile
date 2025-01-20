@@ -1,6 +1,7 @@
 
 # 8080 : port externe redirigé vers nodemcugarage par box
-PORT?=8086
+# 8086 : port externe redirigé vers nodemcu03 par box
+PORT?=8080
 
 #IPADDRESS1?=192.168.1.181
 IPADDRESS1?=176.188.228.22
@@ -21,15 +22,18 @@ WSURL?="ws://$(IPADDRESS1):$(PORT)/ws"
 CORE=esp8266:esp8266:nodemcuv2
 
 
+TESTING="\\\"testing\\\""
+DEPLOY="\\\"deploy\\\""
+
 start :
-	make test
+	make go
 
 go :
 #	OPTIONS= DEFS= PORT=$(PORT) IPADDRESS=$(IPADDRESS) make garage
-	OPTIONS= DEFS= PORT=$(PORT) MODE="\\\"testing\\\""" IPADDRESS="\\\"$(IPADDRESS1)\\\"" make garage
+	OPTIONS= DEFS= PORT=$(PORT) MODE=$(DEPLOY) IPADDRESS="\\\"$(IPADDRESS1)\\\"" make garage
 
 test :
-	OPTIONS= DEFS= PORT=8086 MODE="\\\"testing\\\"" IPADDRESS="\\\"$(IPADDRESS1)\\\"" make garage_test
+	OPTIONS= DEFS= PORT=8086 MODE=$(DEPLOY) IPADDRESS="\\\"$(IPADDRESS1)\\\"" make garage_test
 
 install :
 	pip install rel
@@ -45,7 +49,7 @@ copy :
 	cat code.js | sed s,WURL,http://$(IPADDRESS1):$(PORT),  > /mnt/NUC/www/EPortier/code.js
 
 garage_test : 
-	OPTIONS="-DWS=1 -DDOSWAP=0" make copy env compile upload monitor_ws
+	OPTIONS="-DWS=1 -DDOSWAP=0" make copy env compile upload monitor
 
 garage : 
 	OPTIONS="-DWS=1 -DDOSWAP=1" make copy env compile upload monitor
