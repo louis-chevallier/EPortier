@@ -400,8 +400,8 @@ void update_file(bool reboot = false, bool inc = false) {
     }
     auto s0 = ss.get<0>();
     auto s1 = ss.get<1>();
-    //EKOX(s0);
-    //EKOX(s1);
+    EKOX(s0);
+    EKOX(s1);
     auto n = s0.toInt() + (reboot ? 1 : 0);
     File file = LittleFS.open(fn, "w");
     //EKOX(file);
@@ -413,9 +413,16 @@ void update_file(bool reboot = false, bool inc = false) {
       file.close();
       //EKO();
     }
-    //EKO();
+    EKO();
     //EKOX(read_file("log.txt"));
   }
+}
+
+void IRAM_ATTR putLow()
+{
+  digitalWrite(PORTE, LOW);
+  EKO();
+  
 }
 
 void setup() {
@@ -567,18 +574,36 @@ void setup() {
     //EKOT("handle_index_main");
     int v = ledv ? LOW : HIGH;
     ledv = !ledv;
-    //EKOT("high");    
+    EKOT("high");    
     digitalWrite(PORTE, HIGH);
-    tasks::apres(2 * tasks::SEC_MC, [](){
-      //EKOT("low");
+
+
+    if (true) {
+      tasks::ITimer.detachInterrupt();
+      tasks::ITimer.attachInterruptInterval(500 * 1000, putLow);
+    }
+
+
+    
+    if (false) {
+      EKO();
+      delay(500);
       digitalWrite(PORTE, LOW);
-    });
+      EKO();
+    }
+    if (false) {
+      tasks::apres(2 * tasks::SEC_MC, [](){
+        EKOT("low");
+        digitalWrite(PORTE, LOW);
+      });
+    }
+    EKOX(tasks::dump());
     update_file(false, true);
     auto json = Acc(P("status", "ok"));
     //EKOX(json);
     request->send(200, "text/json", json);
     
-    //EKOT("end");
+    EKOT("end");
   });
   
   server.on("/code.js", HTTP_GET, [](ARequest *request){
@@ -653,6 +678,7 @@ void setup() {
   });
   
   server.on("/statut_porte", HTTP_GET, [](ARequest *request) {
+    noInterrupts();    
     //EKOT("statut");
     String message = "POST form was:\n";
     //for (uint8_t i = 0; i < server.args(); i++) { message += " " + server.argName(i) + ": " + server.arg(i) + "\n"; }
@@ -661,13 +687,24 @@ void setup() {
     String statF = S + (porte_fermee() ? "" : "pas") + " fermée";
     String json = Acc(P("porte_ouverte", statO) + ", " +
                       P("porte_fermee", statF));
+    EKOX(json);
     request->send(200, "text/json", json);
     //EKOX(long(globalClient));
+    EKO();
+
+    if (false) {
+      tasks::apres(tasks::SEC_MC /2, [](){
+        EKOT("low");
+        //digitalWrite(PORTE, LOW);
+      });
+      EKOX(tasks::dump());
+    }
+    interrupts();    
       
   });
 
   server.on("/data_linky", HTTP_GET, [](ARequest *request) {
-    //EKOT("data linky");
+    EKOT("data linky");
     noInterrupts();
     String json = Acc(P("papp", String(Papp)) + ", " +
                       P("pappm", String(PappM)) + ", " +                      
@@ -677,7 +714,7 @@ void setup() {
                       P("pwhc", String(PWHC)));
     request->send(200, "text/json", json);
     interrupts();
-    //EKOX(json);
+    EKOX(json);
   });
 
   EKO();
@@ -788,6 +825,11 @@ void setup() {
   
   startTime = millis();  
   EKOT("c'est parti");
+
+  //tasks::test1();
+  //tasks::test();
+
+  
 }
 /*
 auto o1 = Once([]() {

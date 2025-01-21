@@ -52,10 +52,27 @@ garage_test :
 	OPTIONS="-DWS=1 -DDOSWAP=0" make copy env compile upload monitor
 
 garage : 
-	OPTIONS="-DWS=1 -DDOSWAP=1" make copy env compile upload monitor
+	OPTIONS="-DWS=1 -DDOSWAP=0" make copy env compile upload monitor
 
 check :
-	wget -q http://192.168.1.181/ ; wc  index.html
+	-rm checking/*
+	(cd checking; wget -q http://$(IPADDRESS1):$(PORT)/ )
+	(cd checking; wget -q http://$(IPADDRESS1):$(PORT)/code_boot.js )
+	(cd checking; wget -q http://$(IPADDRESS1):$(PORT)/code.js )
+	(cd checking; wget -q http://$(IPADDRESS1):$(PORT)/data_linky )
+	(cd checking; wget -q http://$(IPADDRESS1):$(PORT)/statut_porte)
+	(cd checking; wget -q http://$(IPADDRESS1):$(PORT)/main96713)
+	sleep 1
+	diff refs/index.html checking/index.html
+	diff refs/code.js checking/code.js
+	diff refs/code_boot.js checking/code_boot.js
+
+LAST := 10000
+NUMBERS := $(shell seq 1 ${LAST})
+
+check_loop :
+	@$(foreach var,$(NUMBERS),make check;) 
+
 
 #FREQ?=160
 MMU?=4816H

@@ -177,7 +177,7 @@ namespace tasks {
         .date_mc = SEC_MC,
         .t= [](){
           EKO();
-          //EKOX(dump());      
+          EKOX(dump());      
         },
         .period_mc = 4*SEC_MC});
     EKOX(t1);
