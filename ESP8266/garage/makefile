@@ -7,7 +7,7 @@ PORT?=8080
 IPADDRESS1?=176.188.228.22
 
 IPADDRESS="\"$(IPADDRESS1)\""
-OPTIONS?="-DWS=1 -DDOSWAP=1"
+OPTIONS?="-DWS=1 -DDOSWAP=1 -DEKO=1"
 
 GITINFO="$(shell git log --pretty=format:"%h - %an, %ad : %s %n" -1)"
 $(warning GITINFO=$(GITINFO))
@@ -52,7 +52,7 @@ garage_test :
 	OPTIONS="-DWS=1 -DDOSWAP=0" make copy env compile upload monitor
 
 garage : 
-	OPTIONS="-DWS=1 -DDOSWAP=0" make copy env compile upload monitor
+	OPTIONS="-DWS=1 -DDOSWAP=1 -DNOEKO=1" make copy env compile upload monitor
 
 check :
 	-rm checking/*
