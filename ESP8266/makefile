@@ -12,10 +12,11 @@ SHELL=bash
 export GITINFO=$(shell git log --pretty=format:"%h - %an, %ar : %s" -1)
 #WOD="$(shell fortune -s)"
 WOD='$(shell fortune -s | sed -e 's/["]//g' | sed -e "s/[']//g")'
-MODE?="\\\"normal\\\""" 
+MODE?="\\\"normal\\\""
 
 
 CPORT?= /dev/ttyUSB0
+
 WSURL?="ws://192.168.1.95/ws"
 SKETCH?=garage
 PORT ?= 9999
@@ -74,7 +75,7 @@ upload :
 	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p $(CPORT) --fqbn $(CORE)  $(SKETCH)
 
 ota :
-	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds   -p $(CPORT)  --fqbn $(CORE) --port $(MIP)  $(SKETCH) 
+	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p $(CPORT)  --fqbn $(CORE) --port $(MIP)  $(SKETCH) 
 #--port $(MIP)
 
 

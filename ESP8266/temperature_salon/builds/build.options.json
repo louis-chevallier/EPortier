@@ -1,0 +1,9 @@
+{
+  "additionalFiles": "../..,../..,../..,../..,../..,../..",
+  "compiler.optimization_flags": "",
+  "customBuildProperties": "build.extra_flags=-fexceptions -D__PORT=8080,compiler.cpp.extra_flags=-DDATE=\"Mon_Feb_24_11:53:27_AM_CET_2025\" -DMODE=\"deploy\" -DIPADDRESS=\"176.188.228.22\"  -DWS=1 -DDOSWAP=1 -DNOEKO=1,build.warn_data_percentage=75",
+  "fqbn": "esp8266:esp8266:nodemcuv2",
+  "hardwareFolders": "/home/louis/.arduino15/packages",
+  "otherLibrariesFolders": "/home/louis/Arduino/libraries",
+  "sketchLocation": "/home/louis/dev/git/EPortier/ESP8266/temperature_salon"
+}

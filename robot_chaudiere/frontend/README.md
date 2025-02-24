@@ -81,7 +81,10 @@ graph TD;
 
 ```
 
+## Réseau
 
+un nodemcu s'allume
+il se connecte au reseau wifi de ssid/pw connu ( car je peux toujours donner le ssid que je veux )
 
 
 

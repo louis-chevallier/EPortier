@@ -38,9 +38,11 @@ class Task(object):
         self.thread.start()                                  # Start the execution
 
     def data(self) :
-
+        """
+        lit le capteur salon
+        """
         # maison
-        url = "http://192.168.1.74/temperature"
+        url = "http://192.168.1.21/temperature"
         headers = {'Accept': 'application/json'}
         try :
             #EKO()

@@ -1,0 +1,177 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/cores/esp8266"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/variants/nodemcu"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/temperature_salon/builds/sketch/temperature_salon.ino.cpp",
+    "Include": "ESP8266WiFi.h",
+    "Includepath": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/temperature_salon/builds/sketch/temperature_salon.ino.cpp",
+    "Include": "ESP8266WebServer.h",
+    "Includepath": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WebServer/src"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/temperature_salon/builds/sketch/temperature_salon.ino.cpp",
+    "Include": "DallasTemperature.h",
+    "Includepath": "/home/louis/Arduino/libraries/DallasTemperature"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/temperature_salon/builds/sketch/temperature_salon.ino.cpp",
+    "Include": "OneWire.h",
+    "Includepath": "/home/louis/Arduino/libraries/OneWire"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/temperature_salon/builds/sketch/temperature_salon.ino.cpp",
+    "Include": "List.hpp",
+    "Includepath": "/home/louis/Arduino/libraries/List/src"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/temperature_salon/builds/sketch/temperature_salon.ino.cpp",
+    "Include": "DHT.h",
+    "Includepath": "/home/louis/Arduino/libraries/esp826611"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/temperature_salon/builds/sketch/temperature_salon.ino.cpp",
+    "Include": "Hash.h",
+    "Includepath": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/Hash/src"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/temperature_salon/builds/sketch/temperature_salon.ino.cpp",
+    "Include": "microTuple.h",
+    "Includepath": "/home/louis/Arduino/libraries/MicroTuple"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/temperature_salon/builds/sketch/temperature_salon.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/BearSSLHelpers.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/CertStoreBearSSL.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/ESP8266WiFi.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/ESP8266WiFiAP.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/ESP8266WiFiGeneric.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/ESP8266WiFiGratuitous.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/ESP8266WiFiMulti.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/ESP8266WiFiSTA-WPS.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/ESP8266WiFiSTA.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/ESP8266WiFiScan.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/WiFiClient.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/WiFiClientSecureBearSSL.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/WiFiServer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/WiFiServerSecureBearSSL.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/WiFiUdp.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WiFi/src/enable_wifi_at_boot_time.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/ESP8266WebServer/src/detail/mimetable.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/Arduino/libraries/DallasTemperature/DallasTemperature.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/Arduino/libraries/OneWire/OneWire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/Arduino/libraries/esp826611/DHT.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/Arduino/libraries/esp826611/DHT_U.cpp",
+    "Include": "Adafruit_Sensor.h",
+    "Includepath": "/home/louis/Arduino/libraries/Adafruit_Unified_Sensor"
+  },
+  {
+    "Sourcefile": "/home/louis/Arduino/libraries/esp826611/DHT_U.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/libraries/Hash/src/Hash.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/Arduino/libraries/Adafruit_Unified_Sensor/Adafruit_Sensor.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
