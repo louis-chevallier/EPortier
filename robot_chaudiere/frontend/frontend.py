@@ -9,6 +9,7 @@ import requests
 import time, json
 import meteofrance_api
 import datetime
+import nmap, subprocess, json, re, time
 
 utillc.default_opt["with_date"] = 1
 
@@ -46,12 +47,13 @@ class Task(object):
         batcmd="nmap -sL 192.168.1.*"
         result = subprocess.check_output(batcmd, shell=True, text=True)
         result = result.split("\n")
+        EKOX(result)
         for e in result :
-            ip = re.search("\((.*)\)", e).groups()[0]
-            #EKOX(ip)
-            url = "http://" + ip + "/identify"
-            headers = {'Accept': 'application/json'}
-            try :
+            try :            
+                ip = re.search("\((.*)\)", e).groups()[0]
+                EKOX(ip)
+                url = "http://" + ip + "/identify"
+                headers = {'Accept': 'application/json'}
                 r = requests.get(url, headers=headers)
                 EKOX(r)
                 j = r.json()
@@ -138,7 +140,7 @@ class Task(object):
             if datetime.datetime.now() > self.save_time + datetime.timedelta(hours = 24)  :
                 self.save()
                 self.save_time = datetime.datetime.now()
-            if datetime.datetime.now() > self.check_time + datetime.timedelta(minutes = 10) :
+            if datetime.datetime.now() > self.check_time + datetime.timedelta(seconds=12) :
                 self.discover_nodemcu();
                 self.check_time = datetime.datetime.now()
             sleep(self.interval)
