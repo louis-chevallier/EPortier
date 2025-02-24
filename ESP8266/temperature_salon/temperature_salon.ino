@@ -7,13 +7,17 @@
 #include <Hash.h>
 #include <Arduino.h>
 #include <microTuple.h>
-String S;
 
+
+#include "util.h"
+#include "UtilFS.h"
+
+/*
 long seko = millis();
 #define EKOT(x) Serial.println(S + __FILE__ + ":" + __LINE__ + ":[" + (millis()-seko) + "] " + String(x)); seko=millis()
 #define EKOX(x) Serial.println(S + __FILE__ + ":" + __LINE__ + ":[" + (millis()-seko) + "] " + #x + " = " + String(x)); seko=millis()
 #define EKO() Serial.println(S + __FILE__+ ":" + __LINE__ + ":[" + (millis()-seko) + "]"); seko=millis()
-
+*/
 /********************************************/
 // DHT11
 
@@ -369,6 +373,11 @@ void webSetup() {
   EKOT("Server started");
 
   // Print the IP address
+  server.on("/identify", [](){
+    String npage(IDENTIFY);
+    server.send(200, "text/json", npage.c_str());    
+  });
+
   server.on("/", handle_index); //Handle Index page
   server.on("/temperature", handle_temperature);
   server.on("/consigne", handle_consigne);

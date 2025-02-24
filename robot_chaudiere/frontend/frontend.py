@@ -32,10 +32,30 @@ class Task(object):
         
         self.obs = None
         self.save_time = self.t1 = datetime.datetime.now() - 2 * datetime.timedelta(hours = 24) 
+        self.check_time = self.t1 = datetime.datetime.now()
     
         self.thread = Thread(target=self.run, args=())
         self.thread.daemon = True                            # Daemonize thread
         self.thread.start()                                  # Start the execution
+        self.devices = {
+            "garage" : 0,
+            "salon" : 0,
+            "chaudiere" : 0}
+                         
+    def discover_nodemcu(self) :
+        batcmd="nmap -sL 192.168.1.*"
+        result = subprocess.check_output(batcmd, shell=True, text=True)
+        result = result.split("\n")
+        for e in result :
+            ip = re.search("\((.*)\)", e).groups()[0]
+            EKOX(ip)
+            url = "http://" + ip + "/identify"
+            headers = {'Accept': 'application/json'}
+            try :
+                r = requests.get(url, headers=headers)
+                EKOX(r)
+            except :
+                pass
 
     def data(self) :
         """
@@ -114,6 +134,9 @@ class Task(object):
             if datetime.datetime.now() > self.save_time + datetime.timedelta(hours = 24)  :
                 self.save()
                 self.save_time = datetime.datetime.now()
+            if datetime.datetime.now() > self.check_time + datetime.timedelta(minutes = 10) :
+                self.discover_nodemcu();
+                self.check_time = datetime.datetime.now()
             sleep(self.interval)
             try :
                 j = self.data()

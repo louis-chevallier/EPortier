@@ -473,6 +473,7 @@ void setup() {
   }
   
   EKOT(" wifi ok");
+  EKOX(WiFi.localIP().toString());  //Print the local IP
 
   auto url = "www.google.com";
   IPAddress remote_addr;  
@@ -512,6 +513,11 @@ void setup() {
   server.addHandler(&ws);
   EKO();
 #endif
+
+  server.on("/identify", HTTP_GET, [](ARequest *request){
+    String npage("garage");
+    request->send(200, "text/json", nnpage.c_str());    
+  });
 
   server.on("/create_file", HTTP_GET, [](ARequest *request){
     create_file("test.txt", "test");

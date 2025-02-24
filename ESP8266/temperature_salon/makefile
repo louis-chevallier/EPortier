@@ -26,11 +26,15 @@ TESTING="\\\"testing\\\""
 DEPLOY="\\\"deploy\\\""
 
 start :
-	make go
+	make salon
 
-go :
+salon :
 #	OPTIONS= DEFS= PORT=$(PORT) IPADDRESS=$(IPADDRESS) make garage
-	OPTIONS= DEFS= PORT=$(PORT) MODE=$(DEPLOY) IPADDRESS="\\\"$(IPADDRESS1)\\\"" make garage
+	OPTIONS= DEFS= PORT=$(PORT) MODE=$(DEPLOY) IDENTIFY="\\\"salon\\\"" IPADDRESS="\\\"$(IPADDRESS1)\\\"" make garage
+
+chaudiere :
+#	OPTIONS= DEFS= PORT=$(PORT) IPADDRESS=$(IPADDRESS) make garage
+	OPTIONS= DEFS= PORT=$(PORT) MODE=$(DEPLOY) IDENTIFY="\\\"chaudiere\\\"" IPADDRESS="\\\"$(IPADDRESS1)\\\"" make garage
 
 test :
 	OPTIONS= DEFS= PORT=8086 MODE=$(DEPLOY) IPADDRESS="\\\"$(IPADDRESS1)\\\"" make garage_test
