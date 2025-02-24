@@ -56,7 +56,7 @@ garage_test :
 	OPTIONS="-DWS=1 -DDOSWAP=0" make copy env compile upload monitor
 
 garage : 
-	OPTIONS="-DWS=1 -DDOSWAP=1 -DNOEKO=1" make copy env compile upload monitor
+	OPTIONS="-DWS=1 -DDOSWAP=1 -DNOEKO=0" make copy env compile upload monitor
 
 check :
 	-rm checking/*

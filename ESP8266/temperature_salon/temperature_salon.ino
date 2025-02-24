@@ -375,7 +375,10 @@ void webSetup() {
   // Print the IP address
   server.on("/identify", [](){
     String npage(IDENTIFY);
-    server.send(200, "text/json", npage.c_str());    
+    String json = "{ identity : '";
+    json += IDENTIFY;
+    json += "'}";
+    server.send(200, "text/json", json.c_str());    
   });
 
   server.on("/", handle_index); //Handle Index page
@@ -435,6 +438,9 @@ void  setup() {
   Serial.println(D3);
   Serial.println(D4);
   Serial.println(D5);
+
+ EKOX(WiFi.localIP().toString());
+  
 }
 
 int state = 0;

@@ -48,21 +48,25 @@ class Task(object):
         result = result.split("\n")
         for e in result :
             ip = re.search("\((.*)\)", e).groups()[0]
-            EKOX(ip)
+            #EKOX(ip)
             url = "http://" + ip + "/identify"
             headers = {'Accept': 'application/json'}
             try :
                 r = requests.get(url, headers=headers)
                 EKOX(r)
+                j = r.json()
+                name = j["identity"]
+                EKOX(name)
+                self.devices[name] = ip
             except :
                 pass
-
+            EKOX(self.devices)
     def data(self) :
         """
         lit le capteur salon
         """
         # maison
-        url = "http://192.168.1.21/temperature"
+        url = "http://" + self.devices["salon"] + "/temperature"
         headers = {'Accept': 'application/json'}
         try :
             #EKO()
@@ -78,7 +82,7 @@ class Task(object):
                 'millis' : 0
                 }
         # chaudiere
-        url = "http://192.168.1.33/temperature"
+        url = "http://" + self.devices["chaudiere"] + "/temperature"
         headers = {'Accept': 'application/json'}
         try :
             r = requests.get(url, headers=headers)
