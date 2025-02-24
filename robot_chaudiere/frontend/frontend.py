@@ -34,43 +34,46 @@ class Task(object):
         self.obs = None
         self.save_time = self.t1 = datetime.datetime.now() - 2 * datetime.timedelta(hours = 24) 
         self.check_time = self.t1 = datetime.datetime.now()
-    
+
+
+        self.devices = {}
+        
         self.thread = Thread(target=self.run, args=())
         self.thread.daemon = True                            # Daemonize thread
         self.thread.start()                                  # Start the execution
-        self.devices = {
-            "garage" : 0,
-            "salon" : 0,
-            "chaudiere" : 0}
                          
     def discover_nodemcu(self) :
         batcmd="nmap -sL 192.168.1.*"
         result = subprocess.check_output(batcmd, shell=True, text=True)
         result = result.split("\n")
-        EKOX(result)
+        #EKOX(result)
+
+        #if 'salon' in self.devices :            return
+        
         for e in result :
             try :            
                 ip = re.search("\((.*)\)", e).groups()[0]
-                EKOX(ip)
+                #EKOX(ip)
                 url = "http://" + ip + "/identify"
                 headers = {'Accept': 'application/json'}
                 r = requests.get(url, headers=headers)
-                EKOX(r)
                 j = r.json()
+                #EKOX(j)
                 name = j["identity"]
                 EKOX(name)
                 self.devices[name] = ip
-            except :
+            except Exception as ex :
                 pass
-            EKOX(self.devices)
+        EKOX(self.devices)
+
     def data(self) :
         """
         lit le capteur salon
         """
         # maison
-        url = "http://" + self.devices["salon"] + "/temperature"
         headers = {'Accept': 'application/json'}
         try :
+            url = "http://" + self.devices["salon"] + "/temperature"
             #EKO()
             r = requests.get(url, headers=headers)
             j = r.json()
@@ -84,9 +87,9 @@ class Task(object):
                 'millis' : 0
                 }
         # chaudiere
-        url = "http://" + self.devices["chaudiere"] + "/temperature"
         headers = {'Accept': 'application/json'}
         try :
+            url = "http://" + self.devices["chaudiere"] + "/temperature"
             r = requests.get(url, headers=headers)
             j1 = r.json()
             j['DS18B20'] = j1['DS18B20'] 
@@ -140,7 +143,7 @@ class Task(object):
             if datetime.datetime.now() > self.save_time + datetime.timedelta(hours = 24)  :
                 self.save()
                 self.save_time = datetime.datetime.now()
-            if datetime.datetime.now() > self.check_time + datetime.timedelta(seconds=12) :
+            if datetime.datetime.now() > self.check_time + datetime.timedelta(minutes=30) :
                 self.discover_nodemcu();
                 self.check_time = datetime.datetime.now()
             sleep(self.interval)
