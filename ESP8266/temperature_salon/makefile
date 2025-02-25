@@ -26,7 +26,8 @@ TESTING="\\\"testing\\\""
 DEPLOY="\\\"deploy\\\""
 
 start :
-	make salon
+#	make salon
+	make chaudiere
 
 salon :
 #	OPTIONS= DEFS= PORT=$(PORT) IPADDRESS=$(IPADDRESS) make garage

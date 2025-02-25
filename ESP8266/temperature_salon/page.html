@@ -1,33 +1,30 @@
+
 <!DOCTYPE html>
 <html>
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-
-    <!-- <link rel='icon' href='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAS0lEQVR42s2SMQ4AIAjE+P+ncSYdasgNXMJgcyIIlVKPIKdvioAXyWBeJmVpqRZKWtj9QWAKZyWll50b8IcL9JUeQF50n28ckyb0ADG8RLwp05YBAAAAAElFTkSuQmCC' type='image/x-png' /> -->
-    <title>Ouverture du garage</title>
+    <!-- 
+    <meta http-equiv="refresh" content="4">
+    --!>
+    <title>Thermostat / Chaudière</title>
     <style>
-      .bb {
-          font-size: 20px;
-      }
-      .ekocontainer {
-          overflow: "auto";
-          overflow-y : "auto" ;
-          max-height : "300px"          
-      }
+    .bb {
+        font-size: 80px;
+    }
     </style>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
   </head>
-  <body class="bb">
-    <div id="statut"> La porte est ??? </div>
-    <div id="buttons" >  </div>
-    <div>
-      <button class="bb", id="ouvrir">Ouvrir</button>
-      <!-- <button class="bb", id="swap">Swap</button>     -->
-    </div>
-    <div id="eko" class="ekocontainer" >  </div>
-    <script type="text/javascript" src="code_boot.js?v=RANDOM" charset="utf-8"></script>        
+  <body>
+  Temperature : TEMPERATURE °C
+   <div id="temperature"> _____ </div>
+   <div id="temperatureDHT"> _____ </div>
+   <div id="hygrometrieDHT"> _____ </div>
+   <div id="gaz"> _____ </div>
+   <div id="consigne"> _____ </div>
+   <div id="relay"> _____ </div>
+   <div id="plot_temperature" style="width:1000px;height:550px;"> _____ </div>
+   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+   <script src="code.js"></script>
+  
   </body>
-  MESSAGE
 </html>

@@ -375,9 +375,9 @@ void webSetup() {
   // Print the IP address
   server.on("/identify", [](){
     String npage(IDENTIFY);
-    String json = "{ identity : '";
+    String json = "{ \"identity\" : \"";
     json += IDENTIFY;
-    json += "'}";
+    json += "\"}";
     server.send(200, "text/json", json.c_str());    
   });
 
