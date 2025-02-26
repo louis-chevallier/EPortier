@@ -8,8 +8,8 @@
 #include <Arduino.h>
 #include <microTuple.h>
 
-//#include <FS.h>
-//#include "LittleFS.h"
+#include <FS.h>
+#include "LittleFS.h"
 
 
 #include "util.h"
@@ -60,7 +60,7 @@ int smokeA0 = A0;
 int sensorThres = 600;
 
 float temperature_bias = 0;
-const String temperature_bias_fn = "temperature_bias.txt";
+const String temperature_bias_fn = "/temperature_bias.txt";
 
 void store_temperature_bias() {
   /*
@@ -72,7 +72,6 @@ void store_temperature_bias() {
 }
 
 float read_temperature_bias() {
-  
   /*
   auto ss = read_file(temperature_bias_fn);
   return ss.toFloat();
