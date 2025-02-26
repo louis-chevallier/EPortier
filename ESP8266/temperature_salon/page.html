@@ -3,26 +3,71 @@
 <html>
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <!-- 
+<!-- 
     <meta http-equiv="refresh" content="4">
-    --!>
+-->
     <title>Thermostat / Chaudière</title>
+
     <style>
     .bb {
         font-size: 80px;
     }
+    input {
+        padding-left: 15px;
+    }
     </style>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
   </head>
+  <style>
+    textarea { 
+    
+    width:  300px;
+    height: 350px;
+    
+    }
+  </style>
   <body>
+
+
+    A FAIRE : STOCKER LE BIAIS DE temperature EN FICHIER
+    <br>
+
+    
+  <!--
   Temperature : TEMPERATURE °C
+   <div id="identity"> _____ </div>
    <div id="temperature"> _____ </div>
    <div id="temperatureDHT"> _____ </div>
    <div id="hygrometrieDHT"> _____ </div>
    <div id="gaz"> _____ </div>
    <div id="consigne"> _____ </div>
-   <div id="relay"> _____ </div>
+   <div id="relay_bruleur"> _____ </div>
+   <div id="relay_circulateur"> _____ </div>
+   -->
+   <textarea id="texte"> _____ </textarea>
+
+   <div> 
+     <input type="checkbox" id="bruleur" class="toggleBruleur" value="bruleur">
+     <label for="bruleur">Bruleur</label>
+     <input type="checkbox" id="circulateur" class="toggleCirculateur" value="circulateur"> 
+     <label for="circulateur">Circulateur</label>
+
+   </div>
+   <div class="slidecontainer">
+     <label>Consigne</label>          
+     <input type="range" min="1" max="100" value="19" class="slider" id="consigne">
+     <output></output>
+   </div>
+   
+   <div class="slidecontainer">
+     <label>Biais temperature</label>               
+     <input type="range" min="-20.0" max="20.0" step="0.05" value="0.0" class="slider" id="temperature_bias">
+     <output></output>
+   </div>
    <div id="plot_temperature" style="width:1000px;height:550px;"> _____ </div>
+
+
+
    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
    <script src="code.js"></script>
   

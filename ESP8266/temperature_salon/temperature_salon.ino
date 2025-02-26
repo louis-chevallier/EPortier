@@ -8,6 +8,9 @@
 #include <Arduino.h>
 #include <microTuple.h>
 
+//#include <FS.h>
+//#include "LittleFS.h"
+
 
 #include "util.h"
 #include "UtilFS.h"
@@ -56,6 +59,28 @@ int smokeA0 = A0;
 // Your threshold value. You might need to change it.
 int sensorThres = 600;
 
+float temperature_bias = 0;
+const String temperature_bias_fn = "temperature_bias.txt";
+
+void store_temperature_bias() {
+  /*
+  File file = LittleFS.open(temperature_bias_fn, "w");
+  assert(file != 0);
+  file.print(String(temperature_bias));
+  file.close();
+  */
+}
+
+float read_temperature_bias() {
+  
+  /*
+  auto ss = read_file(temperature_bias_fn);
+  return ss.toFloat();
+  */
+  return 0;
+}
+
+
 void MQ2Setup() {
   pinMode(smokeA0, INPUT);
 }
@@ -83,7 +108,7 @@ auto last = millis();
 auto last_automaton = millis();
 
 float consigne = 25., delta_hysteresis = 1;
-int relay[2] = {-1, -1};
+int relay[2] = {0, 0};
 
 //https://randomnerdtutorials.com/esp8266-ds18b20-temperature-sensor-web-server-with-arduino-ide/
 
@@ -101,17 +126,22 @@ void set_consigne(float v) {
   consigne = v;
 } 
 
+void set_temperature_bias(float v) {
+  temperature_bias = v;
+  store_temperature_bias(); 
+} 
 
-
-void set_relay(int value, int relay_id) {
+void set_relay(int value_to_set, int relay_id) {
   // value = 1 => relais fermé, le bruleur peut chauffer ( sauf seuil haut atteint)
   //D3 = v;
-  EKOX(value);
+  EKOX(value_to_set);
+  EKOX(relay_id);
 
-  relay[relay_id] = value;
+  relay[relay_id] = value_to_set;
   int r = D3 ? relay_id == 0 : D4;
 
-  digitalWrite(r, value);
+  digitalWrite(r, value_to_set);
+  EKOT("done");
 } 
 
 float getTemperature() {
@@ -120,7 +150,7 @@ float getTemperature() {
   //EKO(); 
   float temperatureC = sensors.getTempCByIndex(0);
   //EKOX(temperatureC);
-  return temperatureC;
+  return temperatureC + temperature_bias;
 }
 
 void collectTemperature(bool fake=1>2) {
@@ -168,119 +198,21 @@ long start = 0;
 // 15 = GPIO15, PIN=D8 on board
 long PINOUT=15;
 
+#include "favicon.h"
+String favicon = ((const char *)bin2c_favicon_ico);
+int favicon_length = sizeof(bin2c_favicon_ico) / sizeof(char);
+
+#include "page.h"
+String page((const char*)bin2c_page_html);
+
+#include "code.h"
+String jscode((const char*)bin2c_code_js);
+
  
- String page(R""""(
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <!-- 
-    <meta http-equiv="refresh" content="4">
-    --!>
-    <title>Thermostat / Chaudière</title>
-    <style>
-    .bb {
-        font-size: 80px;
-    }
-    </style>
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
-  </head>
-  <body>
-  Temperature : TEMPERATURE °C
-   <div id="temperature"> _____ </div>
-   <div id="temperatureDHT"> _____ </div>
-   <div id="hygrometrieDHT"> _____ </div>
-   <div id="gaz"> _____ </div>
-   <div id="consigne"> _____ </div>
-   <div id="relay"> _____ </div>
-   <div id="plot_temperature" style="width:1000px;height:550px;"> _____ </div>
-   <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
-  <script>
-  function eko(x) {
-    console.log(x)
-  }
-  var temps= [33, 44];
-  var trace1 = {
-    y: temps,
-    type: 'scatter'
-  }
-  var data = [trace1];
-  //Plotly.newPlot('plot_temperature', data);
-  
-  function read_temperature() {
-    console.log("read temperature");
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", "/temperature");
-    xhr.send();
-    xhr.responseType = "json";
-    xhr.onload = () => {
-      eko("received")
-      if (xhr.readyState == 4 && xhr.status == 200) {
-        response = xhr.response;
-        /*
-        temps.push(response.temperature);i aussi mais peut-être plus vers 18h30 je fais au mie
-        if (temps.length > 24*60) { // mn in a day
-          temps.shift();
-        }
-        let labels = [];
-        // on oublie ca, le buffer est géré dans l'arduino
-
-        eko()
-        temps = response.valeurs;
-        */
-        tempDHT = response.DHT.temperature;
-        hygroDHT = response.DHT.hygrometry;
-        gaz = response.MQ2.gaz;
-
-        setd = function(l, v) {
-           document.getElementById(l).innerHTML = l + "=" + v;
-        }
-
-        //setd("temperature", "" + response.temperature + "°C");
-        setd("temperatureDHT", "" + tempDHT + "°C");
-        setd("hygrometrieDHT", hygroDHT);
-        setd("gaz", gaz); 
-        setd("consigne", response.consigne);
-        setd("relay", response.relay);
-        let now = new Date();
-
-        //console.log(temps); 
-        let interval = xhr.response.interval;
-        /*
-        for (i in temps) {
-          let dd = new Date(now.getTime() - i * interval);
-          let ss = dd.toLocaleDateString('fr', { weekday:"long", hour:"numeric", minute:"numeric"});
-          labels.unshift(dd);
-        }
-
-        var trace1 = {
-          x : labels, 
-          y : temps,
-          type: 'scatter'
-        };
-        var data = [trace1];
-        Plotly.newPlot('plot_temperature', data);
-        */
-      }
-    }
-    //console.log("received");
-    setTimeout(read_temperature, 1000 * 60); // 1 mn
-  }
-  setTimeout(read_temperature, 1000);
-
-  const d = new Date();
-  let time = d.getTime();
-
-  </script>
-  
-  </body>
-</html>
-)"""");
 
 void handle_temperature() {
-  //EKOT("handle temperature");
+  EKOT("handle temperature");
   String json = "{";
-
   auto st = String(getTemperature());
   //json += String("{") + "\"temperature\" : " + st + "," ;
   /*
@@ -304,11 +236,15 @@ void handle_temperature() {
 
   json += S + "\"interval\" : " + String(delta) + ", ";
 
+  json += S + "\"identity\" : \"" + IDENTIFY + "\", ";
+
   json += S + "\"millis\" : " + String(millis()) + ", ";
 
+  json += S + "\"temperature_bias\" : " + String(temperature_bias) + ", ";
+  //EKO();
   json += S + "\"consigne\" : " + String(consigne) + ", ";
   
-  json += S + "\"relay bruleur\" : " + String(relay[0]) + ", ";
+  json += S + "\"relay_bruleur\" : " + String(relay[0]) + ", ";
 
   json += S + "\"relay_circulateur\" : " + String(relay[1]) + ", ";
 
@@ -316,10 +252,12 @@ void handle_temperature() {
   //EKO();
 
   json += "}";
+  //EKOX(json); 
+  
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "application/json", json.c_str());
-  //EKO(); 
   request_number ++;
+  //EKO();
 }
 
 void handle_index() {
@@ -334,26 +272,40 @@ void handle_index() {
 
 void handle_relay() {
   // method get
-  String npage("ok");
+  String npage("{ \"status\" : \"ok\" }");
+  EKOX(server.argName(0));
+  EKOX(server.argName(1));
   if (server.argName(0) == "value") {
     set_relay(server.arg(0).toInt(), server.arg(1).toInt());
   } else {
-    npage = "fail";
+    npage = "{ \"status\" : \"failed\" }";      
   }
   server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(200, "text/html", npage.c_str());
+  server.send(200, "application/json", npage.c_str());
   Serial.println("end");
 };
 
 void handle_consigne() {
-  String npage("ok");
+  String npage("{ \"status\" : \"ok\" }");  
   if (server.argName(0) == "value") {
     set_consigne(server.arg(0).toFloat());
   } else {
-    npage = "fail";
+    npage = "{ \"status\" : \"failed\" }";      
   }
   server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(200, "text/html", npage.c_str());
+  server.send(200, "application/json", npage.c_str());
+  Serial.println("end");
+}
+
+void handle_temperature_bias() {
+  String npage("{ \"status\" : \"ok\" }");  
+  if (server.argName(0) == "value") {
+    set_temperature_bias(server.arg(0).toFloat());
+  } else {
+    npage = "{ \"status\" : \"failed\" }";      
+  }
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "application/json", npage.c_str());
   Serial.println("end");
 }
 
@@ -383,8 +335,26 @@ void webSetup() {
 
   server.on("/", handle_index); //Handle Index page
   server.on("/temperature", handle_temperature);
-  server.on("/consigne", handle_consigne);
-  server.on("/relay", handle_relay);
+  server.on("/set_consigne", handle_consigne);
+  server.on("/set_relay", handle_relay);
+  server.on("/set_temperature_bias", handle_temperature_bias);
+
+  server.on("/favicon.ico", [](){
+    EKOT("icon");
+    server.send(200, "image/x-icon", favicon);
+    EKOT("end");
+  });
+
+  server.on("/code.js", []() {
+    EKOT("js");
+    String npage(jscode);
+    EKO();
+    EKOX(npage.length());
+    server.send(200, "text/javascript", npage);
+    EKOT("end");
+  });
+
+  
   
   server.begin(); //Start the server
   EKOT("setup");
@@ -439,7 +409,12 @@ void  setup() {
   Serial.println(D4);
   Serial.println(D5);
 
- EKOX(WiFi.localIP().toString());
+  EKOX(WiFi.localIP().toString());
+  
+  set_relay(0, 0);
+  set_relay(0, 1);
+
+  //temperature_bias = read_temperature_bias();
   
 }
 
