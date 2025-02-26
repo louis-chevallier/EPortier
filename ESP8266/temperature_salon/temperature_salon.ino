@@ -60,23 +60,23 @@ int smokeA0 = A0;
 int sensorThres = 600;
 
 float temperature_bias = 0;
-const String temperature_bias_fn = "/temperature_bias.txt";
+const String temperature_bias_fn = "/temperatureBias.txt";
 
 void store_temperature_bias() {
-  /*
   File file = LittleFS.open(temperature_bias_fn, "w");
-  assert(file != 0);
-  file.print(String(temperature_bias));
-  file.close();
-  */
+  if (file) {
+    file.println(String(temperature_bias));
+    file.close();
+    EKOT("ok");
+  } else {
+    EKOT("pb creatingreading bias file");
+  }
 }
 
 float read_temperature_bias() {
-  /*
   auto ss = read_file(temperature_bias_fn);
+  EKOX(ss);
   return ss.toFloat();
-  */
-  return 0;
 }
 
 
@@ -210,7 +210,7 @@ String jscode((const char*)bin2c_code_js);
  
 
 void handle_temperature() {
-  EKOT("handle temperature");
+  //EKOT("handle temperature");
   String json = "{";
   auto st = String(getTemperature());
   //json += String("{") + "\"temperature\" : " + st + "," ;
@@ -412,8 +412,13 @@ void  setup() {
   
   set_relay(0, 0);
   set_relay(0, 1);
+  LittleFS.begin();
+  EKO();
+  // cold start
+  //temperature_bias = 0; store_temperature_bias();
 
-  //temperature_bias = read_temperature_bias();
+  temperature_bias = read_temperature_bias();
+  EKOT("end setup");
   
 }
 

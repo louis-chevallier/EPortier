@@ -63,6 +63,11 @@ function read_temperature(update = true) {
                 button_bruleur.checked = response.relay_bruleur;
                 button_circulateur.checked = response.relay_circulateur;
                 consigne.value = response.consigne;
+                consigne.nextElementSibling.value = response.consigne;
+                temperature_bias.value = response.temperature_bias;
+                temperature_bias.nextElementSibling.value = response.temperature_bias;
+                
+                
             }
             
             let now = new Date();
