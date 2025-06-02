@@ -1,5 +1,11 @@
 # sound
 
+
+## ESP8266
+
+
+![pinout](https://lastminuteengineers.com/wp-content/uploads/iot/ESP8266-Pinout-NodeMCU.png)
+
 ## preampli circuit
 
 LM358N ampop dual
@@ -12,6 +18,7 @@ https://protosupplies.com/product/lm358/
 ## ADC
 
 
+## schematic
 
 ```mermaid
 graph LR
