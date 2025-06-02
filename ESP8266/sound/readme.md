@@ -14,6 +14,7 @@ https://protosupplies.com/product/lm358/
 
 3-20V supply
 
+![pinout](https://protosupplies.com/wp-content/uploads/2019/06/LM358-Amplifier-Module-Connections-1.jpg)
 
 ## ADC
 
