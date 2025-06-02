@@ -28,7 +28,7 @@ CORE?=esp8266:esp8266:nodemcuv2
 DATE=$(shell date -r $(SKETCH).ino | sed s,' ','_',g)
 #$(warning date $(DATE))
 # --build-property build.extra_flags=-DNOEKO=1
-DEF?=--build-property build.extra_flags="-fexceptions -D__PORT=$(PORT)" --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DMODE=$(MODE) -DIDENTIFY=$(IDENTIFY) -DIPADDRESS=$(IPADDRESS)  $(OPTIONS)"
+DEF?=--build-property build.extra_flags="-fexceptions -D__PORT=$(PORT) " --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DMODE=$(MODE) -DIDENTIFY=$(IDENTIFY) -DIPADDRESS=$(IPADDRESS)  $(OPTIONS)"
 
 SOURCES=$(wildcard $(CURDIR)/*.ino $(CURDIR)/*.h $(CURDIR)/*.hpp $(CURDIR)/*.html $(CURDIR)/*.js $(CURDIR)/makefile makefile)
 #$(warning $(SOURCES))
@@ -59,7 +59,9 @@ clean :
 #$(warning  $(CURDIR)/$(SKETCH).ino $(SOURCES))
 
 %.bin : $(CURDIR)/$(SKETCH).ino $(SOURCES)
+	@echo making $* $@
 	arduino-cli compile --fqbn $(CORE) . $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
+	@echo made $* $@
 
 compile : $(CURDIR)/builds/$(SKETCH).ino.bin
 
@@ -71,8 +73,10 @@ compile : $(CURDIR)/builds/$(SKETCH).ino.bin
 
 # --log -v
 upload :
+	@echo upload
 	-arduino-cli core list
 	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p $(CPORT) --fqbn $(CORE)  $(SKETCH)
+	@echo uploaded
 
 ota :
 	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p $(CPORT)  --fqbn $(CORE) --port $(MIP)  $(SKETCH) 

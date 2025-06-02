@@ -21,7 +21,7 @@ const char* ssid = "Tenda-2.4G-ext"; //Enter Wi-Fi SSID
 const char* password =  "9697abcdea"; //Enter Wi-Fi Password
 
 //const String IPADRESS="176.161.19.7";
-const String WURL = String("http://") + String(IPADDRESS) + ":" + String(PORT);
+const String WURL = String("http://") + String(IPADDRESS) + ":" + String(__PORT);
 
 
 
@@ -139,7 +139,7 @@ void setup() {
   }
   
   jscode.replace("RANDOM", String(random(255)));
-  jscode.replace("PORT", String(PORT));
+  jscode.replace("PORT", String(__PORT));
   jscode.replace("IPADDRESS", String(IPADDRESS));
   jscode.replace("WURL", WURL);
   
