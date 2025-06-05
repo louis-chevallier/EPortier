@@ -21,17 +21,9 @@ https://protosupplies.com/product/lm358/
 
 ## schematic
 
-```mermaid
-graph LR
-A[Hard edge] -->B(Round edge)
-    B --> C{Decision}
-    C -->|One| D[Result one]
-    C -->|Two| E[Result two]
-```
-
 
 ```mermaid
-flowgraph LR
+graph LR 
 
 
 subgraph esp8266
@@ -50,11 +42,11 @@ subgraph mcp3208
     din;
     cs;
 end
-d5 --> cs
-d6 --> din
-d7 --> dout
-d8 --> clk
-vdd --> _3V
-gnd --> _GND
+d5 --- cs
+d6 --- din
+d7 --- dout
+d8 --- clk
+vdd --- _3V
+gnd --- _GND
 
 ``` 
