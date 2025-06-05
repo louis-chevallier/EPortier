@@ -1,14 +1,16 @@
 SKETCH=sound
+MODE=1
 
-start : start1
+start : start111
 
 start2 :
 	python simu.py
 
-start1 :
+start111 :
 	OPTIONS= DEFS= PORT=8080 IPADDRESS="\\\"176.188.228.22\\\"" make garage
 
 env :
+	@echo making env
 	bin2c --ultra -H code.h code.js
 	bin2c --ultra -H page.h page.html
 	bin2c --ultra -H favicon.h favicon.ico
