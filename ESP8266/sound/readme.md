@@ -28,3 +28,33 @@ A[Hard edge] -->B(Round edge)
     C -->|One| D[Result one]
     C -->|Two| E[Result two]
 ```
+
+
+```mermaid
+flowgraph LR
+
+
+subgraph esp8266
+    d5
+    d6
+    d7
+    d8
+    _3V
+    _GND
+end
+subgraph mcp3208
+    vdd;
+    gnd;
+    clk;
+    dout;
+    din;
+    cs;
+end
+d5 --> cs
+d6 --> din
+d7 --> dout
+d8 --> clk
+vdd --> _3V
+gnd --> _GND
+
+``` 
