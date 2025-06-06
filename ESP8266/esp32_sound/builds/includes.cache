@@ -1,0 +1,47 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/louis/.arduino15/packages/esp32/hardware/esp32/3.0.5/cores/esp32"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/louis/.arduino15/packages/esp32/hardware/esp32/3.0.5/variants/esp32"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/esp32_sound/builds/sketch/esp32_sound.ino.cpp",
+    "Include": "util.h",
+    "Includepath": "/home/louis/dev/git/EPortier/ESP8266"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/esp32_sound/builds/sketch/esp32_sound.ino.cpp",
+    "Include": "microTuple.h",
+    "Includepath": "/home/louis/Arduino/libraries/MicroTuple"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/esp32_sound/builds/sketch/esp32_sound.ino.cpp",
+    "Include": "SPI.h",
+    "Includepath": "/home/louis/.arduino15/packages/esp32/hardware/esp32/3.0.5/libraries/SPI/src"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/esp32_sound/builds/sketch/esp32_sound.ino.cpp",
+    "Include": "MCP_ADC.h",
+    "Includepath": "/home/louis/Arduino/libraries/MCP_ADC"
+  },
+  {
+    "Sourcefile": "/home/louis/dev/git/EPortier/ESP8266/esp32_sound/builds/sketch/esp32_sound.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/.arduino15/packages/esp32/hardware/esp32/3.0.5/libraries/SPI/src/SPI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/louis/Arduino/libraries/MCP_ADC/MCP_ADC.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]

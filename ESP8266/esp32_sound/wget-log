@@ -1,0 +1,11 @@
+--2025-06-06 17:50:03--  https://www.quantamagazine.org/how-much-energy-does-it-take-to-think-20250604/?mc_cid=1c51370671
+Resolving www.quantamagazine.org (www.quantamagazine.org)... 104.18.1.206, 104.18.0.206, 2606:4700::6812:1ce, ...
+Connecting to www.quantamagazine.org (www.quantamagazine.org)|104.18.1.206|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [text/html]
+Saving to: ‘index.html?mc_cid=1c51370671’
+
+index.html?mc_cid=1c51370671      [<=>                                               ]       0  --.-KB/s               index.html?mc_cid=1c51370671      [ <=>                                              ] 211,41K  --.-KB/s    in 0,02s   
+
+2025-06-06 17:50:03 (12,9 MB/s) - ‘index.html?mc_cid=1c51370671’ saved [216480]
+
