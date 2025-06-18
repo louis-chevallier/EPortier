@@ -6,7 +6,7 @@
 
 
 ```mermaid
-flowgraph LR
+graph LR
 
 
 subgraph ESP32
