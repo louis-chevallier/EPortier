@@ -516,7 +516,7 @@ void setup() {
 
   server.on("/identify", HTTP_GET, [](ARequest *request){
     String npage("garage");
-    request->send(200, "text/json", nnpage.c_str());    
+    request->send(200, "text/json", npage.c_str());    
   });
 
   server.on("/create_file", HTTP_GET, [](ARequest *request){

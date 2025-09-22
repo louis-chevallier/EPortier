@@ -67,7 +67,7 @@ void store_temperature_bias() {
   if (file) {
     file.println(String(temperature_bias));
     file.close();
-    EKOT("ok");
+    //EKOT("ok");
   } else {
     EKOT("pb creatingreading bias file");
   }
