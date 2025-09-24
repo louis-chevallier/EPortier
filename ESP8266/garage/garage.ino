@@ -86,8 +86,9 @@ IF_1 ddd1(1, fff);
 
  
 // chez nous
-const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
+//const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
 //const char* ssid = "Tenda-2.4G-ext"; //Enter Wi-Fi SSID
+const char* ssid = "Tenda"; //Enter Wi-Fi SSID
 const char* password =  "9697abcdea"; //Enter Wi-Fi Password
 
 //const String IPADRESS="176.161.19.7";
@@ -709,6 +710,18 @@ void setup() {
       
   });
 
+  server.on("/status", HTTP_GET, [](ARequest *request) {
+    EKOT("status");
+    noInterrupts();
+    auto ss = read_file("log.txt");
+    String ipaddr = WiFi.localIP().toString(); 
+    EKOX(ipaddr); 
+    String json = Acc(P("file", String(ss)) + ", " +
+                      P("IPAdress", ipaddr));
+    request->send(200, "text/json", json);
+    interrupts();
+    EKOX(json);
+  });
   server.on("/data_linky", HTTP_GET, [](ARequest *request) {
     EKOT("data linky");
     noInterrupts();

@@ -3,6 +3,8 @@
 # 8086 : port externe redirigé vers nodemcu03 par box
 PORT?=8080
 
+CPORT?= /dev/ttyUSB0
+
 #IPADDRESS1?=192.168.1.181
 IPADDRESS1?=176.188.228.22
 

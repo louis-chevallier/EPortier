@@ -1,6 +1,8 @@
 # EPortier
 
-
+Aller dans ESP8266
+puis dans garage
+make start
 
 ```mermaid
 graph TD;

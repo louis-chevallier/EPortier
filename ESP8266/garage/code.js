@@ -200,7 +200,7 @@ function addbutton(txt, x, y) {
 W=30*4;
 H=75*2;
 ML=  100;
-MH = 230;
+MH = 280;
 //console.log("create buttons");
 for (i = 1; i < 10; i++) {
     //console.log(i);
