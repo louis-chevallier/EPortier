@@ -735,6 +735,21 @@ void setup() {
     interrupts();
     EKOX(json);
   });
+  
+  server.on("/status", HTTP_GET, [](ARequest *request) {
+    EKOT("status");
+    noInterrupts();
+    byte mac[6];
+    WiFi.macAddress(mac);
+    EKOX(WiFi.localIP().toString());  //Print the local IP
+    String json = Acc(P("RSSI", String(Wifi.RSSI())) + ", " +
+                      P("IP", String(WiFi.localIP().toString())));
+    String nnpage = String("{") + G("status") + " : " + G("ok") +  " }";
+    request->send(200, "text/json", nnpage.c_str());    
+    request->send(200, "text/json", json);
+    interrupts();
+    EKOX(json);
+  });
 
   EKO();
   // Start the server
