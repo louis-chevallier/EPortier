@@ -129,8 +129,8 @@ class Task(object):
         
         return j
 
-    def save(self) :
-        saving_to = "/tmp/buffer_%05d.pickle" % self.interval
+    def save(self, folder = "/tmp") :
+        saving_to = os.path.join(folder, "buffer_%05d.pickle" % self.interval)
         EKOX(saving_to)
         with open(saving_to, "wb") as fd :
             pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
