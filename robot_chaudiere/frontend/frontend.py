@@ -117,7 +117,7 @@ class Task(object):
 		except :
 			j['DS18B20'] =	{ 'value' : -999}
 
-		j['date'] = datetime.datetime.now()
+		j['date'] = datetime.datetime.now().isoformat()
 		if datetime.datetime.now() > get_t1() + datetime.timedelta(minutes = 10) or self.obs is None :
 			#EKO()
 			update_t1()
@@ -223,7 +223,10 @@ class HelloWorld(object):
 		def read(gi) :
 			i = os.environ[gi] if gi in os.environ else ""
 			return gi + "=" + i
-		return read('GITINFO') + ", " + read("HOST") + ", " + read("DATE")
+		ss = read('GITINFO') + ", " + read("HOST") + ", " + read("DATE")
+		ss += "<br>"
+		ss += ", ".join([ "buffer %d, " %len(t.buffer) for t in self.tasks])
+		return ss
 
 	@cherrypy.expose
 	def data(self) :
