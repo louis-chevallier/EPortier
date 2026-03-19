@@ -17,7 +17,7 @@ deploy :
 startx :
 	python pid.py
 
-start : run
+start : test
 
 server  :
 #	mypy --install-types --ignore-missing-imports  frontend.py
@@ -27,6 +27,9 @@ server  :
 #2>> trace.txt
 
 pem : privkey.pem  privkey.pem
+
+test :
+	PORT=8899 make run
 
 run :
 	echo run
