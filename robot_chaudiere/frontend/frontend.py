@@ -1,5 +1,6 @@
 
 import cherrypy, os, pickle
+import lzma
 from time import sleep
 from threading import Thread, Lock
 from utillc import *
@@ -49,6 +50,8 @@ class Task(object):
 		try :
 			with open(os.path.join(DATA_DIR, "frontend_buffer_%05d.pickle" % self.interval_sec), "rb") as fd :
 				self.buffer = pickle.load(fd)
+				EKON(len(self.buffer), max_length)
+				self.filter_buffer()
 		except Exception as e:
 			EKOX(e)
 		
@@ -56,13 +59,18 @@ class Task(object):
 		self.save_time = self.t2 = datetime.datetime.now() - 2 * datetime.timedelta(hours = 24) 
 		self.check_time = self.t2 = datetime.datetime.now()
 
-
 		self.devices = {}
 		
 		self.thread = Thread(target=self.run, args=())
 		self.thread.daemon = True							 # Daemonize thread
 		self.thread.start()									 # Start the execution
-						 
+
+
+	def filter_buffer(self) :
+		def g(v) : return v.isoformat() if isinstance(v, datetime.datetime) else v
+		def f(d) : return dict([(k,g(v)) for k,v in d.items()])
+		self.buffer = [ f(d) for d in self.buffer]
+		
 	def discover_nodemcu(self) :
 		batcmd="nmap -sL 192.168.1.*"
 		result = subprocess.check_output(batcmd, shell=True, text=True)
@@ -118,6 +126,7 @@ class Task(object):
 			j['DS18B20'] =	{ 'value' : -999}
 
 		j['date'] = datetime.datetime.now().isoformat()
+		EKOX(j['date'])
 		if datetime.datetime.now() > get_t1() + datetime.timedelta(minutes = 10) or self.obs is None :
 			#EKO()
 			update_t1()
@@ -125,7 +134,6 @@ class Task(object):
 			self.suliac = self.meteo.get_observation(48.568886594144104, -1.975317996277762)
 
 			dd = lambda f  : abs(datetime.datetime.fromtimestamp(f['dt']).hour - 12)
-
 			
 			# select forecast for st suliac in +2 days closest to 12am
 			self.suliac_forecast = self.meteo.get_forecast(48.568886594144104, -1.975317996277762).forecast
@@ -140,9 +148,6 @@ class Task(object):
 			ff = sorted(ff, key = dd)
 			self.obs_forecast = ff[0]
 
-
-			
-
 		j['tempext'] = self.obs.temperature		   
 
 		# speed m/s
@@ -152,16 +157,18 @@ class Task(object):
 
 		j['obs_forecast_force_vent'] = self.obs_forecast['wind']['speed']		 
 		j['obs_forecast_direction_vent'] = self.obs_forecast['wind']['direction']
-		j['obs_forecast_date'] = self.obs_forecast['dt']
-		
 
+		#j['obs_forecast_date'] = datetime.datetime.fromtimestamp(self.obs_forecast['dt'])
+		j['obs_forecast_date_iso'] = datetime.datetime.fromtimestamp(self.obs_forecast['dt']).isoformat()
 		
 		#EKOX( self.suliac.wind_speed)
 		j['suliac_force_vent'] = self.suliac.wind_speed
 		j['suliac_direction_vent'] = self.suliac.wind_direction
 		j['suliac_forecast_force_vent'] = self.suliac_forecast['wind']['speed']		   
 		j['suliac_forecast_direction_vent'] = self.suliac_forecast['wind']['direction']
-		j['suliac_forecast_date'] = self.suliac_forecast['dt']
+
+		#j['suliac_forecast_date'] = datetime.datetime.fromtimestamp(self.suliac_forecast['dt'])
+		j['suliac_forecast_date_iso'] = datetime.datetime.fromtimestamp(self.suliac_forecast['dt']).isoformat()
 		
 		j['tempchaudiere'] =  j['DS18B20']
 		
@@ -170,16 +177,17 @@ class Task(object):
 	def save(self, folder = "/tmp") :
 		saving_to = os.path.join(folder, "frontend_buffer_%05d.pickle" % self.interval_sec)
 		EKOX(saving_to)
-		with open(saving_to, "wb") as fd :
-			pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
-			
+		#with open(saving_to, "wb") as fd :
+		#		pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
+		with lzma.open(saving_to + ".xz", "wb") as f:
+				pickle.dump(self.buffer, f, protocol=pickle.HIGHEST_PROTOCOL)			
 	
 	def run(self):
 		""" Method that runs forever """
 		j = self.data()		   
 		while True:
 			if datetime.datetime.now() > self.save_time + datetime.timedelta(hours = SAVE_PERIOD_HOUR, minutes=SAVE_PERIOD_MINUTES)  :
-				self.save()
+				#self.save()
 				self.save(DATA_DIR)
 				self.save_time = datetime.datetime.now()
 			if datetime.datetime.now() > self.check_time + datetime.timedelta(minutes=30) :
@@ -208,7 +216,7 @@ class HelloWorld(object):
 	@cherrypy.expose
 	def save(self) :
 		for t in self.tasks :
-			t.save()
+			t.save(DATA_DIR)
 			
 	@cherrypy.expose
 	def index(self):
@@ -251,7 +259,7 @@ class HelloWorld(object):
 		#EKOX(j.buffer)
 		#cherrypy.response.headers["Access-Control-Allow-Origin"] = '*'
 		#cherrypy.response.headers['Content-Type'] = 'application/json'
-		#EKOX(d)
+		EKOX(d)
 		return json.dumps(d) 
 			
 if __name__ == "__main__":
