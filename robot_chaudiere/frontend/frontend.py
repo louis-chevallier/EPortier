@@ -11,9 +11,9 @@ import time, json
 import meteofrance_api
 import datetime
 import nmap, subprocess, json, re, time
-
-utillc.default_opt["with_date"] = 1
-
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import numpy as np
 DATA_DIR="/deploy/data"
 
 mylock = Lock()
@@ -65,9 +65,67 @@ class Task(object):
 		self.thread.daemon = True							 # Daemonize thread
 		self.thread.start()									 # Start the execution
 
+	def read_plot(self) :
+		with open(os.path.join(DATA_DIR, "frontend_buffer_%05d.pickle" % self.interval_sec), "rb") as fd :
+				self.buffer = pickle.load(fd)
+				self.filter_buffer()
+		def r(d) :
+				def iso(v) :						
+						if isinstance(v, datetime.datetime) :
+								return v.isoformat()
+						elif type(v) is int :
+								return datetime.datetime.fromtimestamp(v).isoformat()
+						elif type(v) is str and v.isdigit() :
+								return datetime.datetime.fromtimestamp(int(v)).isoformat()								
+						else :
+								return v
+						
+				def get_date_iso(k) :
+						assert('date' in k)
+						if k in d :
+								return iso(d[k])
+						else :
+								return iso(d[k + '_iso'])
+				
+				return (get_date_iso('date'),
+						d['direction_vent'],
+						get_date_iso('obs_forecast_date'),
+						d['obs_forecast_direction_vent'])
+		def dt(xx) :
+				return datetime.datetime.fromisoformat(xx)
+				
+		b = [ r(d) for  d in self.buffer]
+		ll = [ (dt(aa[0])-dt(bb[0])).total_seconds() for aa,bb in zip(b[1:], b[:-1])]
+		plt.plot(ll)
+		plt.show()
+		x1, y1 = [ e[0] for e in b], [ e[1] for e in b]
+
+		#x1, y1 = np.linspace(0, 12, 1000), np.sin(x1)
+		
+		EKON(x1[:10], y1[:10])
+		#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
+		#plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+		plt.plot(x1,y1, color='r')
+		x2, y2 = [ e[2] for e in b], [ e[3] for e in b]
+		#x2, y2 = np.linspace(0, 12, 1000),  np.cos(x2)
+		EKON(x2[:10], y2[:10])		
+
+		#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
+		#plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+		plt.plot(x2,y2, color='b')
+		plt.show()
+
+
+
+
+		
+		#plt.gcf().autofmt_xdate()
+		utillc.default_opt["with_date"] = 1
+
 
 	def filter_buffer(self) :
-		def g(v) : return v.isoformat() if isinstance(v, datetime.datetime) else v
+		def g(v) :
+				return v.isoformat() if isinstance(v, datetime.datetime) else v
 		def f(d) : return dict([(k,g(v)) for k,v in d.items()])
 		self.buffer = [ f(d) for d in self.buffer]
 		
@@ -213,6 +271,12 @@ class HelloWorld(object):
 			Task(30*24*3600*12, 10000) # 1 an			 
 		]
 
+
+		for t in self.tasks :
+				t.read_plot()
+
+		
+
 	@cherrypy.expose
 	def save(self) :
 		for t in self.tasks :
@@ -294,6 +358,10 @@ if __name__ == "__main__":
 		},
 	}
 	hello = HelloWorld()
+
+	
+
+	
 	sleep(2)
 	EKOT("running")
 	cherrypy.quickstart(hello, "/", config=config) 
