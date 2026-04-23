@@ -1,5 +1,5 @@
 
-#$(warning $(CURDIR))
+$(warning $(CURDIR))
 
 SKETCH?=$(notdir $(CURDIR))
 #$(warning sketch = $(SKETCH))
@@ -34,6 +34,8 @@ SOURCES=$(wildcard $(CURDIR)/*.ino $(CURDIR)/*.h $(CURDIR)/*.hpp $(CURDIR)/*.htm
 #$(warning $(SOURCES))
 # install RemoteDebug2
 
+
+$(warning sketch $(SKETCH))
 x : start
 
 run :

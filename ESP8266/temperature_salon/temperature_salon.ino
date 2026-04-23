@@ -67,7 +67,8 @@ void store_temperature_bias() {
   if (file) {
     file.println(String(temperature_bias));
     file.close();
-    //EKOT("ok");
+    float written_temperature = temperature_bias;
+    EKOX(written_temperature);
   } else {
     EKOT("pb creatingreading bias file");
   }
@@ -299,13 +300,14 @@ void handle_consigne() {
 void handle_temperature_bias() {
   String npage("{ \"status\" : \"ok\" }");  
   if (server.argName(0) == "value") {
+    EKOX(server.arg(0).toFloat());
     set_temperature_bias(server.arg(0).toFloat());
   } else {
     npage = "{ \"status\" : \"failed\" }";      
   }
   server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "application/json", npage.c_str());
-  Serial.println("end");
+  //Serial.println("end");
 }
 
 void webSetup() {
@@ -326,14 +328,16 @@ void webSetup() {
   // Print the IP address
   server.on("/identify", [](){
     String npage(IDENTIFY);
-    String json = "{ \"identity\" : \"";
-    json += IDENTIFY;
-    json += "\"}";
+    String json = "{";
+    json += "\"identity\" : \"" + String(IDENTIFY) + "\",";
+    json += "\"ip\" : \"" + WiFi.localIP().toString() + "\"";
+    json += "}";
     server.send(200, "text/json", json.c_str());    
   });
 
   server.on("/", handle_index); //Handle Index page
   server.on("/temperature", handle_temperature);
+  server.on("/data", handle_temperature);
   server.on("/set_consigne", handle_consigne);
   server.on("/set_relay", handle_relay);
   server.on("/set_temperature_bias", handle_temperature_bias);
