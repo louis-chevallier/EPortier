@@ -9,7 +9,7 @@ DEPLOY_DIR = /deploy
 export DATE:=$(shell date +%Y-%m-%d_%Hh%Mm%Ss)
 export HOST=$(shell hostname)
 SHELL=bash
-export GITINFO=$(shell git log --pretty=format:"%h - %an, %ar : %s" -1)
+export GITINFO=$(shell git log --pretty=format:"%h-%as" -1)
 #WOD="$(shell fortune -s)"
 WOD='$(shell fortune -s | sed -e 's/["]//g' | sed -e "s/[']//g")'
 MODE?="\\\"normal\\\""
@@ -28,7 +28,7 @@ CORE?=esp8266:esp8266:nodemcuv2
 DATE=$(shell date -r $(SKETCH).ino | sed s,' ','_',g)
 #$(warning date $(DATE))
 # --build-property build.extra_flags=-DNOEKO=1
-DEF?=--build-property build.extra_flags="-fpermissive -fexceptions -D__PORT=$(PORT) " --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DMODE=$(MODE) -DIDENTIFY=$(IDENTIFY) -DIPADDRESS=$(IPADDRESS)  $(OPTIONS)"
+DEF?=--build-property build.extra_flags="-fpermissive -fexceptions -D__PORT=$(PORT) " --build-property compiler.cpp.extra_flags="-DDATE=\"$(DATE)\" -DGITINFOS=$(GITINFO) -DMODE=$(MODE) -DIDENTIFY=$(IDENTIFY) -DIPADDRESS=$(IPADDRESS)  $(OPTIONS)"
 
 SOURCES=$(wildcard $(CURDIR)/*.ino $(CURDIR)/*.h $(CURDIR)/*.hpp $(CURDIR)/*.html $(CURDIR)/*.js $(CURDIR)/makefile makefile)
 #$(warning $(SOURCES))
@@ -106,7 +106,6 @@ lib :
 #	-arduino-cli lib uninstall DueTimer
 	-arduino-cli lib install NTPClient
 	arduino-cli board listall esp32
-
 
 doc :
 	pandoc readme.md --filter=mermaid-filter  -o readme.pdf 

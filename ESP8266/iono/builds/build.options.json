@@ -1,0 +1,9 @@
+{
+  "additionalFiles": "../..,../..,../..,../..,../..,../..,../../..,../..,../..",
+  "compiler.optimization_flags": "",
+  "customBuildProperties": "build.extra_flags=-fpermissive -fexceptions -D__PORT=8080 ,compiler.cpp.extra_flags=-DDATE=\"Wed_May_27_07:28:19_PM_CEST_2026\" -DGITINFO=8370794 - jitdeep chehara, 5 weeks ago : tenda -DMODE=\"deploy\" -DIDENTIFY= -DIPADDRESS=\"176.188.228.22\"  -DWS=1 -DDOSWAP=1 -DNOEKO=1",
+  "fqbn": "esp8266:esp8266:nodemcuv2",
+  "hardwareFolders": "/mnt/hd3/users/Louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2,/mnt/hd3/users/Louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2",
+  "otherLibrariesFolders": "/home/louis/Arduino/libraries",
+  "sketchLocation": "/mnt/hd3/users/Louis/dev/git/EPortier/ESP8266/iono"
+}

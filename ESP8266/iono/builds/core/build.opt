@@ -1,0 +1,2 @@
+-include "/mnt/hd3/users/Louis/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/cores/esp8266/CommonHFile.h"
+-include "/mnt/hd3/users/Louis/dev/git/EPortier/ESP8266/iono/builds/core/iono.ino.globals.h"

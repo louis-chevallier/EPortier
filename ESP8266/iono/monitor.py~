@@ -1,0 +1,7 @@
+
+import urllib.request, json
+
+url = "http://192.168.1.115/data_linky"
+with urllib.request.urlopen("http://maps.googleapis.com/maps/api/geocode/json?address=google") as url:
+    data = json.load(url)
+    print(data)

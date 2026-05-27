@@ -11,7 +11,7 @@ IPADDRESS1?=176.188.228.22
 IPADDRESS="\"$(IPADDRESS1)\""
 OPTIONS?="-DWS=1 -DDOSWAP=1 -DEKO=1"
 
-#GITINFO="$(shell git log --pretty=format:"%h-%ai-%D" -1)"
+GITINFO="$(shell git log --pretty=format:"%h - %an, %ad : %s %n" -1)"
 $(warning GITINFO=$(GITINFO))
 MIP=$(IPADDRESS)
 
