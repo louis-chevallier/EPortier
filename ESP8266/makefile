@@ -1,8 +1,9 @@
 
-$(warning $(CURDIR))
+
+$(warning CURDIR=$(CURDIR))
 
 SKETCH?=$(notdir $(CURDIR))
-#$(warning sketch = $(SKETCH))
+$(warning sketch = $(SKETCH))
 MIP?=192.168.1.95
 
 DEPLOY_DIR = /deploy

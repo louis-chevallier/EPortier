@@ -179,7 +179,8 @@ void onewireLoop() {
 ESP8266WebServer server(80);
 
 // chez nous
-const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
+//const char* ssid = "CHEVALLIER_BORDEAU"; //Enter Wi-Fi SSID
+const char* ssid = "Tenda"; //Enter Wi-Fi SSID
 const char* password =  "9697abcdea"; //Enter Wi-Fi Password
 const char* WURL = "http://176.161.19.7:8080/main";
 // deuxieme mcu 

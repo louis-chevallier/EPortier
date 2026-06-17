@@ -14,6 +14,8 @@ import nmap, subprocess, json, re, time
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
+import nmap, requests
+
 DATA_DIR="/deploy/data"
 
 mylock = Lock()
@@ -21,8 +23,6 @@ t11 =  datetime.datetime.now()
 
 SAVE_PERIOD_HOUR, SAVE_PERIOD_MINUTES = 24, 0
 SAVE_PERIOD_HOUR, SAVE_PERIOD_MINUTES = 0, 4
-
-
 
 def update_t1() :
 	with mylock:
@@ -34,7 +34,9 @@ def get_t1() :
 	return vt11
 
 update_t1()
-	
+
+tasks_list = []
+
 class Task(object):
 	def __init__(self, duration_sec, max_length=1000):
 		"""
@@ -42,6 +44,8 @@ class Task(object):
 		max_length : le nombre d'échantillons sur cette période
 		interval_sec : seconds
 		"""
+		tasks_list.append(self)
+		
 		self.max_length = max_length
 		self.meteo = meteofrance_api.MeteoFranceClient()
 		self.interval_sec = max(duration_sec / max_length, 30) # espace minimal entre 2 mesures : 30 sec
@@ -56,8 +60,9 @@ class Task(object):
 			EKOX(e)
 		
 		self.obs = None
-		self.save_time = self.t2 = datetime.datetime.now() - 2 * datetime.timedelta(hours = 24) 
-		self.check_time = self.t2 = datetime.datetime.now()
+		self.save_time = self.t2 = datetime.datetime.now() - 2 * datetime.timedelta(hours = 24)
+		self.delta_check = datetime.timedelta(minutes=30)
+		self.check_time = self.t2 = datetime.datetime.now() - self.delta_check
 
 		self.devices = {}
 		
@@ -132,25 +137,39 @@ class Task(object):
 	def discover_nodemcu(self) :
 		batcmd="nmap -sL 192.168.1.*"
 		result = subprocess.check_output(batcmd, shell=True, text=True)
+		trace = self.index() == 0		
 		result = result.split("\n")
-		#EKOX(result)
+		if trace :
+				EKOX(result)
 
 		#if 'salon' in self.devices :			 return
-		
+
 		for e in result :
-			try :			 
+			try :
+				if trace :
+						EKOX(e)
 				ip = re.search("\((.*)\)", e).groups()[0]
-				#EKOX(ip)
+				if trace :
+						EKOX(ip)
 				url = "http://" + ip + "/identify"
 				headers = {'Accept': 'application/json'}
-				r = requests.get(url, headers=headers)
+				r = requests.get(url, headers=headers, timeout=10)
+				if trace :
+						EKOX(r)
 				j = r.json()
-				#EKOX(j)
+				if trace :
+						EKOX(j)
 				name = j["identity"]
-				EKOX(name)
+				if trace :
+						EKON(ip, name)
 				self.devices[name] = ip
+				if trace :
+						EKOX(len(self.devices))
 			except Exception as ex :
+				if trace :
+						EKOX(ex)
 				pass
+		EKO()
 		EKOX(self.devices)
 
 	def data(self) :
@@ -238,7 +257,20 @@ class Task(object):
 		#with open(saving_to, "wb") as fd :
 		#		pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
 		with lzma.open(saving_to + ".xz", "wb") as f:
-				pickle.dump(self.buffer, f, protocol=pickle.HIGHEST_PROTOCOL)			
+				pickle.dump(self.buffer, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+				
+	def index(self) :
+			return tasks_list.index(self)
+			
+	def name(self) :
+		return "Task_%d" % self.interval_sec
+
+	def info(self):
+		ks = self.devices.keys()
+		EKOX(ks)
+		return self.name() + "=>" + "; ".join([ k + " : " + self.devices[k] for k in ks])
+
 	
 	def run(self):
 		""" Method that runs forever """
@@ -248,7 +280,7 @@ class Task(object):
 				#self.save()
 				self.save(DATA_DIR)
 				self.save_time = datetime.datetime.now()
-			if datetime.datetime.now() > self.check_time + datetime.timedelta(minutes=30) :
+			if datetime.datetime.now() > self.check_time + self.delta_check :
 				self.discover_nodemcu();
 				self.check_time = datetime.datetime.now()
 			sleep(self.interval_sec)
@@ -271,9 +303,9 @@ class HelloWorld(object):
 			Task(30*24*3600*12, 10000) # 1 an			 
 		]
 
-
-		for t in self.tasks :
-				t.read_plot()
+		if False :
+				for t in self.tasks :
+						t.read_plot()
 
 		
 
@@ -291,6 +323,7 @@ class HelloWorld(object):
 			data = data.replace("INFO", self.info())
 			return data
 
+	@cherrypy.expose
 	def info(self) :
 		def read(gi) :
 			i = os.environ[gi] if gi in os.environ else ""
@@ -298,8 +331,15 @@ class HelloWorld(object):
 		ss = read('GITINFO') + ", " + read("HOST") + ", " + read("DATE")
 		ss += "<br>"
 		ss += ", ".join([ "buffer %d, " %len(t.buffer) for t in self.tasks])
+		ss += "<br>"
+		ss += " \n ".join([ t.info() for t in self.tasks])		
 		return ss
 
+	@cherrypy.expose
+	def identify(self) :
+		d = { "identity" : "server_temperature" }
+		return json.dumps(d)
+			
 	@cherrypy.expose
 	def data(self) :
 		d = self.tasks[0].data()
@@ -323,7 +363,7 @@ class HelloWorld(object):
 		#EKOX(j.buffer)
 		#cherrypy.response.headers["Access-Control-Allow-Origin"] = '*'
 		#cherrypy.response.headers['Content-Type'] = 'application/json'
-		EKOX(d)
+		#EKOX(d)
 		return json.dumps(d) 
 			
 if __name__ == "__main__":
