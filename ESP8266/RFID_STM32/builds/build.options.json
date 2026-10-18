@@ -1,0 +1,9 @@
+{
+  "additionalFiles": "",
+  "compiler.optimization_flags": "{build.flags.optimize} {build.flags.debug}",
+  "customBuildProperties": "build.warn_data_percentage=75",
+  "fqbn": "STMicroelectronics:stm32:GenF4",
+  "hardwareFolders": "/home/louis/.arduino15/packages",
+  "otherLibrariesFolders": "/home/louis/Arduino/libraries",
+  "sketchLocation": "/home/louis/dev/git/EPortier/ESP8266/RFID_STM32"
+}

@@ -49,6 +49,7 @@ run :
 	arduino-cli core install esp8266:esp8266
 	arduino-cli core install esp32:esp32
 	arduino-cli core install arduino:avr
+	arduino-cli core install  STMicroelectronics:stm32
 #	arduino-cli core install asp8266
 #	arduino-cli compile --fqbn arduino:samd:mkr1000 MyFirstSketch
 	arduino-cli core install arduino:renesas_uno
@@ -62,13 +63,20 @@ clean :
 #$(warning  $(CURDIR)/$(SKETCH).ino $(SOURCES))
 
 %.bin : $(CURDIR)/$(SKETCH).ino $(SOURCES)
-	@echo making $* $@
+	@echo ============== COMPILING $* $@
 	arduino-cli compile --fqbn $(CORE) . $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
 	@echo made $* $@
 
-compile : $(CURDIR)/builds/$(SKETCH).ino.bin
 
-#	cd ..; arduino-cli compile --fqbn $(CORE):mmu=$(MMU),xtal=$(FREQ),exception=enabled $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
+ifeq ($(CORE),STMicroelectronics:stm32:GenF4) 
+	OPTIONS=$(CORE):mmu=$(MMU),exception=enabled
+else
+	OPTIONS=$(CORE):mmu=$(MMU),xtal=$(FREQ),exception=enabled
+endif
+
+compile : $(CURDIR)/builds/$(SKETCH).ino.bin
+	@echo ============== DONE $* $@
+#	cd ..; arduino-cli compile --fqbn $(OPTIONS) $(SKETCH) $(DEF) --library $(CURDIR),$(CURDIR)/.. -j 0  --build-path $(CURDIR)/builds 
 
 #--library $(CURDIR)
 
@@ -76,7 +84,7 @@ compile : $(CURDIR)/builds/$(SKETCH).ino.bin
 
 # --log -v
 upload :
-	@echo upload
+	@echo =============== upload
 	-arduino-cli core list
 	cd ..; arduino-cli upload --input-dir $(CURDIR)/builds -p $(CPORT) --fqbn $(CORE)  $(SKETCH)
 	@echo uploaded
@@ -107,6 +115,12 @@ lib :
 #	-arduino-cli lib uninstall DueTimer
 	-arduino-cli lib install NTPClient
 	arduino-cli board listall esp32
+
+
+	arduino-cli lib search PN532
+	arduino-cli lib uninstall "Adafruit PN532"
+	arduino-cli lib install NiusWireless
+
 
 doc :
 	pandoc readme.md --filter=mermaid-filter  -o readme.pdf 
