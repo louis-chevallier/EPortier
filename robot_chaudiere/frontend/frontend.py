@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
 import nmap, requests
+import argparse
+from collections import deque
 
 DATA_DIR="/deploy/data"
 
@@ -38,26 +40,40 @@ update_t1()
 tasks_list = []
 
 class Task(object):
-	def __init__(self, duration_sec, max_length=1000):
+
+	def data_filename(self) :
+		return os.path.join(DATA_DIR, "frontend_buffer_%s_%05d.pickle" % ("test" if args.debug else "",  self.interval_sec))
+				
+	
+	def __init__(self, duration_sec, args, max_length=1000):
 		"""
 		duration_sec : l'etendue temporelle couverte par cette tache
 		max_length : le nombre d'échantillons sur cette période
 		interval_sec : seconds
 		"""
 		tasks_list.append(self)
-		
+		self.args = args
 		self.max_length = max_length
 		self.meteo = meteofrance_api.MeteoFranceClient()
 		self.interval_sec = max(duration_sec / max_length, 30) # espace minimal entre 2 mesures : 30 sec
 		EKON(duration_sec, max_length, self.interval_sec)
 		self.buffer = []
 		try :
-			with open(os.path.join(DATA_DIR, "frontend_buffer_%05d.pickle" % self.interval_sec), "rb") as fd :
+			with open(self.data_filename(), "rb") as fd :
 				self.buffer = pickle.load(fd)
 				EKON(len(self.buffer), max_length)
 				self.filter_buffer()
 		except Exception as e:
 			EKOX(e)
+			with open(self.data_filename(), "wb") as fd :
+				pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
+				
+			EKOX(e)
+
+		try :
+			EKOX(self.buffer[0])
+		except :
+			pass
 		
 		self.obs = None
 		self.save_time = self.t2 = datetime.datetime.now() - 2 * datetime.timedelta(hours = 24)
@@ -69,63 +85,82 @@ class Task(object):
 		self.thread = Thread(target=self.run, args=())
 		self.thread.daemon = True							 # Daemonize thread
 		self.thread.start()									 # Start the execution
-
+		if args.debug :
+			self.read_plot()
+			
 	def read_plot(self) :
-		with open(os.path.join(DATA_DIR, "frontend_buffer_%05d.pickle" % self.interval_sec), "rb") as fd :
-				self.buffer = pickle.load(fd)
-				self.filter_buffer()
+		with open(self.data_filename(), "rb") as fd :
+			self.buffer = pickle.load(fd)
+			self.filter_buffer()
 		def r(d) :
-				def iso(v) :						
-						if isinstance(v, datetime.datetime) :
-								return v.isoformat()
-						elif type(v) is int :
-								return datetime.datetime.fromtimestamp(v).isoformat()
-						elif type(v) is str and v.isdigit() :
-								return datetime.datetime.fromtimestamp(int(v)).isoformat()								
-						else :
-								return v
+			def iso(v) :						
+				if isinstance(v, datetime.datetime) :
+					return v.isoformat()
+				elif type(v) is int :
+					return datetime.datetime.fromtimestamp(v).isoformat()
+				elif type(v) is str and v.isdigit() :
+					return datetime.datetime.fromtimestamp(int(v)).isoformat()								
+				else :
+					return v
 						
-				def get_date_iso(k) :
-						assert('date' in k)
-						if k in d :
-								return iso(d[k])
-						else :
-								return iso(d[k + '_iso'])
+			def get_date_iso(k) :
+				assert('date' in k)
+				if k in d :
+					return iso(d[k])
+				else :
+					return iso(d[k + '_iso'])
 				
-				return (get_date_iso('date'),
-						d['direction_vent'],
-						get_date_iso('obs_forecast_date'),
-						d['obs_forecast_direction_vent'])
+			return (get_date_iso('date'),
+					d['direction_vent'],
+					get_date_iso('obs_forecast_date'),
+					d['obs_forecast_direction_vent'],
+					d['date'],
+					d['tempchaudiere'])
 		def dt(xx) :
-				return datetime.datetime.fromisoformat(xx)
-				
-		b = [ r(d) for  d in self.buffer]
-		ll = [ (dt(aa[0])-dt(bb[0])).total_seconds() for aa,bb in zip(b[1:], b[:-1])]
-		plt.plot(ll)
-		plt.show()
-		x1, y1 = [ e[0] for e in b], [ e[1] for e in b]
+			#return datetime.strptime(xx, "%Y-%d-%mT%H:%M:%S.%f")				
+			return datetime.datetime.fromisoformat(xx)
 
-		#x1, y1 = np.linspace(0, 12, 1000), np.sin(x1)
-		
-		EKON(x1[:10], y1[:10])
-		#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
-		#plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-		plt.plot(x1,y1, color='r')
-		x2, y2 = [ e[2] for e in b], [ e[3] for e in b]
-		#x2, y2 = np.linspace(0, 12, 1000),  np.cos(x2)
-		EKON(x2[:10], y2[:10])		
+		if len(self.buffer) > 1 :
+				EKOX(datetime.datetime.now().isoformat())
+				EKOX(self.buffer[0])
+				EKOX(self.buffer[-1])
 
-		#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
-		#plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-		plt.plot(x2,y2, color='b')
-		plt.show()
+				b = [ r(d) for  d in self.buffer]
+				dates, temps = [ dt(e[4]) for e in b], [ e[5]['value'] for e in b]
+				fig, ax = plt.subplots(figsize=(10, 5))
+				ax.plot(dates, temps, linestyle="-", color="#2563eb")
+				ax.xaxis.set_major_formatter(mdates.DateFormatter("%d/%m %H:%M"))
+				fig.autofmt_xdate()  # Incline les dates pour éviter qu'elles ne se chevauchent
+				ax.set_ylabel("Températures")
+				ax.grid(True, linestyle="--", alpha=0.6)
 
+				plt.tight_layout()
+				plt.show()
 
+				if False :
+						ll = [ (dt(aa[0])-dt(bb[0])).total_seconds() for aa,bb in zip(b[1:], b[:-1])]
+						EKO()
+						plt.plot(ll)
+						plt.show()
+						x1, y1 = [ e[0] for e in b], [ e[1] for e in b]
 
+						#x1, y1 = np.linspace(0, 12, 1000), np.sin(x1)
 
-		
-		#plt.gcf().autofmt_xdate()
-		utillc.default_opt["with_date"] = 1
+						EKON(x1[:10], y1[:10])
+						#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
+						#plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+						plt.plot(x1,y1, color='r')
+						x2, y2 = [ e[2] for e in b], [ e[3] for e in b]
+						#x2, y2 = np.linspace(0, 12, 1000),  np.cos(x2)
+						EKON(x2[:10], y2[:10])		
+
+						#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
+						#plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+						plt.plot(x2,y2, color='b')
+						plt.show()
+
+				#plt.gcf().autofmt_xdate()
+				utillc.default_opt["with_date"] = 1
 
 
 	def filter_buffer(self) :
@@ -137,7 +172,8 @@ class Task(object):
 	def discover_nodemcu(self) :
 		batcmd="nmap -sL 192.168.1.*"
 		result = subprocess.check_output(batcmd, shell=True, text=True)
-		trace = self.index() == 0		
+		trace = self.index() == 0
+		trace = False
 		result = result.split("\n")
 		if trace :
 				EKOX(result)
@@ -252,11 +288,12 @@ class Task(object):
 		return j
 
 	def save(self, folder = "/tmp") :
-		saving_to = os.path.join(folder, "frontend_buffer_%05d.pickle" % self.interval_sec)
+		saving_to = self.data_filename()
 		EKOX(saving_to)
-		#with open(saving_to, "wb") as fd :
-		#		pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
-		with lzma.open(saving_to + ".xz", "wb") as f:
+		with open(saving_to, "wb") as fd :
+			pickle.dump(self.buffer, fd, protocol=pickle.HIGHEST_PROTOCOL)
+		if not self.args.debug :
+			with lzma.open(saving_to + ".xz", "wb") as f:
 				pickle.dump(self.buffer, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 				
@@ -271,7 +308,6 @@ class Task(object):
 		EKOX(ks)
 		return self.name() + "=>" + "; ".join([ k + " : " + self.devices[k] for k in ks])
 
-	
 	def run(self):
 		""" Method that runs forever """
 		j = self.data()		   
@@ -287,32 +323,35 @@ class Task(object):
 			try :
 				j = self.data()
 				self.buffer.append(j)
+				EKOX(len(self.buffer))
 				if len(self.buffer) > self.max_length :
 					self.buffer.pop(0)
 					
 			except Exception as e :
 				EKOX(e)
 
-class HelloWorld(object):
-	def __init__(self):
-		self.tasks = [
-			Task(1*3600), # 1 heure
-			Task(24*3600), # 1 jour 
-			Task(7*24*3600), # 1 semaine
-			Task(30*24*3600, 10000), # 1 mois			 
-			Task(30*24*3600*12, 10000) # 1 an			 
-		]
 
+intervals = [
+		(1*3600, 1000), # 1 heure
+		(24*3600, 1000), # 1 jour 
+		(7*24*3600, 1000), # 1 semaine
+		(30*24*3600, 10000), # 1 mois			 
+		(30*24*3600*12000, 10000) # 1 an			 
+]
+
+class HelloWorld(object):
+	def __init__(self, args):
+		self.tasks = [ Task(e[0], args, e[1]) for e in intervals]
 		if False :
 				for t in self.tasks :
 						t.read_plot()
-
-		
+		EKO()
 
 	@cherrypy.expose
 	def save(self) :
 		for t in self.tasks :
 			t.save(DATA_DIR)
+		return "saved"
 			
 	@cherrypy.expose
 	def index(self):
@@ -365,8 +404,14 @@ class HelloWorld(object):
 		#cherrypy.response.headers['Content-Type'] = 'application/json'
 		#EKOX(d)
 		return json.dumps(d) 
-			
-if __name__ == "__main__":
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--debug", action="store_true")
+args = parser.parse_args()
+
+
+def main() :
 	PATH = os.path.abspath(os.path.dirname(__file__))
 	EKOX(PATH)
 	class Root(object): pass
@@ -397,12 +442,12 @@ if __name__ == "__main__":
 			'log.access_file': './access.log'
 		},
 	}
-	hello = HelloWorld()
-
-	
-
+	hello = HelloWorld(args)
 	
 	sleep(2)
 	EKOT("running")
 	cherrypy.quickstart(hello, "/", config=config) 
 	hello.tasks[0].thread.join()
+
+if __name__ == "__main__":
+		main()

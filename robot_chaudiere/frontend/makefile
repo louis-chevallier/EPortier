@@ -22,14 +22,14 @@ start : test
 server  :
 #	mypy --install-types --ignore-missing-imports  frontend.py
 	echo bpython
-	python frontend.py
+	python frontend.py $(OPT)
 
 #2>> trace.txt
 
 pem : privkey.pem  privkey.pem
 
 test :
-	PORT=8899 make run
+	PORT=8899 OPT=--debug make run
 
 run :
 	echo run

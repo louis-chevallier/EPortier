@@ -24,7 +24,7 @@
     <script src="lclog.js" charset="utf-8"></script>    
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
     <script  type = "text/javascript" src="sensor.js" ></script>
-    <script  type = "text/javascript" src="fff.js" ></script>
+    <!-- <script  type = "text/javascript" src="fff.js" ></script> -->
 
     INFO
 
@@ -36,18 +36,21 @@
     <div id="tempext"> ______</div>
     <div id="tempchaudiere"> ______</div>
     <form action="">
-      Temperature <input type="button" id="temp" value="OFF" style="color:blue; display:none"  onclick="toggle(this);">
-       <input type="button" id="tempds18" value="ON" style="color:blue;display:true;"  onclick="toggle(this)">
-      Hygrometrie <input type="button" id="hygro" value="OFF" style="color:blue"  onclick="toggle(this);">
-      Gaz <input type="button" id="gaz" value="OFF" style="color:blue"  onclick="toggle(this);">
-      Temp. extérieure <input type="button" id="tempextb" value="OFF" style="color:blue"  onclick="toggle(this);">
-      Temp. chaudière <input type="button" id="tempchaudiereb" value="OFF" style="color:blue"  onclick="toggle(this);">
+      <ul> 
+        <li> Temperature   <input type="button" id="temp" value="OFF" style="color:blue; display:none"  onclick="toggle(this);"> </li>
+        <li> Temp18 <input type="button" id="tempds18" value="ON" style="color:blue;display:true;"  onclick="toggle(this)"> </li>
+        <li> Hygrometrie <input type="button" id="hygro" value="OFF" style="color:blue"  onclick="toggle(this);"> </li>
+        <li> Gaz <input type="button" id="gaz" value="OFF" style="color:blue"  onclick="toggle(this);"> </li>
+        <li> Temp. extérieure <input type="button" id="tempextb" value="OFF" style="color:blue"  onclick="toggle(this);"> </li>
+        <li> Temp. chaudière <input type="button" id="tempchaudiereb" value="OFF" style="color:blue"  onclick="toggle(this);"> </li>
+       </ul>
     </form>
     <label for="hist">Sélectionnez une durée d'historique :</label>
     <select id="hist" name="historique" onclick="toggle_select(this);">
       <option value="0">1h</option>
       <option value="1" selected>24h</option>
       <option value="2">1 semaine</option>
+      <option value="3">1 mois</option>
     </select>
     <div id="plot_temperature" style="width:1000px;height:550px;"> _____ </div>
     <div style="font-size:30px">
