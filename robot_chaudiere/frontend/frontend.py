@@ -42,7 +42,7 @@ tasks_list = []
 class Task(object):
 
 	def data_filename(self) :
-		return os.path.join(DATA_DIR, "frontend_buffer_%s_%05d.pickle" % ("test" if args.debug else "",  self.interval_sec))
+		return os.path.join(DATA_DIR, "new_frontend_buffer_%s_%05d.pickle" % ("test" if args.debug else "",  self.interval_sec))
 				
 	
 	def __init__(self, duration_sec, args, max_length=1000):
