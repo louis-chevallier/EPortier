@@ -396,7 +396,7 @@ class HelloWorld(object):
 		s = int(s)
 		EKOX(s)
 		j = self.tasks[s]
-		#EKOX(len(j.buffer))
+		EKOX(len(j.buffer))
 		d = { 'buffer' : j.buffer, 'interval' : j.interval_sec }
 		#EKOX(len(j.buffer))
 		#EKOX(j.buffer)
