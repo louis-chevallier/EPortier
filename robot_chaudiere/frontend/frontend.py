@@ -42,10 +42,10 @@ tasks_list = []
 class Task(object):
 
 	def data_filename(self) :
-		return os.path.join(DATA_DIR, "new_frontend_buffer_%s_%05d.pickle" % ("test" if args.debug else "",  self.interval_sec))
+		return os.path.join(DATA_DIR, "new_frontend_buffer__%05d.pickle" % self.interval_sec)
 				
 	
-	def __init__(self, duration_sec, args, max_length=1000):
+	def __init__(self, duration_sec, args, max_length=1000, name = ""):
 		"""
 		duration_sec : l'etendue temporelle couverte par cette tache
 		max_length : le nombre d'échantillons sur cette période
@@ -53,10 +53,12 @@ class Task(object):
 		"""
 		tasks_list.append(self)
 		self.args = args
+		self.name = name
 		self.max_length = max_length
 		self.meteo = meteofrance_api.MeteoFranceClient()
 		self.interval_sec = max(duration_sec / max_length, 30) # espace minimal entre 2 mesures : 30 sec
-		EKON(duration_sec, max_length, self.interval_sec)
+		EKON(duration_sec, max_length, self.interval_sec, name)
+		EKON(self.interval_sec * max_length)
 		self.buffer = []
 		try :
 			with open(self.data_filename(), "rb") as fd :
@@ -84,9 +86,11 @@ class Task(object):
 		
 		self.thread = Thread(target=self.run, args=())
 		self.thread.daemon = True							 # Daemonize thread
-		self.thread.start()									 # Start the execution
+
 		if args.debug :
 			self.read_plot()
+		else :
+			self.thread.start()									 # Start the execution
 			
 	def read_plot(self) :
 		with open(self.data_filename(), "rb") as fd :
@@ -124,16 +128,16 @@ class Task(object):
 				EKOX(datetime.datetime.now().isoformat())
 				EKOX(self.buffer[0])
 				EKOX(self.buffer[-1])
-
+				
 				b = [ r(d) for  d in self.buffer]
 				dates, temps = [ dt(e[4]) for e in b], [ e[5]['value'] for e in b]
 				fig, ax = plt.subplots(figsize=(10, 5))
 				ax.plot(dates, temps, linestyle="-", color="#2563eb")
 				ax.xaxis.set_major_formatter(mdates.DateFormatter("%d/%m %H:%M"))
 				fig.autofmt_xdate()  # Incline les dates pour éviter qu'elles ne se chevauchent
+				ax.set_title(self.name)
 				ax.set_ylabel("Températures")
 				ax.grid(True, linestyle="--", alpha=0.6)
-
 				plt.tight_layout()
 				plt.show()
 
@@ -157,6 +161,8 @@ class Task(object):
 						#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
 						#plt.gca().xaxis.set_major_locator(mdates.DayLocator())
 						plt.plot(x2,y2, color='b')
+
+						# fig.savefig(); plt.close(fig)
 						plt.show()
 
 				#plt.gcf().autofmt_xdate()
@@ -332,16 +338,16 @@ class Task(object):
 
 
 intervals = [
-		(1*3600, 1000), # 1 heure
-		(24*3600, 1000), # 1 jour 
-		(7*24*3600, 1000), # 1 semaine
-		(30*24*3600, 10000), # 1 mois			 
-		(30*24*3600*12000, 10000) # 1 an			 
+		(1*3600, 1000, "une heure"), # 1 heure
+		(24*3600, 1000, "un jour"), # 1 jour 
+		(7*24*3600, 1000, "une semaine"), # 1 semaine
+		(30*24*3600, 10000, "un mois"), # 1 mois			 
+		(30*24*3600*12000, 10000, "un an") # 1 an			 
 ]
 
 class HelloWorld(object):
 	def __init__(self, args):
-		self.tasks = [ Task(e[0], args, e[1]) for e in intervals]
+		self.tasks = [ Task(e[0], args, e[1], e[2]) for e in intervals]
 		if False :
 				for t in self.tasks :
 						t.read_plot()
@@ -443,11 +449,11 @@ def main() :
 		},
 	}
 	hello = HelloWorld(args)
-	
-	sleep(2)
-	EKOT("running")
-	cherrypy.quickstart(hello, "/", config=config) 
-	hello.tasks[0].thread.join()
+	if not args.debug :
+			sleep(2)
+			EKOT("running")
+			cherrypy.quickstart(hello, "/", config=config) 
+			hello.tasks[0].thread.join()
 
 if __name__ == "__main__":
 		main()
